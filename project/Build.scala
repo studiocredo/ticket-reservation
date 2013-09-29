@@ -12,13 +12,15 @@ object ApplicationBuild extends Build {
     "org.webjars" % "bootstrap" % "3.0.0",
     "org.webjars" % "html5shiv" % "3.6.2",
 
-    play.Project.cache,
-    play.Project.jdbc
+    "org.postgresql" % "postgresql" % "9.2-1003-jdbc4",
+    "com.github.tototoshi" %% "slick-joda-mapper" % "0.4.0",
+
+    play.Project.cache
   )
 
 
   val main = Project(appName, appVersion, appDependencies).settings(
     organization := "be.studiocredo"
-  )
+  ).dependsOn(RootProject(uri("git://github.com/freekh/play-slick.git"))) // scary shit
 
 }
