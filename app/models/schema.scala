@@ -3,24 +3,10 @@ package models
 import org.joda.time.DateTime
 import play.api.db.slick.Config.driver.simple._
 import com.github.tototoshi.slick.JodaSupport._
-import models.entities._
 
 object schema {
 
   object tables {
-
-    implicit val userIdType = MappedTypeMapper.base[UserId, Long](_.id, new UserId(_))
-    implicit val guestIdType = MappedTypeMapper.base[GuestId, Long](_.id, new GuestId(_))
-    implicit val adminIdType = MappedTypeMapper.base[AdminId, Long](_.id, new AdminId(_))
-    implicit val memberIdType = MappedTypeMapper.base[MemberId, Long](_.id, new MemberId(_))
-    implicit val eventIdType = MappedTypeMapper.base[EventId, Long](_.id, new EventId(_))
-    implicit val venueIdType = MappedTypeMapper.base[VenueId, Long](_.id, new VenueId(_))
-    implicit val showIdType = MappedTypeMapper.base[ShowId, Long](_.id, new ShowId(_))
-    implicit val dvdIdType = MappedTypeMapper.base[DvdId, Long](_.id, new DvdId(_))
-    implicit val orderIdType = MappedTypeMapper.base[OrderId, Long](_.id, new OrderId(_))
-    implicit val ticketOrderIdType = MappedTypeMapper.base[TicketOrderId, Long](_.id, new TicketOrderId(_))
-    implicit val courseIdType = MappedTypeMapper.base[CourseId, Long](_.id, new CourseId(_))
-    implicit val groupIdType = MappedTypeMapper.base[GroupId, Long](_.id, new GroupId(_))
 
     val Users = new Users
     val Guests = new Guests
@@ -41,6 +27,8 @@ object schema {
   }
 
   import tables._
+  import models.entities._
+  import models.ids._
 
   class Users extends Table[User]("user") {
     def id = column[UserId]("id", O.PrimaryKey, O.AutoInc)
@@ -249,4 +237,17 @@ object schema {
     def member = foreignKey("member_fk", memberId, Members)(_.id)
   }
 
+
+  implicit val userIdType = MappedTypeMapper.base[UserId, Long](_.id, new UserId(_))
+  implicit val guestIdType = MappedTypeMapper.base[GuestId, Long](_.id, new GuestId(_))
+  implicit val adminIdType = MappedTypeMapper.base[AdminId, Long](_.id, new AdminId(_))
+  implicit val memberIdType = MappedTypeMapper.base[MemberId, Long](_.id, new MemberId(_))
+  implicit val eventIdType = MappedTypeMapper.base[EventId, Long](_.id, new EventId(_))
+  implicit val venueIdType = MappedTypeMapper.base[VenueId, Long](_.id, new VenueId(_))
+  implicit val showIdType = MappedTypeMapper.base[ShowId, Long](_.id, new ShowId(_))
+  implicit val dvdIdType = MappedTypeMapper.base[DvdId, Long](_.id, new DvdId(_))
+  implicit val orderIdType = MappedTypeMapper.base[OrderId, Long](_.id, new OrderId(_))
+  implicit val ticketOrderIdType = MappedTypeMapper.base[TicketOrderId, Long](_.id, new TicketOrderId(_))
+  implicit val courseIdType = MappedTypeMapper.base[CourseId, Long](_.id, new CourseId(_))
+  implicit val groupIdType = MappedTypeMapper.base[GroupId, Long](_.id, new GroupId(_))
 }

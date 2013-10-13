@@ -1,20 +1,20 @@
 @(memberForm: Form[entities.Member])
 
 @import helper._
-
+@implicitFieldConstructor = @{FieldConstructor(twitterBootstrapInput.render)}
 
 @base("Add member") {
 
     <h1>Add a member</h1>
 
-    @form(routes.Members.save()) {
+    @form(action = routes.Members.save(), 'class -> "form form-horizontal") {
 
         <fieldset>
 
-            @inputText(memberForm("name"), '_label -> "Name")
-            @inputText(memberForm("email"), '_label -> "E-mail")
-            @inputText(memberForm("address"), '_label -> "Optional Address")
-            @inputText(memberForm("phone"), '_label -> "Optional phone")
+            @inputText(memberForm("name"), '_label -> "Name",  'class -> "form-control")
+            @inputText(memberForm("email"), '_label -> "E-mail", 'class -> "form-control")
+            @textarea(memberForm("address"), '_label -> "Address", 'class -> "form-control")
+            @inputText(memberForm("phone"), '_label -> "phone", 'class -> "form-control")
 
         </fieldset>
 
@@ -24,5 +24,4 @@
         </div>
 
     }
-
 }

@@ -52,13 +52,23 @@ object Members extends Controller {
   }
 
 
-  def update(id: Long) = Action {
-    Ok(views.html.index())
+  def update(id: Long) = DBAction { implicit rs =>
+    memberForm.bindFromRequest.fold(
+      formWithErrors => BadRequest(views.html.membersForm(formWithErrors)),
+      member => {
+        memberService.update(id, member)
+
+        ListPage.flashing("success" -> "Member %s has been updated".format(member.name))
+      }
+    )
   }
 
 
-  def delete(id: Long) = Action {
-    Ok(views.html.index())
+  def delete(id: Long) = DBAction { implicit rs =>
+    memberService.delete(id)
+
+    ListPage.flashing("success" -> "Member has been deleted")
+
   }
 
 }

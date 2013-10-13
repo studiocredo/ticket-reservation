@@ -10,10 +10,11 @@
         <link rel='stylesheet' href='@routes.WebJarAssets.at(WebJarAssets.locate("css/bootstrap.min.css"))'>
         <link rel='stylesheet' href='@routes.WebJarAssets.at(WebJarAssets.locate("css/bootstrap-theme.min.css"))'>
         <link rel='stylesheet' href='@routes.Assets.at("css/main.css")'>
-        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
-        <!--[if lt IE 9]>
-            <script type='text/javascript' src='@routes.WebJarAssets.at(WebJarAssets.locate("html5shiv.min.js"))'></script>
-            <script type='text/javascript' src='@routes.Assets.at("js/respond.min.js")'></script>
+            <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+            <!--[if lt IE 9]>
+            <script type='text/javascript' src=' @routes.WebJarAssets.at(WebJarAssets.locate("html5shiv.min.js"))
+            '> </script>
+        < script type = 'text/javascript' src = ' @routes.Assets.at("js/respond.min.js") '> </script>
         <![endif]-->
         <script type='text/javascript' src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery.min.js"))'></script>
         <script type='text/javascript' src='@routes.WebJarAssets.at(WebJarAssets.locate("js/bootstrap.min.js"))'></script>
@@ -59,6 +60,8 @@
                 </div>
             </div>
         </div>
-        @content
+        <div class="container">
+            @content
+        </div>
     </body>
 </html>

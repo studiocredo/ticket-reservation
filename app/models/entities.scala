@@ -1,8 +1,11 @@
 package models
 
 import scala.Predef._
+import scala.slick.lifted.MappedTypeMapper
 
 object entities {
+  import ids._
+
   case class User(
                    id: Option[UserId],
                    email: String,
@@ -35,17 +38,69 @@ object entities {
                     name: String
                   )
 
-  class UserId(val id: Long) extends AnyVal
-  class AdminId(val id: Long) extends AnyVal
-  class GuestId(val id: Long) extends AnyVal
-  class MemberId(val id: Long) extends AnyVal
-  class CourseId(val id: Long) extends AnyVal
-  // named group because class is a keyword (annoying)
-  class GroupId(val id: Long) extends AnyVal
-  class EventId(val id: Long) extends AnyVal
-  class VenueId(val id: Long) extends AnyVal
-  class ShowId(val id: Long) extends AnyVal
-  class DvdId(val id: Long) extends AnyVal
-  class OrderId(val id: Long) extends AnyVal
-  class TicketOrderId(val id: Long) extends AnyVal
+}
+
+object ids {
+  case class UserId(id: Long) extends AnyVal with TypedId
+  case class AdminId(id: Long) extends AnyVal with TypedId
+  case class GuestId(id: Long) extends AnyVal with TypedId
+  case class MemberId(id: Long) extends AnyVal with TypedId
+  case class CourseId(id: Long) extends AnyVal with TypedId
+  case class GroupId(id: Long) extends AnyVal with TypedId
+  case class EventId(id: Long) extends AnyVal with TypedId
+  case class VenueId(id: Long) extends AnyVal with TypedId
+  case class ShowId(id: Long) extends AnyVal with TypedId
+  case class DvdId(id: Long) extends AnyVal with TypedId
+  case class OrderId(id: Long) extends AnyVal with TypedId
+  case class TicketOrderId(id: Long) extends AnyVal with TypedId
+
+  implicit object UserId extends IdFactory[UserId]
+  implicit object AdminId extends IdFactory[AdminId]
+  implicit object GuestId extends IdFactory[GuestId]
+  implicit object MemberId extends IdFactory[MemberId]
+  implicit object CourseId extends IdFactory[CourseId]
+  implicit object GroupId extends IdFactory[GroupId]
+  implicit object EventId extends IdFactory[EventId]
+  implicit object VenueId extends IdFactory[VenueId]
+  implicit object ShowId extends IdFactory[ShowId]
+  implicit object DvdId extends IdFactory[DvdId]
+  implicit object OrderId extends IdFactory[OrderId]
+  implicit object TicketOrderId extends IdFactory[TicketOrderId]
+
+
+  trait TypedId extends Any {
+    def id: Long
+  }
+
+  implicit def idMapper[T <: TypedId](implicit create: IdFactory[T]) = MappedTypeMapper.base[T, Long](_.id, create)
+  implicit def longToId[T <: TypedId](untypedId: Long)(implicit create: IdFactory[T]) = create(untypedId)
+  implicit def longToIdOption[T <: TypedId](untypedId: Long)(implicit create: IdFactory[T]) = Option(create(untypedId))
+  implicit def longToId[T <: TypedId](untypedId: Option[Long])(implicit create: IdFactory[T]) = untypedId.map(create)
+
+  sealed trait IdFactory[T <: TypedId] extends (Long => T)
+
+
+  // play custom id formatters
+  object LongEx {
+    def unapply(s: String): Option[Long] = try {
+      Some(s.toLong)
+    } catch {
+      case _: java.lang.NumberFormatException => None
+    }
+  }
+
+  import play.api.data.format.Formatter
+
+  implicit def idFormatter[T <: TypedId](implicit create: IdFactory[T]): Formatter[T] = new Formatter[T] {
+    override val format = Some(("format.id", Nil))
+
+    def bind(key: String, data: Map[String, String]) = {
+      Right(data.get(key).getOrElse("false")).right.flatMap {
+        case LongEx(i) => Right(create(i))
+        case _ => Left(Seq(play.api.data.FormError(key, "error.id", Nil)))
+      }
+    }
+
+    def unbind(key: String, untypedId: T) = Map(key -> untypedId.toString)
+  }
 }

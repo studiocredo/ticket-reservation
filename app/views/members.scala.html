@@ -1,15 +1,17 @@
 @(currentPage: Page[entities.Member])
 
-@link(newPage: Int) = @{
-    routes.Members.list(newPage)
-}
+    @link(newPage: Int) = @{
+        routes.Members.list(newPage)
+    }
 
 @base("Members") {
 
-    <a class="btn success" id="add" href="@routes.Members.create()">Add new</a>
+    <div>
+    <a class="btn btn-primary" id="add" href="@routes.Members.create()">Add new</a>
+    </div>
 
     @if(!currentPage.isEmpty) {
-        <table class="zebra-striped">
+        <table class="table table-hover table-striped">
             <thead>
                 <tr>
                     <th>Id</th>
@@ -20,43 +22,43 @@
                 </tr>
             </thead>
             <tbody>
-            @currentPage.items.map{ member =>
-            <tr>
-                <td>@member.id</td>
-                <td>@member.name</td>
-                <td>@member.address</td>
-                <td>@member.phone</td>
-                <td>@member.active</td>
-            </tr>
+            @currentPage.items.map { member =>
+                <tr>
+                    <td>@member.id</td>
+                    <td>@member.name</td>
+                    <td>@member.address</td>
+                    <td>@member.phone</td>
+                    <td>@member.active</td>
+                </tr>
             }
             </tbody>
         </table>
 
-        <div id="pagination" class="pagination">
-            <ul>
-                @currentPage.prev.map { page =>
-                    <li class="prev">
-                        <a href="@link(page)">&larr; Previous</a>
-                    </li>
-                }.getOrElse {
-                    <li class="prev disabled">
-                        <a>&larr; Previous</a>
-                    </li>
-                }
-                <li class="current">
-                    <a>Displaying @(currentPage.offset + 1) to @(currentPage.offset + currentPage.size) of @currentPage.total</a>
+
+        <ul class="pager">
+            @currentPage.prev.map { page =>
+            <li>
+                <a href="@link(page)">&larr; Previous</a>
+            </li>
+            }.getOrElse {
+                <li class="disabled">
+                    <a>&larr; Previous</a>
                 </li>
-                @currentPage.next.map { page =>
-                    <li class="next">
-                        <a href="@link(page)">Next &rarr;</a>
-                    </li>
-                }.getOrElse {
-                    <li class="next disabled">
-                        <a>Next &rarr;</a>
-                    </li>
-                }
-            </ul>
-        </div>
+            }
+            @currentPage.next.map { page =>
+            <li>
+                <a href="@link(page)">Next &rarr;</a>
+            </li>
+            }.getOrElse {
+                <li class="disabled">
+                    <a>Next &rarr;</a>
+                </li>
+            }
+            <li class="pull-right">
+                Displaying @(currentPage.offset + 1) to @(currentPage.offset + currentPage.size) of @currentPage.total
+            </li>
+        </ul>
+
     } else {
         <div class="well">
             <em>Nothing to display</em>
