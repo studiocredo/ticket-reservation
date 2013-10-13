@@ -1,6 +1,7 @@
 import sbt._
 import Keys._
 import play.Project
+import play.Keys._
 
 object ApplicationBuild extends Build {
   val appName = "ticket-reservation"
@@ -19,8 +20,8 @@ object ApplicationBuild extends Build {
 
 
   val main = Project(appName, appVersion, appDependencies).settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*).settings(
-    organization := "be.studiocredo",
-    scalaVersion := "2.10.2"
+    organization := "be.studiocredo"
+    ,scalaVersion := "2.10.2"
   ).dependsOn(RootProject(uri("git://github.com/freekh/play-slick.git"))) // scary shit
 
 }

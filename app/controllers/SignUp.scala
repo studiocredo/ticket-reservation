@@ -5,12 +5,11 @@ import play.api.data.Form
 import play.api.data.Forms._
 import scala.Some
 import views.html
-import models.User
-import play.api.db.DB
-import scala.slick.session.Database
-import models.database.{Users}
+import models.entities.User
+
 import utils.DBAccess
 
+/*
 object SignUp extends Controller with DBAccess {
 
   val signupForm: Form[User] = Form(
@@ -59,3 +58,4 @@ object SignUp extends Controller with DBAccess {
   }
 
 }
+*/

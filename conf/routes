@@ -3,14 +3,22 @@
 # ~~~~
 
 # Home page
-GET         /                     controllers.Application.index
+GET         /                          controllers.Application.index
 
 # Signup
-GET         /signup               controllers.SignUp.form
-POST        /signup               controllers.SignUp.submit
+#GET         /signup               controllers.SignUp.form
+#POST        /signup               controllers.SignUp.submit
+
+
+GET         /members                   controllers.Members.list(p:Int ?= 0)
+GET         /members/new               controllers.Members.create
+POST        /members                   controllers.Members.save
+GET         /members/:id               controllers.Members.edit(id:Long)
+POST        /members/:id               controllers.Members.update(id:Long)
+POST        /members/:id/delete        controllers.Members.delete(id:Long)
 
 
 # Map static resources from the /public folder to the /assets URL path
-GET         /assets/*file         controllers.Assets.at(path="/public", file)
+GET         /assets/*file              controllers.Assets.at(path="/public", file)
 
-GET         /webjars/*file        controllers.WebJarAssets.at(file)
+GET         /webjars/*file             controllers.WebJarAssets.at(file)

@@ -1,9 +1,10 @@
-package models
+package be.studiocredo
 
 import play.api.db.slick.Config.driver.simple._
 import utils.DBAccess
 
 
+/*
 class UserService extends DBAccess {
 
   def emailExists(email: String)(implicit session: Session): Boolean = {
@@ -26,3 +27,4 @@ class UserService extends DBAccess {
     }
   }
 }
+*/

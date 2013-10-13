@@ -2,11 +2,26 @@ package models
 
 import org.joda.time.DateTime
 import play.api.db.slick.Config.driver.simple._
+import com.github.tototoshi.slick.JodaSupport._
 import models.entities._
 
 object schema {
 
   object tables {
+
+    implicit val userIdType = MappedTypeMapper.base[UserId, Long](_.id, new UserId(_))
+    implicit val guestIdType = MappedTypeMapper.base[GuestId, Long](_.id, new GuestId(_))
+    implicit val adminIdType = MappedTypeMapper.base[AdminId, Long](_.id, new AdminId(_))
+    implicit val memberIdType = MappedTypeMapper.base[MemberId, Long](_.id, new MemberId(_))
+    implicit val eventIdType = MappedTypeMapper.base[EventId, Long](_.id, new EventId(_))
+    implicit val venueIdType = MappedTypeMapper.base[VenueId, Long](_.id, new VenueId(_))
+    implicit val showIdType = MappedTypeMapper.base[ShowId, Long](_.id, new ShowId(_))
+    implicit val dvdIdType = MappedTypeMapper.base[DvdId, Long](_.id, new DvdId(_))
+    implicit val orderIdType = MappedTypeMapper.base[OrderId, Long](_.id, new OrderId(_))
+    implicit val ticketOrderIdType = MappedTypeMapper.base[TicketOrderId, Long](_.id, new TicketOrderId(_))
+    implicit val courseIdType = MappedTypeMapper.base[CourseId, Long](_.id, new CourseId(_))
+    implicit val groupIdType = MappedTypeMapper.base[GroupId, Long](_.id, new GroupId(_))
+
     val Users = new Users
     val Guests = new Guests
     val Members = new Members
@@ -29,49 +44,67 @@ object schema {
 
   class Users extends Table[User]("user") {
     def id = column[UserId]("id", O.PrimaryKey, O.AutoInc)
-    def name = column[String]("name")
     def email = column[String]("email")
     def password = column[String]("password")
 
-    def * = id.? ~ name ~ email ~ password <>(User, User.unapply _)
+    def * = id.? ~ email ~ password <>(User, User.unapply _)
 
-    def forInsert = name ~ email ~ password <>( {
-      (name, email, password) => User(None, name, email, password)
+    def forInsert = email ~ password <>( {
+      (email, password) => User(None, email, password)
     }, {
-      u: User => Some((u.name, u.email, u.password))
+      u: User => Some((u.email, u.password))
     })
 
     def uniqueEmail = index("idx_email", email, unique = true)
   }
 
+  /*
+    case class Guest(
+                    id: Option[GuestId],
+                    userId: UserId,
+                    name: String,
+                    email: Option[String],
+                    address: Option[String],
+                    phone: Option[String]
+                  )
+
+   */
   class Guests extends Table[Guest]("guest") {
     def id = column[GuestId]("id", O.PrimaryKey, O.AutoInc)
     def userId = column[UserId]("user_id")
-    def address = column[String]("address")
-    def phone = column[String]("phone")
+    def name = column[String]("name")
+    def email = column[String]("email")
+    def address = column[Option[String]]("address")
+    def phone = column[Option[String]]("phone")
 
-    def * = id.? ~ userId ~ address ~ phone <>(Guest, Guest.unapply _)
+    def * = id.? ~ userId ~ name ~ email ~ address ~ phone <>(Guest, Guest.unapply _)
 
     def user = foreignKey("user_fk", userId, Users)(_.id)
   }
 
   class Members extends Table[Member]("member") {
     def id = column[MemberId]("id", O.PrimaryKey, O.AutoInc)
-    def userId = column[UserId]("user_id")
-    def address = column[String]("address")
-    def phone = column[String]("phone")
+    def name = column[String]("name")
+    def email = column[Option[String]]("email")
+    def address = column[Option[String]]("address")
+    def phone = column[Option[String]]("phone")
     def active = column[Boolean]("active")
 
-    def * = id.? ~ userId ~ address ~ phone ~ active <>(Member, Member.unapply _)
+    def * = id.? ~ name ~ email ~ address ~ phone ~ active <>(Member, Member.unapply _)
 
-    def user = foreignKey("user_fk", userId, Users)(_.id)
+    def forInsert = name ~ email ~ address ~ phone ~ active <>( {
+      (name, email, address, phone, active) => Member(None, name, email, address, phone, active)
+    }, {
+      u: Member => Some((u.name, u.email, u.address, u.phone, u.active))
+    })
   }
 
   class Admins extends Table[Admin]("admin") {
     def id = column[AdminId]("id", O.PrimaryKey, O.AutoInc)
     def userId = column[UserId]("user_id")
+    def name = column[String]("name")
 
-    def * = id.? ~ userId <>(Admin, Admin.unapply _)
+    def * = id.? ~ userId ~ name <>(Admin, Admin.unapply _)
 
     def user = foreignKey("user_fk", userId, Users)(_.id)
   }
@@ -86,10 +119,10 @@ object schema {
     def * = id ~ name ~ active
   }
 
-  class Groups extends Table[(GroupId, String, Integer, CourseId)]("group") {
+  class Groups extends Table[(GroupId, String, Int, CourseId)]("group") {
     def id = column[GroupId]("id", O.PrimaryKey, O.AutoInc)
     def name = column[String]("name")
-    def year = column[Integer]("year")
+    def year = column[Int]("year")
     def courseId = column[CourseId]("course_id")
 
     def * = id ~ name ~ year ~ courseId
@@ -102,7 +135,7 @@ object schema {
     def courseId = column[CourseId]("course_id")
 
     def * = groupId ~ courseId
-    def pk = primaryKey("pk", (groupId, courseId))
+    def pk = primaryKey("group-members-pkey", (groupId, courseId))
 
     def group = foreignKey("group_fk", groupId, Groups)(_.id)
     def course = foreignKey("course_fk", courseId, Courses)(_.id)
@@ -138,11 +171,11 @@ object schema {
     def venue = foreignKey("venue_fk", venueId, Venues)(_.id)
   }
 
-  class Dvds extends Table[(DvdId, EventId, String, Integer, DateTime, Option[DateTime], Boolean)]("dvd") {
+  class Dvds extends Table[(DvdId, EventId, String, Int, DateTime, Option[DateTime], Boolean)]("dvd") {
     def id = column[DvdId]("id", O.PrimaryKey, O.AutoInc)
     def eventId = column[EventId]("event_id")
     def name = column[String]("name")
-    def price = column[Integer]("price")
+    def price = column[Int]("price")
     def availableStart = column[DateTime]("available-start")
     def availableEnd = column[Option[DateTime]]("available-end")
     def active = column[Boolean]("active")
@@ -152,27 +185,27 @@ object schema {
     def event = foreignKey("event_fk", eventId, Events)(_.id)
   }
 
-  class EventParticipants extends Table[(EventId, MemberId, Integer)]("event-participants") {
+  class EventParticipants extends Table[(EventId, MemberId, Int)]("event-participants") {
     def eventId = column[EventId]("event_id")
     def memberId = column[MemberId]("member_id")
-    def allowedTicketReservation = column[Integer]("allowed-ticket-reservations")
+    def allowedTicketReservation = column[Int]("allowed-ticket-reservations")
 
     def * = eventId ~ memberId ~ allowedTicketReservation
 
-    def pk = primaryKey("pk", (eventId, memberId))
+    def pk = primaryKey("event-participants_pkey", (eventId, memberId))
 
     def event = foreignKey("event_fk", eventId, Events)(_.id)
     def member = foreignKey("member_fk", memberId, Members)(_.id)
   }
 
-  class TicketReservations extends Table[(ShowId, MemberId, Integer)]("ticket-reservation") {
+  class TicketReservations extends Table[(ShowId, MemberId, Int)]("ticket-reservation") {
     def showId = column[ShowId]("show_id")
     def memberId = column[MemberId]("member_id")
-    def amount = column[Integer]("amount")
+    def amount = column[Int]("amount")
 
     def * = showId ~ memberId ~ amount
 
-    def pk = primaryKey("pk", (showId, memberId))
+    def pk = primaryKey("ticket-reservation_pkey", (showId, memberId))
     def show = foreignKey("show_fk", showId, Shows)(_.id)
     def member = foreignKey("member_fk", memberId, Members)(_.id)
   }
@@ -209,21 +242,11 @@ object schema {
 
     def * = ticketOrderId ~ showId ~ memberId
 
-    def pk = primaryKey("pk", (ticketOrderId, showId))
+    def pk = primaryKey("order-ticket-seat_pkey", (ticketOrderId, showId))
 
     def ticketOrder = foreignKey("ticket_order_fk", ticketOrderId, TicketOrders)(_.id)
     def show = foreignKey("show_fk", showId, Shows)(_.id)
     def member = foreignKey("member_fk", memberId, Members)(_.id)
   }
 
-  implicit val userIdType = MappedTypeMapper.base[UserId, Long](_.id, new UserId(_))
-  implicit val memberIdType = MappedTypeMapper.base[MemberId, Long](_.id, new MemberId(_))
-  implicit val eventIdType = MappedTypeMapper.base[EventId, Long](_.id, new EventId(_))
-  implicit val venueIdType = MappedTypeMapper.base[VenueId, Long](_.id, new VenueId(_))
-  implicit val showIdType = MappedTypeMapper.base[ShowId, Long](_.id, new ShowId(_))
-  implicit val dvdIdType = MappedTypeMapper.base[DvdId, Long](_.id, new DvdId(_))
-  implicit val orderIdType = MappedTypeMapper.base[OrderId, Long](_.id, new OrderId(_))
-  implicit val ticketOrderIdType = MappedTypeMapper.base[TicketOrderId, Long](_.id, new TicketOrderId(_))
-  implicit val courseIdType = MappedTypeMapper.base[CourseId, Long](_.id, new CourseId(_))
-  implicit val groupIdType = MappedTypeMapper.base[GroupId, Long](_.id, new GroupId(_))
 }

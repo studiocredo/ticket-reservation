@@ -1,10 +1,11 @@
-@(signupForm: Form[User])
+@***
+@(signupForm: Form[entities.User])
 
 @import helper._
 @import helper.twitterBootstrap._
 
 
-@main("Signup", None) {
+@base("Signup") {
 
     @helper.form(action = routes.SignUp.submit) {
 
@@ -57,3 +58,4 @@
     }
 
 }
+**@

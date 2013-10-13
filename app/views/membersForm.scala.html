@@ -1,0 +1,28 @@
+@(memberForm: Form[entities.Member])
+
+@import helper._
+
+
+@base("Add member") {
+
+    <h1>Add a member</h1>
+
+    @form(routes.Members.save()) {
+
+        <fieldset>
+
+            @inputText(memberForm("name"), '_label -> "Name")
+            @inputText(memberForm("email"), '_label -> "E-mail")
+            @inputText(memberForm("address"), '_label -> "Optional Address")
+            @inputText(memberForm("phone"), '_label -> "Optional phone")
+
+        </fieldset>
+
+        <div class="actions">
+            <input type="submit" value="Add member" class="btn primary"> or
+            <a href="@routes.Members.list()" class="btn">Cancel</a>
+        </div>
+
+    }
+
+}
