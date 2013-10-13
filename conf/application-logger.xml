@@ -4,6 +4,9 @@
     <logger name="be.studiocredo" level="debug"/>
     <logger name="play" level="INFO" />
 
+    <logger name="scala.slick" level="INFO"/>
+    <logger name="scala.slick.session" level="DEBUG"/>
+
     <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%-20(%8relative %16([%.14thread])) %-5coloredlevel %35.35logger{35} - %msg%n%rEx</pattern>
