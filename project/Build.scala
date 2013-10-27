@@ -1,5 +1,5 @@
 import sbt._
-import Keys._
+import sbt.Keys._
 import play.Project
 import play.Keys._
 
@@ -18,10 +18,10 @@ object ApplicationBuild extends Build {
     play.Project.cache
   )
 
-
   val main = Project(appName, appVersion, appDependencies).settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*).settings(
     organization := "be.studiocredo"
-    ,scalaVersion := "2.10.2"
+    , scalaVersion := "2.10.3"
+    , scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-language:implicitConversions")
   ).dependsOn(RootProject(uri("git://github.com/freekh/play-slick.git"))) // scary shit
 
 }

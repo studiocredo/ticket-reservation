@@ -8,6 +8,7 @@ import play.api.data.Form
 import play.api.data.Forms._
 import scala.Some
 import models.entities.Member
+import models.ids._
 
 object Members extends Controller {
   val memberService = new MemberService()

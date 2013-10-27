@@ -12,8 +12,11 @@ object queries {
   type BTM[Type] = BaseTypeMapper[Type]
 
 
+  /*
   implicit def extendAll[E, T](q: Q[T, E]) = new {
     def paginate(page: Int, pageSize: Int): Q[T, E] = q.drop(pageSize * page).take(pageSize)
   }
+  */
 
+  def paginate[E, T](q: Q[T, E],page: Int, pageSize: Int): Q[T, E] = q.drop(pageSize * page).take(pageSize)
 }
