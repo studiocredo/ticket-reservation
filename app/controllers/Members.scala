@@ -9,6 +9,8 @@ import play.api.data.Forms._
 import scala.Some
 import models.entities.Member
 import models.ids._
+import scala.Some
+import models.entities.Member
 
 object Members extends Controller {
   val memberService = new MemberService()
@@ -33,13 +35,13 @@ object Members extends Controller {
 
   }
 
-  def create() = Action {
-    Ok(views.html.membersForm(memberForm))
-  }
 
+  def create() = Action {
+    Ok(views.html.membersCreateForm(memberForm))
+  }
   def save() = DBAction { implicit rs =>
     memberForm.bindFromRequest.fold(
-      formWithErrors => BadRequest(views.html.membersForm(formWithErrors)),
+      formWithErrors => BadRequest(views.html.membersCreateForm(formWithErrors)),
       member => {
         memberService.insert(member)
 
@@ -48,14 +50,15 @@ object Members extends Controller {
     )
   }
 
-  def edit(id: Long) = Action {
-    Ok(views.html.index())
+  def edit(id: Long) = DBAction { implicit rs =>
+    memberService.get(id) match {
+      case None => ListPage
+      case Some(member) => Ok(views.html.membersEditForm(id, memberForm.fillAndValidate(member)))
+    }
   }
-
-
   def update(id: Long) = DBAction { implicit rs =>
     memberForm.bindFromRequest.fold(
-      formWithErrors => BadRequest(views.html.membersForm(formWithErrors)),
+      formWithErrors => BadRequest(views.html.membersEditForm(id, formWithErrors)),
       member => {
         memberService.update(id, member)
 
@@ -63,13 +66,9 @@ object Members extends Controller {
       }
     )
   }
-
-
   def delete(id: Long) = DBAction { implicit rs =>
     memberService.delete(id)
 
     ListPage.flashing("success" -> "Member has been deleted")
-
   }
-
 }

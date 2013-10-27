@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="false" scan="true" scanPeriod="5 seconds">
+
+    <logger name="be.studiocredo" level="debug"/>
+    <logger name="play" level="INFO" />
+
+    <logger name="scala.slick" level="debug"/>
+    <logger name="scala.slick.compiler" level="info"/>
+    <logger name="scala.slick.session" level="DEBUG"/>
+
+    <logger name="com.jolbox.bonecp" level="OFF"/>
+
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <!-- "%black", "%red",     "%green",     "%yellow",    "%blue",     "%magenta",    "%cyan",       "%white",   "%gray",
+                         "%boldRed","%boldGreen", "%boldYellow", "%boldBlue", "%boldMagenta",  "%boldCyan", "%boldWhite" -->
+            <pattern>%-20(%8relative %16([%.14thread])) %highlight(%-5level) %cyan(%35.35logger{35}) - %msg%n%rEx</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <root level="info">
+        <appender-ref ref="console"/>
+    </root>
+
+</configuration>

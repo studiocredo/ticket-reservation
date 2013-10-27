@@ -1,0 +1,33 @@
+@(id: Long, memberForm: Form[entities.Member])
+
+@import helper._
+    @implicitFieldConstructor = @{
+        FieldConstructor(twitterBootstrapInput.render)
+    }
+
+@base("Edit member") {
+
+    <h1>Edit a member
+        @form(routes.Members.delete(id), 'class -> "pull-right") {
+            <input type="submit" value="Delete this member" class="btn btn-danger">
+            }
+    </h1>
+
+
+    @form(action = routes.Members.update(id), 'class -> "form form-horizontal") {
+
+        <fieldset>
+
+            @inputText(memberForm("name"), '_label -> "Name", 'class -> "form-control")
+            @inputText(memberForm("email"), '_label -> "E-mail", 'class -> "form-control")
+            @textarea(memberForm("address"), '_label -> "Address", 'class -> "form-control")
+            @inputText(memberForm("phone"), '_label -> "phone", 'class -> "form-control")
+
+        </fieldset>
+
+        <div class="actions">
+            <input type="submit" value="Update member" class="btn btn-primary">
+            <a href="@routes.Members.list()" class="btn btn-warning">Cancel</a>
+        </div>
+    }
+}

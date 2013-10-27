@@ -19,6 +19,7 @@
                     <th>Address</th>
                     <th>Phone</th>
                     <th>Active</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -29,6 +30,7 @@
                     <td>@member.address</td>
                     <td>@member.phone</td>
                     <td>@member.active</td>
+                    <td><a href="@{routes.Members.edit(member.id.get.id)}">Edit</a></td>
                 </tr>
             }
             </tbody>

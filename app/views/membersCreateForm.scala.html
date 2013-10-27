@@ -5,7 +5,7 @@
 
 @base("Add member") {
 
-    <h1>Add a member</h1>
+    <h1>Add new member</h1>
 
     @form(action = routes.Members.save(), 'class -> "form form-horizontal") {
 
@@ -19,8 +19,8 @@
         </fieldset>
 
         <div class="actions">
-            <input type="submit" value="Add member" class="btn primary"> or
-            <a href="@routes.Members.list()" class="btn">Cancel</a>
+            <input type="submit" value="Add member" class="btn btn-primary">
+            <a href="@routes.Members.list()" class="btn btn-warning">Cancel</a>
         </div>
 
     }

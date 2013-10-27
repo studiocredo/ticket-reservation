@@ -80,6 +80,8 @@ object schema {
 
     def * = id.? ~ name ~ email ~ address ~ phone ~ active <>(Member, Member.unapply _)
 
+    val byId = createFinderBy( t => t.id )
+
     def forInsert = name ~ email ~ address ~ phone ~ active <>( {
       (name, email, address, phone, active) => Member(None, name, email, address, phone, active)
     }, {

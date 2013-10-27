@@ -28,8 +28,13 @@ class MemberService {
   }
 
   def update(id: MemberId, member: Member)(implicit s: Session) = {
-    Members.filter(_.id === id).update(member)
+    Members.filter(_.id === id).update(member.copy(id = Some(id)))
   }
+
+  def get(id: MemberId)(implicit s: Session): Option[Member] = {
+    Members.byId(id).firstOption
+  }
+
 
   def delete(id: MemberId)(implicit s: Session) = {
     Members.filter(_.id === id).delete
