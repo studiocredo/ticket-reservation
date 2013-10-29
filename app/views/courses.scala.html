@@ -1,0 +1,41 @@
+@(currentPage: Page[entities.Course])
+
+
+@base("Courses") {
+
+    <div>
+    <a class="btn btn-primary" id="add" href="@routes.Courses.create()">Add new</a>
+    </div>
+
+    @if(!currentPage.isEmpty) {
+        <table class="table table-hover table-striped">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Name</th>
+                    <th>Active</th>
+                </tr>
+            </thead>
+            <tbody>
+            @currentPage.items.map { course =>
+                <tr>
+                    <td>@course.id</td>
+                    <td>@course.name</td>
+                    <td>@course.active</td>
+                    <td><a href="@{routes.Courses.edit(course.id.get.id)}">Edit</a></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+
+
+        @parts.paging(currentPage, (page:Int) => routes.Courses.list(page))
+
+    } else {
+        <div class="well">
+            <em>Nothing to display</em>
+        </div>
+
+    }
+
+}

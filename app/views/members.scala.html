@@ -1,9 +1,5 @@
 @(currentPage: Page[entities.Member])
 
-    @link(newPage: Int) = @{
-        routes.Members.list(newPage)
-    }
-
 @base("Members") {
 
     <div>
@@ -36,31 +32,7 @@
             </tbody>
         </table>
 
-
-        <ul class="pager">
-            @currentPage.prev.map { page =>
-            <li>
-                <a href="@link(page)">&larr; Previous</a>
-            </li>
-            }.getOrElse {
-                <li class="disabled">
-                    <a>&larr; Previous</a>
-                </li>
-            }
-            @currentPage.next.map { page =>
-            <li>
-                <a href="@link(page)">Next &rarr;</a>
-            </li>
-            }.getOrElse {
-                <li class="disabled">
-                    <a>Next &rarr;</a>
-                </li>
-            }
-            <li class="pull-right">
-                Displaying @(currentPage.offset + 1) to @(currentPage.offset + currentPage.size) of @currentPage.total
-            </li>
-        </ul>
-
+        @parts.paging(currentPage, (page:Int) => routes.Members.list(page))
     } else {
         <div class="well">
             <em>Nothing to display</em>

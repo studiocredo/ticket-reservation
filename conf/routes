@@ -17,6 +17,12 @@ GET         /members/:id               controllers.Members.edit(id:Long)
 POST        /members/:id               controllers.Members.update(id:Long)
 POST        /members/:id/delete        controllers.Members.delete(id:Long)
 
+GET         /courses                   controllers.Courses.list(p:Int ?= 0)
+GET         /courses/new               controllers.Courses.create
+POST        /courses                   controllers.Courses.save
+GET         /courses/:id               controllers.Courses.edit(id:Long)
+POST        /courses/:id               controllers.Courses.update(id:Long)
+POST        /courses/:id/delete        controllers.Courses.delete(id:Long)
 
 # Map static resources from the /public folder to the /assets URL path
 GET         /assets/*file              controllers.Assets.at(path="/public", file)

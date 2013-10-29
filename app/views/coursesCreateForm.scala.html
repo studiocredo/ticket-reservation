@@ -1,0 +1,24 @@
+@(memberForm: Form[entities.Course])
+
+@import helper._
+@implicitFieldConstructor = @{FieldConstructor(twitterBootstrapInput.render)}
+
+@base("Add course") {
+
+    <h1>Add new course</h1>
+
+    @form(action = routes.Courses.save(), 'class -> "form form-horizontal") {
+
+        <fieldset>
+
+            @inputText(memberForm("name"), '_label -> "Name",  'class -> "form-control")
+
+        </fieldset>
+
+        <div class="actions">
+            <input type="submit" value="Add Course" class="btn btn-primary">
+            <a href="@routes.Courses.list()" class="btn btn-warning">Cancel</a>
+        </div>
+
+    }
+}

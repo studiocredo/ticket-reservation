@@ -1,0 +1,30 @@
+@(id: Long, courseForm: Form[entities.Course])
+
+@import helper._
+    @implicitFieldConstructor = @{
+        FieldConstructor(twitterBootstrapInput.render)
+    }
+
+@base("Edit course") {
+
+    <h1>Edit a course
+        @form(routes.Courses.delete(id), 'class -> "pull-right") {
+            <input type="submit" value="Delete this course" class="btn btn-danger">
+            }
+    </h1>
+
+
+    @form(action = routes.Courses.update(id), 'class -> "form form-horizontal") {
+
+        <fieldset>
+
+            @inputText(courseForm("name"), '_label -> "Name", 'class -> "form-control")
+
+        </fieldset>
+
+        <div class="actions">
+            <input type="submit" value="Update course" class="btn btn-primary">
+            <a href="@routes.Courses.list()" class="btn btn-warning">Cancel</a>
+        </div>
+    }
+}

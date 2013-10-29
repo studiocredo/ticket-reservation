@@ -1,0 +1,25 @@
+@(currentPage: Page[_], link: (Int => play.api.mvc.Call))
+
+<ul class="pager">
+    @currentPage.prev.map { page =>
+    <li>
+        <a href="@link(page)">&larr; Previous</a>
+    </li>
+    }.getOrElse {
+        <li class="disabled">
+            <a>&larr; Previous</a>
+        </li>
+    }
+    @currentPage.next.map { page =>
+    <li>
+        <a href="@link(page)">Next &rarr;</a>
+    </li>
+    }.getOrElse {
+        <li class="disabled">
+            <a>Next &rarr;</a>
+        </li>
+    }
+    <li class="pull-right">
+        Displaying @(currentPage.offset + 1) to @(currentPage.offset + currentPage.size) of @currentPage.total
+    </li>
+</ul>
