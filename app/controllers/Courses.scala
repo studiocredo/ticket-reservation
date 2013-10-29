@@ -24,7 +24,7 @@ object Courses extends Controller {
   )
 
   def list(page: Int) = DBAction { implicit rs =>
-    val list = courseService.list(page)
+    val list = courseService.page(page)
     Ok(views.html.courses(list))
   }
 

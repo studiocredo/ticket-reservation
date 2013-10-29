@@ -1,7 +1,7 @@
 package be.studiocredo
 
 import play.api.db.slick.Config.driver.simple._
-import models.entities.Course
+import models.entities.{Group, Course}
 
 import models.Page
 import scala.slick.session.Session
@@ -14,13 +14,17 @@ class CourseService {
 
   val MQuery = Query(Courses)
 
-  def list(page: Int = 0, pageSize: Int = 10, orderBy: Int = 1, filter: String = "%")(implicit s: Session): Page[Course] = {
+
+  def list()(implicit s: Session): Seq[Course] = {
+    MQuery.filter(_.active === true).list
+  }
+
+  def page(page: Int = 0, pageSize: Int = 10, orderBy: Int = 1, filter: String = "%")(implicit s: Session): Page[Course] = {
     val offset = pageSize * page
     val total = MQuery.length.run
     val values = paginate(MQuery, page, pageSize).run
     Page(values, page, pageSize, offset, total)
   }
-
 
   def insert(course: Course)(implicit s: Session): CourseId = {
     require(course.id == None)

@@ -1,0 +1,39 @@
+@(id: Long, groupForm: Form[entities.Group], courses: views.helper.Options[entities.Course])
+
+@import helper._
+    @implicitFieldConstructor = @{
+        FieldConstructor(twitterBootstrapInput.render)
+    }
+
+@base("Edit class") {
+
+    <h1>Edit a class
+        @form(routes.Groups.delete(id), 'class -> "pull-right") {
+            <input type="submit" value="Delete this group" class="btn btn-danger">
+            }
+    </h1>
+
+
+    @form(action = routes.Groups.update(id), 'class -> "form form-horizontal") {
+
+        <fieldset>
+
+            @inputText(groupForm("name"), '_label -> "Name", 'class -> "form-control")
+            @inputText(groupForm("year"), '_label -> "Year", 'class -> "form-control")
+
+            @rselect(
+                groupForm("course"),
+                courses,
+                '_label -> "Course",
+                '_showConstraints -> false,
+                'class -> "form-control"
+            )
+
+        </fieldset>
+
+        <div class="actions">
+            <input type="submit" value="Update class" class="btn btn-primary">
+            <a href="@routes.Groups.list()" class="btn btn-warning">Cancel</a>
+        </div>
+    }
+}

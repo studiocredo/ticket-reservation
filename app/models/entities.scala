@@ -84,6 +84,7 @@ object ids {
 
   trait TypedId extends Any {
     def id: Long
+    override def toString: String = id.toString
   }
 
   implicit def idMapper[T <: TypedId](implicit create: IdFactory[T]) = MappedTypeMapper.base[T, Long](_.id, create)
@@ -95,6 +96,7 @@ object ids {
 
 
   // play custom id formatters
+  import play.api.data.format.Formatter
   object LongEx {
     def unapply(s: String): Option[Long] = try {
       Some(s.toLong)
@@ -102,9 +104,6 @@ object ids {
       case _: java.lang.NumberFormatException => None
     }
   }
-
-  import play.api.data.format.Formatter
-
   implicit def idFormatter[T <: TypedId](implicit create: IdFactory[T]): Formatter[T] = new Formatter[T] {
     override val format = Some(("format.id", Nil))
 

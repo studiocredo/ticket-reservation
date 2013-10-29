@@ -1,0 +1,24 @@
+@**
+ * Allow default selection
+ *@
+
+@(field: play.api.data.Field, opts: views.helper.Options[_], args: (Symbol,Any)*)(implicit handler: helper.FieldConstructor, lang: play.api.i18n.Lang)
+
+@helper.input(field, args:_*) { (id, name, value, htmlArgs) =>
+    @defining( if( htmlArgs.contains('multiple) ) "%s[]".format(name) else name ) { selectName =>
+    @defining( ( !field.indexes.isEmpty && htmlArgs.contains('multiple) ) match {
+            case true => field.indexes.map( i => field("[%s]".format(i)).value ).flatten.toSet
+            case _ => field.value.toSet
+    }){ values =>
+        <select id="@id" name="@selectName" @toHtmlArgs(htmlArgs)>
+            @args.toMap.get('_default).map { defaultValue =>
+                <option class="blank" value="">@defaultValue</option>
+            }
+            @opts.map { v =>
+                    <!-- @values -->
+
+                <option value="@opts.id(v)" @if(opts.contains(values, v)){selected}>@opts.display(v)</option>
+            }
+        </select>
+    }}
+}

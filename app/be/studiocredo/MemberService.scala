@@ -14,7 +14,7 @@ class MemberService {
 
   val MQuery = Query(Members)
 
-  def list(page: Int = 0, pageSize: Int = 10, orderBy: Int = 1, filter: String = "%")(implicit s: Session): Page[Member] = {
+  def page(page: Int = 0, pageSize: Int = 10, orderBy: Int = 1, filter: String = "%")(implicit s: Session): Page[Member] = {
     val offset = pageSize * page
     val total = MQuery.length.run
     val values = paginate(MQuery, page, pageSize).run
