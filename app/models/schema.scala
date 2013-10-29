@@ -46,17 +46,6 @@ object schema {
     def uniqueEmail = index("idx_email", email, unique = true)
   }
 
-  /*
-    case class Guest(
-                    id: Option[GuestId],
-                    userId: UserId,
-                    name: String,
-                    email: Option[String],
-                    address: Option[String],
-                    phone: Option[String]
-                  )
-
-   */
   class Guests extends Table[Guest]("guest") {
     def id = column[GuestId]("id", O.PrimaryKey, O.AutoInc)
     def userId = column[UserId]("user_id")
@@ -80,7 +69,7 @@ object schema {
 
     def * = id.? ~ name ~ email ~ address ~ phone ~ active <>(Member, Member.unapply _)
 
-    val byId = createFinderBy( t => t.id )
+    val byId = createFinderBy(t => t.id)
 
     def forInsert = name ~ email ~ address ~ phone ~ active <>( {
       (name, email, address, phone, active) => Member(None, name, email, address, phone, active)
@@ -95,27 +84,42 @@ object schema {
     def name = column[String]("name")
 
     def * = id.? ~ userId ~ name <>(Admin, Admin.unapply _)
+    def forInsert = userId ~ name <>( {
+      (userId, name) => Admin(None, userId, name)
+    }, {
+      u: Admin => Some((u.userId, u.name))
+    })
 
     def user = foreignKey("user_fk", userId, Users)(_.id)
   }
 
   //////////////////////////////////
 
-  class Courses extends Table[(CourseId, String, Boolean)]("course") {
+  class Courses extends Table[Course]("course") {
     def id = column[CourseId]("id", O.PrimaryKey, O.AutoInc)
     def name = column[String]("name")
     def active = column[Boolean]("active")
 
-    def * = id ~ name ~ active
+    def * = id.? ~ name ~ active <>(Course.apply _, Course.unapply _)
+    def forInsert = name ~ active <>( {
+      (name, active) => Course(None, name, active)
+    }, {
+      u: Course => Some((u.name, u.active))
+    })
   }
 
-  class Groups extends Table[(GroupId, String, Int, CourseId)]("group") {
+  class Groups extends Table[Group]("group") {
     def id = column[GroupId]("id", O.PrimaryKey, O.AutoInc)
     def name = column[String]("name")
     def year = column[Int]("year")
     def courseId = column[CourseId]("course_id")
 
-    def * = id ~ name ~ year ~ courseId
+    def * = id.? ~ name ~ year ~ courseId <>(Group.apply _, Group.unapply _)
+    def forInsert = name ~ year ~ courseId <>( {
+      (name, year, courseId) => Group(None, name, year, courseId)
+    }, {
+      u: Group => Some((u.name, u.year, u.course))
+    })
 
     def course = foreignKey("course_fk", courseId, Courses)(_.id)
   }

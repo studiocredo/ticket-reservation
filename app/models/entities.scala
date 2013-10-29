@@ -4,6 +4,7 @@ import scala.Predef._
 import scala.slick.lifted.MappedTypeMapper
 
 object entities {
+
   import ids._
 
   case class User(
@@ -38,6 +39,19 @@ object entities {
                     name: String
                   )
 
+
+  case class Course(
+                     id: Option[CourseId],
+                     name: String,
+                     active: Boolean
+                   )
+
+  case class Group(
+                    id: Option[GroupId],
+                    name: String,
+                    year: Int,
+                    course: CourseId
+                  )
 }
 
 object ids {
