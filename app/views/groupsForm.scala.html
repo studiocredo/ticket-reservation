@@ -1,0 +1,21 @@
+@(groupForm: Form[entities.Group], courses: views.helper.Options[entities.Course])
+
+@import helper._
+
+@implicitFieldConstructor = @{FieldConstructor(twitterBootstrapInput.render)}
+
+
+<fieldset>
+
+    @inputText(groupForm("name"), '_label -> "Name", 'class -> "form-control")
+    @inputText(groupForm("year"), '_label -> "Year", 'class -> "form-control")
+
+    @rselect(
+        groupForm("course"),
+        courses,
+        '_label -> "Course",
+        '_showConstraints -> false,
+        'class -> "form-control"
+    )
+
+</fieldset>

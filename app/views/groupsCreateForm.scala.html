@@ -12,20 +12,7 @@
 
     @form(action = routes.Groups.save(), 'class -> "form form-horizontal") {
 
-        <fieldset>
-
-            @inputText(groupForm("name"), '_label -> "Name", 'class -> "form-control")
-            @inputText(groupForm("year"), '_label -> "Year", 'class -> "form-control")
-
-            @rselect(
-                groupForm("course"),
-                courses,
-                '_label -> "Course",
-                '_showConstraints -> false,
-                'class -> "form-control"
-            )
-
-        </fieldset>
+        @groupsForm(groupForm, courses)
 
         <div class="actions">
             <input type="submit" value="Add Class" class="btn btn-primary">

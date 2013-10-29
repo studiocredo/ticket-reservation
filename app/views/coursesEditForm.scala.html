@@ -16,11 +16,7 @@
 
     @form(action = routes.Courses.update(id), 'class -> "form form-horizontal") {
 
-        <fieldset>
-
-            @inputText(courseForm("name"), '_label -> "Name", 'class -> "form-control")
-
-        </fieldset>
+        @coursesForm(courseForm)
 
         <div class="actions">
             <input type="submit" value="Update course" class="btn btn-primary">

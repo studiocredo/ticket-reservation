@@ -16,14 +16,7 @@
 
     @form(action = routes.Members.update(id), 'class -> "form form-horizontal") {
 
-        <fieldset>
-
-            @inputText(memberForm("name"), '_label -> "Name", 'class -> "form-control")
-            @inputText(memberForm("email"), '_label -> "E-mail", 'class -> "form-control")
-            @textarea(memberForm("address"), '_label -> "Address", 'class -> "form-control")
-            @inputText(memberForm("phone"), '_label -> "phone", 'class -> "form-control")
-
-        </fieldset>
+        @membersForm(memberForm)
 
         <div class="actions">
             <input type="submit" value="Update member" class="btn btn-primary">
