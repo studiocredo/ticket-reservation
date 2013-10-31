@@ -30,7 +30,7 @@
         </table>
 
 
-        @parts.paging(currentPage, (page:Int) => routes.Groups.list(page))
+        @helper.paging(currentPage, (page:Int) => routes.Groups.list(page))
 
     } else {
         <div class="well">

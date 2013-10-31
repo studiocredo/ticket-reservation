@@ -29,7 +29,7 @@
         </table>
 
 
-        @parts.paging(currentPage, (page:Int) => routes.Courses.list(page))
+        @helper.paging(currentPage, (page:Int) => routes.Courses.list(page))
 
     } else {
         <div class="well">

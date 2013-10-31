@@ -32,7 +32,7 @@
             </tbody>
         </table>
 
-        @parts.paging(currentPage, (page:Int) => routes.Members.list(page))
+        @helper.paging(currentPage, (page:Int) => routes.Members.list(page))
     } else {
         <div class="well">
             <em>Nothing to display</em>
