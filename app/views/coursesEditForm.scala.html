@@ -1,9 +1,7 @@
-@(id: Long, courseForm: Form[entities.Course])
+@(id: Long, courseForm: Form[entities.Course])(implicit flash: Flash)
 
 @import helper._
-    @implicitFieldConstructor = @{
-        FieldConstructor(twitterBootstrapInput.render)
-    }
+@implicitFieldConstructor = @{FieldConstructor(twitterBootstrapInput.render)}
 
 @base("Edit course") {
 

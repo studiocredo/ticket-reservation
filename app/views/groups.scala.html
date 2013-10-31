@@ -1,4 +1,4 @@
-@(currentPage: Page[entities.Group])
+@(currentPage: Page[entities.Group])(implicit flash: Flash)
 
 @base("Classes") {
 
@@ -20,10 +20,10 @@
             @currentPage.items.map { group =>
                 <tr>
                     <td>@group.id</td>
-                    <td>@group.name</td>
+                    <td><a href="@{routes.GroupDetails.view(group.id.get)}">@group.name</a></td>
                     <td>@group.year</td>
                     <td>@group.course</td>
-                    <td><a href="@{routes.Groups.edit(group.id.get.id)}">Edit</a></td>
+                    <td><a class="btn btn-default btn-xs" href="@{routes.Groups.edit(group.id.get.id)}">Edit</a></td>
                 </tr>
             }
             </tbody>
@@ -34,7 +34,7 @@
 
     } else {
         <div class="well">
-            <em>Nothing to display</em>
+            <em>No classes found</em>
         </div>
 
     }

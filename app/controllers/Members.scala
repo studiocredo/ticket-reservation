@@ -34,7 +34,7 @@ object Members extends Controller {
   }
 
 
-  def create() = Action {
+  def create() = Action { implicit request =>
     Ok(views.html.membersCreateForm(memberForm))
   }
   def save() = DBAction { implicit rs =>

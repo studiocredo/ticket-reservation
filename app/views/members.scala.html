@@ -1,4 +1,4 @@
-@(currentPage: Page[entities.Member])
+@(currentPage: Page[entities.Member])(implicit flash: Flash)
 
 @base("Members") {
 
@@ -26,7 +26,7 @@
                     <td>@member.address</td>
                     <td>@member.phone</td>
                     <td>@member.active</td>
-                    <td><a href="@{routes.Members.edit(member.id.get.id)}">Edit</a></td>
+                    <td><a class="btn btn-default btn-xs" href="@{routes.Members.edit(member.id.get.id)}">Edit</a></td>
                 </tr>
             }
             </tbody>
@@ -35,7 +35,7 @@
         @helper.paging(currentPage, (page:Int) => routes.Members.list(page))
     } else {
         <div class="well">
-            <em>Nothing to display</em>
+            <em>No members found</em>
         </div>
 
     }

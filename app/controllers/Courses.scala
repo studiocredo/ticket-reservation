@@ -2,16 +2,17 @@ package controllers
 
 import play.api.mvc._
 import play.api.db.slick._
-import be.studiocredo.CourseService
+import be.studiocredo.{GroupsService, CourseService}
 import play.api.Play.current
 import play.api.data.Form
 import play.api.data.Forms._
 import models.ids._
-import scala.Some
-import models.entities.Course
+import models.entities.{Group, Course}
 
 object Courses extends Controller {
   val courseService = new CourseService()
+  val groupService = new GroupsService()
+
 
   val ListPage = Redirect(routes.Courses.list())
 
@@ -29,7 +30,7 @@ object Courses extends Controller {
   }
 
 
-  def create() = Action {
+  def create() = Action { implicit request =>
     Ok(views.html.coursesCreateForm(courseForm))
   }
   def save() = DBAction { implicit rs =>
@@ -46,7 +47,7 @@ object Courses extends Controller {
   def edit(id: CourseId) = DBAction { implicit rs =>
     courseService.get(id) match {
       case None => ListPage
-      case Some(course) => Ok(views.html.coursesEditForm(id, courseForm.fillAndValidate(course)))
+      case Some(course) => Ok(views.html.coursesEditForm(id.id, courseForm.fillAndValidate(course)))
     }
   }
   def update(id: CourseId) = DBAction { implicit rs =>
@@ -64,4 +65,15 @@ object Courses extends Controller {
 
     ListPage.flashing("success" -> "Course has been deleted")
   }
+
+
+  def view(id: CourseId) = DBAction { implicit rs =>
+    courseService.get(id) match {
+      case None => BadRequest(s"No course found with id $id")
+      case Some(course) => {
+        Ok(views.html.course(course, groupService.listForCourse(id)))
+      }
+    }
+  }
+
 }

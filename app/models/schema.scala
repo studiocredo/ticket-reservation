@@ -122,15 +122,15 @@ object schema {
     def course = foreignKey("course_fk", courseId, Courses)(_.id)
   }
 
-  class GroupMembers extends Table[(GroupId, CourseId)]("group-members") {
+  class GroupMembers extends Table[(GroupId, MemberId)]("group-members") {
     def groupId = column[GroupId]("group_id")
-    def courseId = column[CourseId]("course_id")
+    def memberId = column[MemberId]("member_id")
 
-    def * = groupId ~ courseId
-    def pk = primaryKey("group-members-pkey", (groupId, courseId))
+    def * = groupId ~ memberId
+    def pk = primaryKey("group-members-pkey", (groupId, memberId))
 
     def group = foreignKey("group_fk", groupId, Groups)(_.id)
-    def course = foreignKey("course_fk", courseId, Courses)(_.id)
+    def member = foreignKey("member_fk", memberId, Members)(_.id)
   }
 
   //////////////////////////////////

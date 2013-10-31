@@ -19,4 +19,7 @@ object queries {
   */
 
   def paginate[E, T](q: Q[T, E],page: Int, pageSize: Int): Q[T, E] = q.drop(pageSize * page).take(pageSize)
+
+
+  def iLike( lhs:Column[String], rhs:Column[String] ) = lhs.toLowerCase like rhs.toLowerCase
 }

@@ -19,7 +19,7 @@ class CourseService {
     MQuery.filter(_.active === true).list
   }
 
-  def page(page: Int = 0, pageSize: Int = 10, orderBy: Int = 1, filter: String = "%")(implicit s: Session): Page[Course] = {
+  def page(page: Int = 0, pageSize: Int = 10, orderBy: Int = 1)(implicit s: Session): Page[Course] = {
     val offset = pageSize * page
     val total = MQuery.length.run
     val values = paginate(MQuery, page, pageSize).run

@@ -3,37 +3,43 @@
 # ~~~~
 
 # Home page
-GET         /                          controllers.Application.index
+GET         /                                 controllers.Application.index
 
 # Signup
 #GET         /signup               controllers.SignUp.form
 #POST        /signup               controllers.SignUp.submit
 
 
-GET         /members                   controllers.Members.list(p:Int ?= 0)
-GET         /members/new               controllers.Members.create
-POST        /members                   controllers.Members.save
-GET         /members/:id               controllers.Members.edit(id:Long)
-POST        /members/:id               controllers.Members.update(id:Long)
-POST        /members/:id/delete        controllers.Members.delete(id:Long)
+GET         /members                          controllers.Members.list(p:Int ?= 0)
+GET         /members/new                      controllers.Members.create
+POST        /members                          controllers.Members.save
+GET         /members/:id/edit                 controllers.Members.edit(id:Long)
+POST        /members/:id/edit                 controllers.Members.update(id:Long)
+POST        /members/:id/delete               controllers.Members.delete(id:Long)
 
-GET         /courses                   controllers.Courses.list(p:Int ?= 0)
-GET         /courses/new               controllers.Courses.create
-POST        /courses                   controllers.Courses.save
-GET         /courses/:id               controllers.Courses.edit(id:Long)
-POST        /courses/:id               controllers.Courses.update(id:Long)
-POST        /courses/:id/delete        controllers.Courses.delete(id:Long)
-
-
-GET         /groups                   controllers.Groups.list(p:Int ?= 0)
-GET         /groups/new               controllers.Groups.create
-POST        /groups                   controllers.Groups.save
-GET         /groups/:id               controllers.Groups.edit(id:Long)
-POST        /groups/:id               controllers.Groups.update(id:Long)
-POST        /groups/:id/delete        controllers.Groups.delete(id:Long)
+GET         /courses                          controllers.Courses.list(p:Int ?= 0)
+GET         /courses/new                      controllers.Courses.create
+POST        /courses                          controllers.Courses.save
+GET         /courses/:id                      controllers.Courses.view(id:Long)
+GET         /courses/:id/edit                 controllers.Courses.edit(id:Long)
+POST        /courses/:id/edit                 controllers.Courses.update(id:Long)
+POST        /courses/:id/delete               controllers.Courses.delete(id:Long)
 
 
+GET         /groups                           controllers.Groups.list(p:Int ?= 0)
+GET         /groups/new                       controllers.Groups.create
+GET         /groups/new/course/:id            controllers.Groups.createForCourse(id: Long)
+POST        /groups                           controllers.Groups.save
+GET         /groups/:id/edit                  controllers.Groups.edit(id:Long)
+POST        /groups/:id/edit                  controllers.Groups.update(id:Long)
+POST        /groups/:id/delete                controllers.Groups.delete(id:Long)
+
+GET         /group/:id                        controllers.GroupDetails.view(id:Long)
+POST        /group/:id/members                controllers.GroupDetails.addMembers(id: Long)
+GET         /group/:id/ajax/members           controllers.GroupDetails.ajaxMembers(id:Long)
+
+
+GET         /assets/javascripts/routes        controllers.Application.javascriptRoutes
 # Map static resources from the /public folder to the /assets URL path
-GET         /assets/*file              controllers.Assets.at(path="/public", file)
-
-GET         /webjars/*file             controllers.WebJarAssets.at(file)
+GET         /assets/*file                     controllers.Assets.at(path="/public", file)
+GET         /webjars/*file                    controllers.WebJarAssets.at(file)

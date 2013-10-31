@@ -1,4 +1,4 @@
-@(currentPage: Page[entities.Course])
+@(currentPage: Page[entities.Course])(implicit flash: Flash)
 
 
 @base("Courses") {
@@ -14,15 +14,19 @@
                     <th>Id</th>
                     <th>Name</th>
                     <th>Active</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
             @currentPage.items.map { course =>
                 <tr>
                     <td>@course.id</td>
-                    <td>@course.name</td>
+                    <td><a href="@{routes.Courses.view(course.id.get)}">@course.name</a></td>
                     <td>@course.active</td>
-                    <td><a href="@{routes.Courses.edit(course.id.get.id)}">Edit</a></td>
+                    <td>
+                        <a class="btn btn-default btn-xs" href="@{routes.Courses.view(course.id.get)}">Details</a>
+                        <a class="btn btn-default btn-xs" href="@{routes.Courses.edit(course.id.get)}">Edit</a>
+                    </td>
                 </tr>
             }
             </tbody>
@@ -33,7 +37,7 @@
 
     } else {
         <div class="well">
-            <em>Nothing to display</em>
+            <em>No courses found</em>
         </div>
 
     }

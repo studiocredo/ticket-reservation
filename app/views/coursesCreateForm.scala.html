@@ -1,4 +1,4 @@
-@(courseForm: Form[entities.Course])
+@(courseForm: Form[entities.Course])(implicit flash: Flash)
 
 @import helper._
 @implicitFieldConstructor = @{FieldConstructor(twitterBootstrapInput.render)}

@@ -9,8 +9,8 @@ create table "dvd" ("id" SERIAL NOT NULL PRIMARY KEY,"event_id" BIGINT NOT NULL,
 create table "event-participants" ("event_id" BIGINT NOT NULL,"member_id" BIGINT NOT NULL,"allowed-ticket-reservations" INTEGER NOT NULL);
 alter table "event-participants" add constraint "event-participants_pkey" primary key("event_id","member_id");
 create table "event" ("id" SERIAL NOT NULL PRIMARY KEY,"name" VARCHAR(254) NOT NULL,"description" VARCHAR(254) NOT NULL);
-create table "group-members" ("group_id" BIGINT NOT NULL,"course_id" BIGINT NOT NULL);
-alter table "group-members" add constraint "group-members-pkey" primary key("group_id","course_id");
+create table "group-members" ("group_id" BIGINT NOT NULL,"member_id" BIGINT NOT NULL);
+alter table "group-members" add constraint "group-members-pkey" primary key("group_id","member_id");
 create table "group" ("id" SERIAL NOT NULL PRIMARY KEY,"name" VARCHAR(254) NOT NULL,"year" INTEGER NOT NULL,"course_id" BIGINT NOT NULL);
 create table "guest" ("id" SERIAL NOT NULL PRIMARY KEY,"user_id" BIGINT NOT NULL,"name" VARCHAR(254) NOT NULL,"email" VARCHAR(254) NOT NULL,"address" VARCHAR(254),"phone" VARCHAR(254));
 create table "member" ("id" SERIAL NOT NULL PRIMARY KEY,"name" VARCHAR(254) NOT NULL,"email" VARCHAR(254),"address" VARCHAR(254),"phone" VARCHAR(254),"active" BOOLEAN NOT NULL);
@@ -28,7 +28,7 @@ alter table "admin" add constraint "user_fk" foreign key("user_id") references "
 alter table "dvd" add constraint "event_fk" foreign key("event_id") references "event"("id") on update NO ACTION on delete NO ACTION;
 alter table "event-participants" add constraint "event_fk" foreign key("event_id") references "event"("id") on update NO ACTION on delete NO ACTION;
 alter table "event-participants" add constraint "member_fk" foreign key("member_id") references "member"("id") on update NO ACTION on delete NO ACTION;
-alter table "group-members" add constraint "course_fk" foreign key("course_id") references "course"("id") on update NO ACTION on delete NO ACTION;
+alter table "group-members" add constraint "member_fk" foreign key("member_id") references "member"("id") on update NO ACTION on delete NO ACTION;
 alter table "group-members" add constraint "group_fk" foreign key("group_id") references "group"("id") on update NO ACTION on delete NO ACTION;
 alter table "group" add constraint "course_fk" foreign key("course_id") references "course"("id") on update NO ACTION on delete NO ACTION;
 alter table "guest" add constraint "user_fk" foreign key("user_id") references "user"("id") on update NO ACTION on delete NO ACTION;
@@ -49,7 +49,7 @@ alter table "admin" drop constraint "user_fk";
 alter table "dvd" drop constraint "event_fk";
 alter table "event-participants" drop constraint "event_fk";
 alter table "event-participants" drop constraint "member_fk";
-alter table "group-members" drop constraint "course_fk";
+alter table "group-members" drop constraint "member_fk";
 alter table "group-members" drop constraint "group_fk";
 alter table "group" drop constraint "course_fk";
 alter table "guest" drop constraint "user_fk";

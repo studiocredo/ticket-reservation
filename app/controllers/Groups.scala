@@ -2,7 +2,7 @@ package controllers
 
 import play.api.mvc._
 import play.api.db.slick._
-import be.studiocredo.{CourseService, GroupsService}
+import be.studiocredo.{MemberService, CourseService, GroupsService}
 import play.api.Play.current
 import play.api.data.Form
 import play.api.data.Forms._
@@ -11,10 +11,13 @@ import scala.Some
 import models.entities.{Course, Group}
 import views.helper.Options
 import scala.slick.session.Session
+import org.joda.time.{DateTime, Years}
+import models.GroupDetail
 
 object Groups extends Controller {
   val groupService = new GroupsService()
   val courseService = new CourseService()
+  val memberService = new MemberService()
 
   val ListPage = Redirect(routes.Groups.list())
 
@@ -33,6 +36,9 @@ object Groups extends Controller {
     Ok(views.html.groups(list))
   }
 
+  def createForCourse(id: CourseId) = DBAction { implicit rs =>
+    Ok(views.html.groupsCreateForm(groupForm.fill(Group(None, "", DateTime.now().year().get(), id)), courseOptions))
+  }
 
   def create() = DBAction { implicit rs =>
     Ok(views.html.groupsCreateForm(groupForm, courseOptions))
@@ -69,7 +75,6 @@ object Groups extends Controller {
 
     ListPage.flashing("success" -> "Group has been deleted")
   }
-
 
   private def courseOptions(implicit s: Session): Options[Course] = Options(courseService.list(), Options.CourseRenderer)
 }
