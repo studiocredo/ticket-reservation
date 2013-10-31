@@ -43,13 +43,13 @@ object Courses extends Controller {
     )
   }
 
-  def edit(id: Long) = DBAction { implicit rs =>
+  def edit(id: CourseId) = DBAction { implicit rs =>
     courseService.get(id) match {
       case None => ListPage
       case Some(course) => Ok(views.html.coursesEditForm(id, courseForm.fillAndValidate(course)))
     }
   }
-  def update(id: Long) = DBAction { implicit rs =>
+  def update(id: CourseId) = DBAction { implicit rs =>
     courseForm.bindFromRequest.fold(
       formWithErrors => BadRequest(views.html.coursesEditForm(id, formWithErrors)),
       course => {
@@ -59,7 +59,7 @@ object Courses extends Controller {
       }
     )
   }
-  def delete(id: Long) = DBAction { implicit rs =>
+  def delete(id: CourseId) = DBAction { implicit rs =>
     courseService.delete(id)
 
     ListPage.flashing("success" -> "Course has been deleted")

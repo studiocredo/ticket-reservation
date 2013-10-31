@@ -6,8 +6,6 @@ import be.studiocredo.MemberService
 import play.api.Play.current
 import play.api.data.Form
 import play.api.data.Forms._
-import scala.Some
-import models.entities.Member
 import models.ids._
 import scala.Some
 import models.entities.Member
@@ -50,13 +48,13 @@ object Members extends Controller {
     )
   }
 
-  def edit(id: Long) = DBAction { implicit rs =>
+  def edit(id: MemberId) = DBAction { implicit rs =>
     memberService.get(id) match {
       case None => ListPage
       case Some(member) => Ok(views.html.membersEditForm(id, memberForm.fillAndValidate(member)))
     }
   }
-  def update(id: Long) = DBAction { implicit rs =>
+  def update(id: MemberId) = DBAction { implicit rs =>
     memberForm.bindFromRequest.fold(
       formWithErrors => BadRequest(views.html.membersEditForm(id, formWithErrors)),
       member => {
@@ -66,7 +64,7 @@ object Members extends Controller {
       }
     )
   }
-  def delete(id: Long) = DBAction { implicit rs =>
+  def delete(id: MemberId) = DBAction { implicit rs =>
     memberService.delete(id)
 
     ListPage.flashing("success" -> "Member has been deleted")

@@ -87,6 +87,8 @@ object ids {
     override def toString: String = id.toString
   }
 
+  implicit def idToLong(typedId: TypedId): Long = typedId.id
+
   implicit def idMapper[T <: TypedId](implicit create: IdFactory[T]) = MappedTypeMapper.base[T, Long](_.id, create)
   implicit def longToId[T <: TypedId](untypedId: Long)(implicit create: IdFactory[T]) = create(untypedId)
   implicit def longToIdOption[T <: TypedId](untypedId: Long)(implicit create: IdFactory[T]) = Option(create(untypedId))

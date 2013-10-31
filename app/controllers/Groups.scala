@@ -48,13 +48,13 @@ object Groups extends Controller {
     )
   }
 
-  def edit(id: Long) = DBAction { implicit rs =>
+  def edit(id: GroupId) = DBAction { implicit rs =>
     groupService.get(id) match {
       case None => ListPage
       case Some(group) => Ok(views.html.groupsEditForm(id, groupForm.fillAndValidate(group), courseOptions))
     }
   }
-  def update(id: Long) = DBAction { implicit rs =>
+  def update(id: GroupId) = DBAction { implicit rs =>
     groupForm.bindFromRequest.fold(
       formWithErrors => BadRequest(views.html.groupsEditForm(id, formWithErrors, courseOptions)),
       group => {
@@ -64,7 +64,7 @@ object Groups extends Controller {
       }
     )
   }
-  def delete(id: Long) = DBAction { implicit rs =>
+  def delete(id: GroupId) = DBAction { implicit rs =>
     groupService.delete(id)
 
     ListPage.flashing("success" -> "Group has been deleted")
