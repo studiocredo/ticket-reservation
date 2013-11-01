@@ -46,7 +46,7 @@ object Groups extends Controller {
       group => {
         groupService.insert(group)
 
-        ListPage.flashing("success" -> "Group %s has been created".format(group.name))
+        ListPage.flashing("success" -> "Group '%s' has been created".format(group.name))
       }
     )
   }
@@ -63,7 +63,7 @@ object Groups extends Controller {
       group => {
         groupService.update(id, group)
 
-        ListPage.flashing("success" -> "Group %s has been updated".format(group.name))
+        ListPage.flashing("success" -> "Group '%s' has been updated".format(group.name))
       }
     )
   }

@@ -36,7 +36,7 @@ object Courses extends Controller {
       course => {
         courseService.insert(course)
 
-        ListPage.flashing("success" -> s"Course ${course.name} has been created")
+        ListPage.flashing("success" -> s"Course '${course.name}' has been created")
       }
     )
   }
@@ -53,7 +53,7 @@ object Courses extends Controller {
       course => {
         courseService.update(id, course)
 
-        ListPage.flashing("success" -> s"Course ${course.name}  has been updated")
+        ListPage.flashing("success" -> s"Course '${course.name}'  has been updated")
       }
     )
   }

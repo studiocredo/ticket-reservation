@@ -40,7 +40,7 @@ object Members extends Controller {
       member => {
         memberService.insert(member)
 
-        ListPage.flashing("success" -> "Member %s has been created".format(member.name))
+        ListPage.flashing("success" -> "Member '%s' has been created".format(member.name))
       }
     )
   }
@@ -57,7 +57,7 @@ object Members extends Controller {
       member => {
         memberService.update(id, member)
 
-        ListPage.flashing("success" -> "Member %s has been updated".format(member.name))
+        ListPage.flashing("success" -> "Member '%s' has been updated".format(member.name))
       }
     )
   }
