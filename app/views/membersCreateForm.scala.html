@@ -1,4 +1,4 @@
-@(memberForm: Form[entities.Member])(implicit flash: Flash)
+@(memberForm: Form[entities.MemberEdit])(implicit flash: Flash)
 
 @import helper._
 @implicitFieldConstructor = @{FieldConstructor(twitterBootstrapInput.render)}
@@ -9,7 +9,12 @@
 
     @form(action = routes.Members.save(), 'class -> "form form-horizontal") {
 
-        @membersForm(memberForm)
+        <fieldset>
+            @inputText(memberForm("name"), '_label -> "Name",  'class -> "form-control")
+            @inputText(memberForm("email"), '_label -> "E-mail", 'class -> "form-control")
+            @textarea(memberForm("address"), '_label -> "Address", 'class -> "form-control")
+            @inputText(memberForm("phone"), '_label -> "phone", 'class -> "form-control")
+        </fieldset>
 
         <div class="actions">
             <input type="submit" value="Add member" class="btn btn-primary">

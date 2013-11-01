@@ -1,7 +1,7 @@
 package be.studiocredo
 
 import play.api.db.slick.Config.driver.simple._
-import models.entities.Group
+import models.entities._
 
 import models.{GroupDetail, Page}
 import scala.slick.session.Session
@@ -11,34 +11,35 @@ class GroupsService {
 
   import models.queries._
   import models.schema.tables._
+
   val courseService = new CourseService()
   val memberService = new MemberService()
 
-  val MQuery = Query(Groups)
+  val GroupsQ = Query(Groups)
 
   def page(page: Int = 0, pageSize: Int = 10, orderBy: Int = 1)(implicit s: Session): Page[Group] = {
     val offset = pageSize * page
-    val total = MQuery.length.run
-    val values = paginate(MQuery, page, pageSize).run
+    val total = GroupsQ.length.run
+    val values = paginate(GroupsQ, page, pageSize).run
     Page(values, page, pageSize, offset, total)
   }
 
-
-  def insert(group: Group)(implicit s: Session): GroupId = {
-    require(group.id == None)
-    Groups.forInsert.returning(Groups.id).insert(group)
+  def insert(group: GroupEdit)(implicit s: Session): GroupId = {
+    Groups.autoInc.insert(group)
   }
 
-  def update(id: GroupId, group: Group)(implicit s: Session) = {
-    MQuery.filter(_.id === id).update(group.copy(id = Some(id)))
+  def update(id: GroupId, edit: GroupEdit)(implicit s: Session) = {
+    GroupsQ.filter(_.id === id).update(toEntity(id, edit))
   }
+
 
   def get(id: GroupId)(implicit s: Session): Option[Group] = {
-    MQuery.filter(_.id === id).firstOption
+    GroupsQ.filter(_.id === id).firstOption
   }
+  def getEdit(id: GroupId)(implicit s: Session): Option[GroupEdit] = get(id) map toEdit
 
   def delete(id: GroupId)(implicit s: Session) = {
-    MQuery.filter(_.id === id).delete
+    GroupsQ.filter(_.id === id).delete
   }
 
 
@@ -61,4 +62,19 @@ class GroupsService {
       course <- courseService.get(group.course)
     } yield GroupDetail(group, course, memberService.listForGroup(id))
   }
+
+
+  // MAGIC
+  import shapeless._
+  val entEditGen = Generic[GroupEdit]
+  val entGen = Generic[Group]
+
+  def toEntity(id: GroupId, edit: GroupEdit): Group = {
+    entGen.from(id :: entEditGen.to(edit))
+  }
+
+  def toEdit(group:Group): GroupEdit = {
+    entEditGen.from(entGen.to(group).tail)
+  }
 }
+

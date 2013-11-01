@@ -1,4 +1,4 @@
-@(memberForm: Form[entities.Member])
+@(memberForm: Form[entities.MemberEdit])
 
 @import helper._
 @implicitFieldConstructor = @{FieldConstructor(twitterBootstrapInput.render)}
@@ -9,5 +9,5 @@
     @inputText(memberForm("email"), '_label -> "E-mail", 'class -> "form-control")
     @textarea(memberForm("address"), '_label -> "Address", 'class -> "form-control")
     @inputText(memberForm("phone"), '_label -> "phone", 'class -> "form-control")
-
+    @twCheckbox(memberForm("archived"), '_label -> "Archived")
 </fieldset>

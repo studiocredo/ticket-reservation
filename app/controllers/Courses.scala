@@ -7,28 +7,25 @@ import play.api.Play.current
 import play.api.data.Form
 import play.api.data.Forms._
 import models.ids._
-import models.entities.{Group, Course}
+import models.entities._
 
 object Courses extends Controller {
   val courseService = new CourseService()
   val groupService = new GroupsService()
 
-
   val ListPage = Redirect(routes.Courses.list())
 
   val courseForm = Form(
     mapping(
-      "name" -> nonEmptyText
-    )
-    ({ (name) => Course(None, name, active = true)})
-    ({ course => Some(course.name)})
+      "name" -> nonEmptyText,
+      "archived" -> boolean
+    )(CourseEdit.apply)(CourseEdit.unapply)
   )
 
   def list(page: Int) = DBAction { implicit rs =>
     val list = courseService.page(page)
     Ok(views.html.courses(list))
   }
-
 
   def create() = Action { implicit request =>
     Ok(views.html.coursesCreateForm(courseForm))
@@ -39,13 +36,13 @@ object Courses extends Controller {
       course => {
         courseService.insert(course)
 
-        ListPage.flashing("success" -> "Course %s has been created".format(course.name))
+        ListPage.flashing("success" -> s"Course ${course.name} has been created")
       }
     )
   }
 
   def edit(id: CourseId) = DBAction { implicit rs =>
-    courseService.get(id) match {
+    courseService.getEdit(id) match {
       case None => ListPage
       case Some(course) => Ok(views.html.coursesEditForm(id.id, courseForm.fillAndValidate(course)))
     }
@@ -56,7 +53,7 @@ object Courses extends Controller {
       course => {
         courseService.update(id, course)
 
-        ListPage.flashing("success" -> "Course %s has been updated".format(course.name))
+        ListPage.flashing("success" -> s"Course ${course.name}  has been updated")
       }
     )
   }

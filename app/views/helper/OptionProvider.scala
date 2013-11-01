@@ -3,7 +3,7 @@ package views.helper
 import models.entities.Course
 
 object Options {
-  val CourseRenderer = Renderer[Course](_.id.get.toString, _.name)
+  val CourseRenderer = Renderer[Course](_.id.toString, _.name)
 
   def apply[T](options: Seq[T], renderer: Renderer[T]) = new Options[T](options, renderer)
 }

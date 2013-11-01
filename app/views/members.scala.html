@@ -14,7 +14,7 @@
                     <th>Name</th>
                     <th>Address</th>
                     <th>Phone</th>
-                    <th>Active</th>
+                    <th>Archived</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -25,8 +25,8 @@
                     <td>@member.name</td>
                     <td>@member.address</td>
                     <td>@member.phone</td>
-                    <td>@member.active</td>
-                    <td><a class="btn btn-default btn-xs" href="@{routes.Members.edit(member.id.get.id)}">Edit</a></td>
+                    <td>@member.archived</td>
+                    <td><a class="btn btn-default btn-xs" href="@{routes.Members.edit(member.id)}">Edit</a></td>
                 </tr>
             }
             </tbody>

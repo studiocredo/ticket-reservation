@@ -19,6 +19,8 @@ object ApplicationBuild extends Build {
     "org.postgresql" % "postgresql" % "9.2-1003-jdbc4",
     "com.github.tototoshi" %% "slick-joda-mapper" % "0.4.0",
 
+    "com.chuusai" % "shapeless_2.10.2" % "2.0.0-M1", /* cross CrossVersion.full */
+
     play.Project.cache
   )
 
@@ -27,5 +29,4 @@ object ApplicationBuild extends Build {
     , scalaVersion := "2.10.3"
     , scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-language:implicitConversions")
   )
-
 }

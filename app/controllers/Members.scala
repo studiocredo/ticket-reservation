@@ -8,7 +8,7 @@ import play.api.data.Form
 import play.api.data.Forms._
 import models.ids._
 import scala.Some
-import models.entities.Member
+import models.entities._
 
 object Members extends Controller {
   val memberService = new MemberService()
@@ -20,17 +20,14 @@ object Members extends Controller {
       "name" -> nonEmptyText,
       "email" -> optional(email),
       "address" -> optional(text),
-      "phone" -> optional(text)
-    )
-    ({ (name, email, address, phone) => Member(None, name, email, address, phone, active = true)})
-    ({ member => Some(member.name, member.email, member.address, member.phone)})
+      "phone" -> optional(text),
+      "arhived" -> boolean
+    )(MemberEdit.apply)(MemberEdit.unapply)
   )
 
   def list(page: Int) = DBAction { implicit rs =>
-
     val list = memberService.page(page)
     Ok(views.html.members(list))
-
   }
 
 
@@ -49,7 +46,7 @@ object Members extends Controller {
   }
 
   def edit(id: MemberId) = DBAction { implicit rs =>
-    memberService.get(id) match {
+    memberService.getEdit(id) match {
       case None => ListPage
       case Some(member) => Ok(views.html.membersEditForm(id, memberForm.fillAndValidate(member)))
     }

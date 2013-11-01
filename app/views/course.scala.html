@@ -20,7 +20,7 @@
             <tbody>
             @groups.map { group =>
                 <tr>
-                    <td><a href="@{routes.GroupDetails.view(course.id.get)}">@group.name</a></td>
+                    <td><a href="@{routes.GroupDetails.view(course.id)}">@group.name</a></td>
                     <td>@group.year</td>
                 </tr>
             }
@@ -32,5 +32,5 @@
         </div>
     }
 
-    <a class="btn btn-primary" href="@{routes.Groups.createForCourse(course.id.get)}">Add new class</a>
+    <a class="btn btn-primary" href="@{routes.Groups.createForCourse(course.id)}">Add new class</a>
 }

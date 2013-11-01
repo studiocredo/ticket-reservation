@@ -21,7 +21,7 @@
             <tbody>
             @info.members.map { member =>
                 <tr>
-                    <td><a href="@routes.Members.edit(member.id.get.id)">@member.name</a></td>
+                    <td><a href="@routes.Members.edit(member.id)">@member.name</a></td>
                     <td>@member.address</td>
                     <td>@member.phone</td>
                 </tr>

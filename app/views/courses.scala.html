@@ -13,7 +13,7 @@
                 <tr>
                     <th>Id</th>
                     <th>Name</th>
-                    <th>Active</th>
+                    <th>Archived</th>
                     <th></th>
                 </tr>
             </thead>
@@ -21,11 +21,11 @@
             @currentPage.items.map { course =>
                 <tr>
                     <td>@course.id</td>
-                    <td><a href="@{routes.Courses.view(course.id.get)}">@course.name</a></td>
-                    <td>@course.active</td>
+                    <td><a href="@{routes.Courses.view(course.id)}">@course.name</a></td>
+                    <td>@course.archived</td>
                     <td>
-                        <a class="btn btn-default btn-xs" href="@{routes.Courses.view(course.id.get)}">Details</a>
-                        <a class="btn btn-default btn-xs" href="@{routes.Courses.edit(course.id.get)}">Edit</a>
+                        <a class="btn btn-default btn-xs" href="@{routes.Courses.view(course.id)}">Details</a>
+                        <a class="btn btn-default btn-xs" href="@{routes.Courses.edit(course.id)}">Edit</a>
                     </td>
                 </tr>
             }

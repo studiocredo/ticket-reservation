@@ -8,11 +8,10 @@ import play.api.data.Form
 import play.api.data.Forms._
 import models.ids._
 import scala.Some
-import models.entities.{Course, Group}
+import models.entities._
 import views.helper.Options
 import scala.slick.session.Session
-import org.joda.time.{DateTime, Years}
-import models.GroupDetail
+import org.joda.time.DateTime
 
 object Groups extends Controller {
   val groupService = new GroupsService()
@@ -26,9 +25,7 @@ object Groups extends Controller {
       "name" -> nonEmptyText,
       "year" -> number,
       "course" -> of[CourseId]
-    )
-    ({ (name, year, course) => Group(None, name, year, course)})
-    ({ group => Some(group.name, group.year, group.course)})
+    )(GroupEdit.apply)(GroupEdit.unapply)
   )
 
   def list(page: Int) = DBAction { implicit rs =>
@@ -37,7 +34,7 @@ object Groups extends Controller {
   }
 
   def createForCourse(id: CourseId) = DBAction { implicit rs =>
-    Ok(views.html.groupsCreateForm(groupForm.fill(Group(None, "", DateTime.now().year().get(), id)), courseOptions))
+    Ok(views.html.groupsCreateForm(groupForm.fill(GroupEdit("", DateTime.now().year().get(), id)), courseOptions))
   }
 
   def create() = DBAction { implicit rs =>
@@ -55,7 +52,7 @@ object Groups extends Controller {
   }
 
   def edit(id: GroupId) = DBAction { implicit rs =>
-    groupService.get(id) match {
+    groupService.getEdit(id) match {
       case None => ListPage
       case Some(group) => Ok(views.html.groupsEditForm(id, groupForm.fillAndValidate(group), courseOptions))
     }

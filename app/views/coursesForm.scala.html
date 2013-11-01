@@ -1,10 +1,11 @@
-@(courseForm: Form[entities.Course])
+@(courseForm: Form[entities.CourseEdit])
 
 @import helper._
 @implicitFieldConstructor = @{FieldConstructor(twitterBootstrapInput.render)}
 
 <fieldset>
 @inputText(courseForm("name"), '_label -> "Name", 'class -> "form-control")
+@twCheckbox(courseForm("archived"), '_label -> "Archived")
 </fieldset>
 
 

@@ -4,7 +4,6 @@ import play.api.db.slick._
 import be.studiocredo.{MemberService, CourseService, GroupsService}
 import play.api.Play.current
 import models.ids._
-import scala.slick.session.Session
 import play.api._
 import play.api.mvc._
 import play.api.libs.json._
@@ -47,7 +46,7 @@ object GroupDetails extends Controller {
       val result = memberService.page(Math.max(0, page -1), limit, filter = Some(query + '%'))
 
       Ok(Json.obj("total" -> result.total, "results" ->
-        result.items.map (member => Json.obj("id" -> member.id.get.id, "text" -> member.name))
+        result.items.map (member => Json.obj("id" -> member.id, "text" -> member.name))
       ))
     }
 

@@ -35,13 +35,9 @@ object schema {
     def email = column[String]("email")
     def password = column[String]("password")
 
-    def * = id.? ~ email ~ password <>(User, User.unapply _)
+    def * = id ~ email ~ password <>(User, User.unapply _)
 
-    def forInsert = email ~ password <>( {
-      (email, password) => User(None, email, password)
-    }, {
-      u: User => Some((u.email, u.password))
-    })
+    def autoInc = email ~ password <>(UserEdit, UserEdit.unapply _) returning id
 
     def uniqueEmail = index("idx_email", email, unique = true)
   }
@@ -54,7 +50,7 @@ object schema {
     def address = column[Option[String]]("address")
     def phone = column[Option[String]]("phone")
 
-    def * = id.? ~ userId ~ name ~ email ~ address ~ phone <>(Guest, Guest.unapply _)
+    def * = id ~ userId ~ name ~ email ~ address ~ phone <>(Guest, Guest.unapply _)
 
     def user = foreignKey("user_fk", userId, Users)(_.id)
   }
@@ -65,15 +61,11 @@ object schema {
     def email = column[Option[String]]("email")
     def address = column[Option[String]]("address")
     def phone = column[Option[String]]("phone")
-    def active = column[Boolean]("active")
+    def archived = column[Boolean]("archived", O.Default(false))
 
-    def * = id.? ~ name ~ email ~ address ~ phone ~ active <>(Member, Member.unapply _)
+    def * = id ~ name ~ email ~ address ~ phone ~ archived <>(Member, Member.unapply _)
 
-    def forInsert = name ~ email ~ address ~ phone ~ active <>( {
-      (name, email, address, phone, active) => Member(None, name, email, address, phone, active)
-    }, {
-      u: Member => Some((u.name, u.email, u.address, u.phone, u.active))
-    })
+    def autoInc = name ~ email ~ address ~ phone ~ archived<>(MemberEdit, MemberEdit.unapply _) returning id
   }
 
   class Admins extends Table[Admin]("admin") {
@@ -81,12 +73,8 @@ object schema {
     def userId = column[UserId]("user_id")
     def name = column[String]("name")
 
-    def * = id.? ~ userId ~ name <>(Admin, Admin.unapply _)
-    def forInsert = userId ~ name <>( {
-      (userId, name) => Admin(None, userId, name)
-    }, {
-      u: Admin => Some((u.userId, u.name))
-    })
+    def * = id ~ userId ~ name <>(Admin, Admin.unapply _)
+    def autoInc = userId ~ name <>(AdminEdit, AdminEdit.unapply _) returning id
 
     def user = foreignKey("user_fk", userId, Users)(_.id)
   }
@@ -96,14 +84,10 @@ object schema {
   class Courses extends Table[Course]("course") {
     def id = column[CourseId]("id", O.PrimaryKey, O.AutoInc)
     def name = column[String]("name")
-    def active = column[Boolean]("active")
+    def archived = column[Boolean]("archived", O.Default(false))
 
-    def * = id.? ~ name ~ active <>(Course.apply _, Course.unapply _)
-    def forInsert = name ~ active <>( {
-      (name, active) => Course(None, name, active)
-    }, {
-      u: Course => Some((u.name, u.active))
-    })
+    def * = id ~ name ~ archived <>(Course.apply _, Course.unapply _)
+    def autoInc = name ~ archived <>( CourseEdit, CourseEdit.unapply _) returning id
   }
 
   class Groups extends Table[Group]("group") {
@@ -112,12 +96,8 @@ object schema {
     def year = column[Int]("year")
     def courseId = column[CourseId]("course_id")
 
-    def * = id.? ~ name ~ year ~ courseId <>(Group.apply _, Group.unapply _)
-    def forInsert = name ~ year ~ courseId <>( {
-      (name, year, courseId) => Group(None, name, year, courseId)
-    }, {
-      u: Group => Some((u.name, u.year, u.course))
-    })
+    def * = id ~ name ~ year ~ courseId <>(Group.apply _, Group.unapply _)
+    def autoInc = name ~ year ~ courseId <>(GroupEdit.apply _, GroupEdit.unapply _) returning id
 
     def course = foreignKey("course_fk", courseId, Courses)(_.id)
   }
@@ -170,9 +150,9 @@ object schema {
     def price = column[Int]("price")
     def availableStart = column[DateTime]("available-start")
     def availableEnd = column[Option[DateTime]]("available-end")
-    def active = column[Boolean]("active")
+    def archived = column[Boolean]("archived", O.Default(false))
 
-    def * = id ~ eventId ~ name ~ price ~ availableStart ~ availableEnd ~ active
+    def * = id ~ eventId ~ name ~ price ~ availableStart ~ availableEnd ~ archived
 
     def event = foreignKey("event_fk", eventId, Events)(_.id)
   }

@@ -7,51 +7,27 @@ object entities {
 
   import ids._
 
-  case class User(
-                   id: Option[UserId],
-                   email: String,
-                   password: String
-                 )
+  // Well it's either an extra classes or using -1 id or be really annoyed with optional ids (that are always there except when used in forms), seem to hate this option the least at the moment
+  case class User(id: UserId, email: String, password: String)
+  case class UserEdit(        email: String, password: String)
 
-  // non member registered on site to buy tickets
-
-  case class Guest(
-                    id: Option[GuestId],
-                    userId: UserId,
-                    name: String,
-                    email: String,
-                    address: Option[String],
-                    phone: Option[String]
-                  )
-
-  case class Member(
-                     id: Option[MemberId],
-                     name: String,
-                     email: Option[String],
-                     address: Option[String],
-                     phone: Option[String],
-                     active: Boolean
-                   )
-
-  case class Admin(
-                    id: Option[AdminId],
-                    userId: UserId,
-                    name: String
-                  )
+  case class Guest(id: GuestId, userId: UserId, name: String, email: String, address: Option[String], phone: Option[String])
+  case class GuestEdit(         userId: UserId, name: String, email: String, address: Option[String], phone: Option[String])
 
 
-  case class Course(
-                     id: Option[CourseId],
-                     name: String,
-                     active: Boolean
-                   )
+  case class Member(id: MemberId, name: String, email: Option[String], address: Option[String], phone: Option[String], archived: Boolean)
+  case class MemberEdit(          name: String, email: Option[String], address: Option[String], phone: Option[String], archived: Boolean)
 
-  case class Group(
-                    id: Option[GroupId],
-                    name: String,
-                    year: Int,
-                    course: CourseId
-                  )
+  case class Admin(id: AdminId, userId: UserId, name: String)
+  case class AdminEdit(         userId: UserId, name: String)
+
+
+  case class Course(id: CourseId, name: String, archived: Boolean)
+  case class CourseEdit(          name: String, archived: Boolean)
+
+  case class Group(id: GroupId, name: String, year: Int, course: CourseId)
+  case class GroupEdit(         name: String, year: Int, course: CourseId)
+
 }
 
 object ids {
@@ -98,7 +74,9 @@ object ids {
 
 
   // play custom id formatters
+
   import play.api.data.format.Formatter
+
   object LongEx {
     def unapply(s: String): Option[Long] = try {
       Some(s.toLong)
@@ -117,5 +95,11 @@ object ids {
     }
 
     def unbind(key: String, untypedId: T) = Map(key -> untypedId.toString)
+  }
+
+  import play.api.libs.json._
+
+  implicit val creatureWrites = new Writes[TypedId] {
+    def writes(c: TypedId): JsValue = JsNumber(c.id)
   }
 }
