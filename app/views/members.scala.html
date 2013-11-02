@@ -22,7 +22,7 @@
             @currentPage.items.map { member =>
                 <tr>
                     <td>@member.id</td>
-                    <td>@member.name</td>
+                    <td><a href="@{routes.MemberDetails.view(member.id)}">@member.name</a></td>
                     <td>@member.address</td>
                     <td>@member.phone</td>
                     <td>@member.archived</td>

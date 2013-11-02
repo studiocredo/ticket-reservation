@@ -16,7 +16,7 @@ object Application extends Controller {
     import routes.javascript._
     Ok(
       Routes.javascriptRouter("jsRoutes")(
-        GroupDetails.ajaxMembers
+        GroupDetails.ajaxMembers, MemberDetails.ajaxGroups
       )).as("text/javascript")
   }
 

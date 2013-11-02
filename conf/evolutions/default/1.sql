@@ -11,7 +11,7 @@ alter table "event-participants" add constraint "event-participants_pkey" primar
 create table "event" ("id" SERIAL NOT NULL PRIMARY KEY,"name" VARCHAR(254) NOT NULL,"description" VARCHAR(254) NOT NULL);
 create table "group-members" ("group_id" BIGINT NOT NULL,"member_id" BIGINT NOT NULL);
 alter table "group-members" add constraint "group-members-pkey" primary key("group_id","member_id");
-create table "group" ("id" SERIAL NOT NULL PRIMARY KEY,"name" VARCHAR(254) NOT NULL,"year" INTEGER NOT NULL,"course_id" BIGINT NOT NULL);
+create table "group" ("id" SERIAL NOT NULL PRIMARY KEY,"name" VARCHAR(254) NOT NULL,"year" INTEGER NOT NULL,"course_id" BIGINT NOT NULL,"archived" BOOLEAN DEFAULT false NOT NULL);
 create table "guest" ("id" SERIAL NOT NULL PRIMARY KEY,"user_id" BIGINT NOT NULL,"name" VARCHAR(254) NOT NULL,"email" VARCHAR(254) NOT NULL,"address" VARCHAR(254),"phone" VARCHAR(254));
 create table "member" ("id" SERIAL NOT NULL PRIMARY KEY,"name" VARCHAR(254) NOT NULL,"email" VARCHAR(254),"address" VARCHAR(254),"phone" VARCHAR(254),"archived" BOOLEAN DEFAULT false NOT NULL);
 create table "order" ("id" SERIAL NOT NULL PRIMARY KEY,"user_id" BIGINT NOT NULL,"date" TIMESTAMP NOT NULL,"billing-name" VARCHAR(254) NOT NULL,"billing-address" VARCHAR(254) NOT NULL);

@@ -6,8 +6,7 @@ import play.api.Play.current
 import models.ids._
 import play.api._
 import play.api.mvc._
-import play.api.libs.json._
-import play.api.libs.functional.syntax._
+import models.entities.{Member, Group}
 
 
 object GroupDetails extends Controller {
@@ -25,8 +24,6 @@ object GroupDetails extends Controller {
   }
 
   def addMembers(id: GroupId) = DBAction(parse.urlFormEncoded) { implicit rs =>
-    logger.warn(rs.request.body.toString())
-
     rs.request.body.get("member").foreach { ids =>
       groupService.addMembers(id, (ids map (id => MemberId(id.toLong))).toList)
     }
@@ -35,21 +32,12 @@ object GroupDetails extends Controller {
   }
 
   def ajaxMembers(id: GroupId) = DBAction { implicit rs =>
-    implicit val rds = ((__ \ 'q).read[String] and (__ \ 'limit).read[Int] and (__ \ 'page).read[Int]).tupled
+    Select2.parse(rs.request).map {
+      query => {
+        val result = memberService.page(query.page, query.limit, filter = Some(query.query + '%'))
 
-    val query = for {
-      query <- rs.request.getQueryString("q")
-      limit <- rs.request.getQueryString("limit") map (_.toInt)
-      page <- rs.request.getQueryString("page") map (_.toInt)
-    } yield {
-
-      val result = memberService.page(Math.max(0, page -1), limit, filter = Some(query + '%'))
-
-      Ok(Json.obj("total" -> result.total, "results" ->
-        result.items.map (member => Json.obj("id" -> member.id, "text" -> member.name))
-      ))
-    }
-
-    query.getOrElse(BadRequest("Missing parameters"))
+        Ok(Select2.respond(result, (m: Member) => m.id.toString, (m: Member) => m.name))
+      }
+    }.getOrElse(BadRequest("Missing parameters"))
   }
 }

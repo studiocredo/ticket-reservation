@@ -25,8 +25,8 @@ object entities {
   case class Course(id: CourseId, name: String, archived: Boolean)
   case class CourseEdit(          name: String, archived: Boolean)
 
-  case class Group(id: GroupId, name: String, year: Int, course: CourseId)
-  case class GroupEdit(         name: String, year: Int, course: CourseId)
+  case class Group(id: GroupId, name: String, year: Int, course: CourseId, archived: Boolean)
+  case class GroupEdit(         name: String, year: Int, course: CourseId, archived: Boolean)
 
 }
 

@@ -3,12 +3,12 @@ package be.studiocredo
 import play.api.db.slick.Config.driver.simple._
 import models.entities._
 
-import models.Page
+import models.{MemberDetail, Page}
 import scala.slick.session.Session
 import models.ids._
 
 class MemberService {
-
+  val groupService = new GroupsService
   import models.queries._
   import models.schema.tables._
 
@@ -49,8 +49,10 @@ class MemberService {
     MembersQ.filter(_.id === id).delete
   }
 
-
-  def listForGroup(id: GroupId)(implicit s: Session): List[Member] = {
-    (for {(jt, m) <- GroupMembers leftJoin Members on (_.memberId === _.id) if jt.groupId === id} yield m).sortBy(_.name.asc).run.toList
+  def memberDetails(id: MemberId)(implicit s: Session): Option[MemberDetail] = {
+    for {
+      member <- get(id)
+    } yield MemberDetail(member, groupService.listForMemeber(member.id))
   }
+
 }

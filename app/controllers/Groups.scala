@@ -24,7 +24,8 @@ object Groups extends Controller {
     mapping(
       "name" -> nonEmptyText,
       "year" -> number,
-      "course" -> of[CourseId]
+      "course" -> of[CourseId],
+      "archived" -> boolean
     )(GroupEdit.apply)(GroupEdit.unapply)
   )
 
@@ -34,7 +35,7 @@ object Groups extends Controller {
   }
 
   def createForCourse(id: CourseId) = DBAction { implicit rs =>
-    Ok(views.html.groupsCreateForm(groupForm.fill(GroupEdit("", DateTime.now().year().get(), id)), courseOptions))
+    Ok(views.html.groupsCreateForm(groupForm.fill(GroupEdit("", DateTime.now().year().get(), id, archived = false)), courseOptions))
   }
 
   def create() = DBAction { implicit rs =>

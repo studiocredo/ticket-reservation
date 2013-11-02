@@ -19,10 +19,10 @@ object FakeData extends Controller {
     val course1 = courseService.insert(CourseEdit("Indian rain dancing", archived = false))
     val course2 = courseService.insert(CourseEdit("Advanced roboting", archived = false))
 
-    groupService.insert(GroupEdit("class A", 2010, course1))
-    val classA = groupService.insert(GroupEdit("class A", 2013, course1))
-    val classB = groupService.insert(GroupEdit("class B", 2013, course1))
-    val classD = groupService.insert(GroupEdit("class D", 2014, course2))
+    groupService.insert(GroupEdit("class A", 2010, course1, archived = false))
+    val classA = groupService.insert(GroupEdit("class A", 2013, course1, archived = false))
+    val classB = groupService.insert(GroupEdit("class B", 2013, course1, archived = false))
+    val classD = groupService.insert(GroupEdit("class D", 2014, course2, archived = false))
 
     groupService.addMembers(classA, List(thomas, sven, jantje))
     groupService.addMembers(classB, List(thomas, jantje))

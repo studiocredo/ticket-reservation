@@ -17,6 +17,11 @@ GET         /members/:id/edit                 controllers.Members.edit(id:Long)
 POST        /members/:id/edit                 controllers.Members.update(id:Long)
 POST        /members/:id/delete               controllers.Members.delete(id:Long)
 
+GET         /member/:id                       controllers.MemberDetails.view(id:Long)
+POST        /member/:id/groups                controllers.MemberDetails.addGroups(id: Long)
+GET         /member/:id/ajax/groups           controllers.MemberDetails.ajaxGroups(id:Long)
+
+
 GET         /courses                          controllers.Courses.list(p:Int ?= 0)
 GET         /courses/new                      controllers.Courses.create
 POST        /courses                          controllers.Courses.save

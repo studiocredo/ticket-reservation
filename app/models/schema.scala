@@ -95,9 +95,10 @@ object schema {
     def name = column[String]("name")
     def year = column[Int]("year")
     def courseId = column[CourseId]("course_id")
+    def archived = column[Boolean]("archived", O.Default(false))
 
-    def * = id ~ name ~ year ~ courseId <>(Group.apply _, Group.unapply _)
-    def autoInc = name ~ year ~ courseId <>(GroupEdit.apply _, GroupEdit.unapply _) returning id
+    def * = id ~ name ~ year ~ courseId ~ archived<>(Group.apply _, Group.unapply _)
+    def autoInc = name ~ year ~ courseId ~ archived<>(GroupEdit.apply _, GroupEdit.unapply _) returning id
 
     def course = foreignKey("course_fk", courseId, Courses)(_.id)
   }
