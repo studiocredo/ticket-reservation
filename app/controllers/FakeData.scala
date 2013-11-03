@@ -2,14 +2,23 @@ package controllers
 
 import play.api.mvc._
 import play.api.db.slick._
-import be.studiocredo.{MemberService, GroupsService, CourseService}
+import be.studiocredo._
 import play.api.Play.current
 import models.entities._
+import models.entities.VenueEdit
+import models.entities.CourseEdit
+import models.entities.GroupEdit
+import models.entities.MemberEdit
+import scala.Some
+import org.joda.time.DateTime
 
 object FakeData extends Controller {
   val memberService = new MemberService()
   val courseService = new CourseService()
   val groupService = new GroupsService()
+  val venueService = new VenueService()
+  val eventService = new EventService()
+  val showService = new ShowService()
 
   def insert() = DBAction { implicit rs =>
     val thomas = memberService.insert(MemberEdit("Thomas", Some("thomas@example.com"), None, None, archived = false))
@@ -27,6 +36,24 @@ object FakeData extends Controller {
     groupService.addMembers(classA, List(thomas, sven, jantje))
     groupService.addMembers(classB, List(thomas, jantje))
     groupService.addMembers(classD, List(jantje))
+
+    val event1 = eventService.insert(EventEdit("xmas special", "", archived = false))
+    val event2 = eventService.insert(EventEdit("Big show 2013", "", archived = false))
+
+    val ven1 = venueService.insert(VenueEdit("Big room 1", "", archived = false))
+    val ven2 = venueService.insert(VenueEdit("Big room 2", "", archived = false))
+    val ven3 = venueService.insert(VenueEdit("Small room", "", archived = false))
+
+    showService.insert(ShowEdit(event1, ven1, new DateTime(2013, 2, 5, 17, 0), archived = false))
+    showService.insert(ShowEdit(event1, ven1, new DateTime(2013, 2, 5, 19, 0), archived = false))
+    showService.insert(ShowEdit(event1, ven1, new DateTime(2013, 2, 6, 17, 0), archived = false))
+    showService.insert(ShowEdit(event1, ven1, new DateTime(2013, 2, 6, 19, 0), archived = false))
+    showService.insert(ShowEdit(event1, ven2, new DateTime(2013, 2, 9, 19, 0), archived = false))
+
+    showService.insert(ShowEdit(event2, ven2, new DateTime(2013, 2, 5, 17, 0), archived = false))
+    showService.insert(ShowEdit(event2, ven3, new DateTime(2013, 2, 5, 19, 0), archived = false))
+    showService.insert(ShowEdit(event2, ven1, new DateTime(2013, 2, 6, 17, 0), archived = false))
+    showService.insert(ShowEdit(event2, ven1, new DateTime(2013, 2, 6, 19, 0), archived = false))
 
     Ok(views.html.index())
   }

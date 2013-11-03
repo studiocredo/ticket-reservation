@@ -44,6 +44,24 @@ POST        /group/:id/members                controllers.GroupDetails.addMember
 GET         /group/:id/ajax/members           controllers.GroupDetails.ajaxMembers(id:Long)
 
 
+GET         /venues                           controllers.Venues.list(p:Int ?= 0)
+GET         /venues/new                       controllers.Venues.create
+POST        /venues                           controllers.Venues.save
+GET         /venues/:id/edit                  controllers.Venues.edit(id:Long)
+POST        /venues/:id/edit                  controllers.Venues.update(id:Long)
+POST        /venues/:id/delete                controllers.Venues.delete(id:Long)
+
+
+GET         /events                           controllers.Events.list(p:Int ?= 0)
+GET         /events/new                       controllers.Events.create
+POST        /events                           controllers.Events.save
+GET         /events/:id/edit                  controllers.Events.edit(id:Long)
+POST        /events/:id/edit                  controllers.Events.update(id:Long)
+POST        /events/:id/delete                controllers.Events.delete(id:Long)
+
+GET         /event/:id                        controllers.EventDetails.view(id:Long)
+POST        /event/:id/addshow                controllers.EventDetails.addShow(id:Long)
+
 GET         /test/fakedata                    controllers.FakeData.insert()
 
 GET         /assets/javascripts/routes        controllers.Application.javascriptRoutes

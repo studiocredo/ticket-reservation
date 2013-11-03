@@ -1,0 +1,11 @@
+@(venueForm: Form[entities.VenueEdit])
+
+@import helper._
+@import views.Bootstrap._
+
+<fieldset>
+
+    @inputText(venueForm("name"), '_label -> "Name",  'class -> "form-control")
+    @inputText(venueForm("description"), '_label -> "Description", 'class -> "form-control")
+    @twCheckbox(venueForm("archived"), '_label -> "Archived")
+</fieldset>

@@ -30,6 +30,11 @@ object schema {
   import models.entities._
   import models.ids._
 
+  trait Archiveable {
+    this:Table[_] =>
+    def archived = column[Boolean]("archived", O.Default(false))
+  }
+
   class Users extends Table[User]("user") {
     def id = column[UserId]("id", O.PrimaryKey, O.AutoInc)
     def email = column[String]("email")
@@ -55,13 +60,12 @@ object schema {
     def user = foreignKey("user_fk", userId, Users)(_.id)
   }
 
-  class Members extends Table[Member]("member") {
+  class Members extends Table[Member]("member") with Archiveable {
     def id = column[MemberId]("id", O.PrimaryKey, O.AutoInc)
     def name = column[String]("name")
     def email = column[Option[String]]("email")
     def address = column[Option[String]]("address")
     def phone = column[Option[String]]("phone")
-    def archived = column[Boolean]("archived", O.Default(false))
 
     def * = id ~ name ~ email ~ address ~ phone ~ archived <>(Member, Member.unapply _)
 
@@ -81,21 +85,19 @@ object schema {
 
   //////////////////////////////////
 
-  class Courses extends Table[Course]("course") {
+  class Courses extends Table[Course]("course") with Archiveable {
     def id = column[CourseId]("id", O.PrimaryKey, O.AutoInc)
     def name = column[String]("name")
-    def archived = column[Boolean]("archived", O.Default(false))
 
     def * = id ~ name ~ archived <>(Course.apply _, Course.unapply _)
     def autoInc = name ~ archived <>( CourseEdit, CourseEdit.unapply _) returning id
   }
 
-  class Groups extends Table[Group]("group") {
+  class Groups extends Table[Group]("group") with Archiveable {
     def id = column[GroupId]("id", O.PrimaryKey, O.AutoInc)
     def name = column[String]("name")
     def year = column[Int]("year")
     def courseId = column[CourseId]("course_id")
-    def archived = column[Boolean]("archived", O.Default(false))
 
     def * = id ~ name ~ year ~ courseId ~ archived<>(Group.apply _, Group.unapply _)
     def autoInc = name ~ year ~ courseId ~ archived<>(GroupEdit.apply _, GroupEdit.unapply _) returning id
@@ -116,29 +118,32 @@ object schema {
 
   //////////////////////////////////
 
-  class Events extends Table[(EventId, String, String)]("event") {
+  class Events extends Table[Event]("event") with Archiveable {
     def id = column[EventId]("id", O.PrimaryKey, O.AutoInc)
     def name = column[String]("name")
     def description = column[String]("description")
 
-    def * = id ~ name ~ description
+    def * = id ~ name ~ description ~ archived <>(Event.apply _, Event.unapply _)
+    def autoInc = name ~ description ~ archived <>(EventEdit.apply _, EventEdit.unapply _) returning id
   }
 
-  class Venues extends Table[(VenueId, String, String)]("venue") {
+  class Venues extends Table[Venue]("venue") with Archiveable {
     def id = column[VenueId]("id", O.PrimaryKey, O.AutoInc)
     def name = column[String]("name")
     def description = column[String]("description")
 
-    def * = id ~ name ~ description
+    def * = id ~ name ~ description ~ archived <>(Venue.apply _, Venue.unapply _)
+    def autoInc = name ~ description ~ archived <>(VenueEdit.apply _, VenueEdit.unapply _) returning id
   }
 
-  class Shows extends Table[(ShowId, EventId, VenueId, DateTime)]("show") {
+  class Shows extends Table[Show]("show") with Archiveable {
     def id = column[ShowId]("id", O.PrimaryKey, O.AutoInc)
     def eventId = column[EventId]("event_id")
     def venueId = column[VenueId]("venue_id")
     def date = column[DateTime]("date")
 
-    def * = id ~ eventId ~ venueId ~ date
+    def * = id ~ eventId ~ venueId ~ date ~ archived <>(Show.apply _, Show.unapply _)
+    def autoInc = eventId ~ venueId ~ date ~ archived <>(ShowEdit.apply _, ShowEdit.unapply _) returning id
 
     def event = foreignKey("event_fk", eventId, Events)(_.id)
     def venue = foreignKey("venue_fk", venueId, Venues)(_.id)

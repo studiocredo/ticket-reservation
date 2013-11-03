@@ -2,32 +2,54 @@ package models
 
 import scala.Predef._
 import scala.slick.lifted.MappedTypeMapper
+import org.joda.time.DateTime
 
 object entities {
 
   import ids._
 
+  object interfaces {
+
+    trait Entity[T <: TypedId] {
+      def id: T
+    }
+
+    trait Archiveable {
+      def archived: Boolean
+    }
+  }
+  import interfaces._
+
   // Well it's either an extra classes or using -1 id or be really annoyed with optional ids (that are always there except when used in forms), seem to hate this option the least at the moment
   case class User(id: UserId, email: String, password: String)
   case class UserEdit(        email: String, password: String)
 
-  case class Guest(id: GuestId, userId: UserId, name: String, email: String, address: Option[String], phone: Option[String])
+  case class Guest(id: GuestId, userId: UserId, name: String, email: String, address: Option[String], phone: Option[String]) extends Entity[GuestId]
   case class GuestEdit(         userId: UserId, name: String, email: String, address: Option[String], phone: Option[String])
 
 
-  case class Member(id: MemberId, name: String, email: Option[String], address: Option[String], phone: Option[String], archived: Boolean)
+  case class Member(id: MemberId, name: String, email: Option[String], address: Option[String], phone: Option[String], archived: Boolean) extends Entity[MemberId] with Archiveable
   case class MemberEdit(          name: String, email: Option[String], address: Option[String], phone: Option[String], archived: Boolean)
 
-  case class Admin(id: AdminId, userId: UserId, name: String)
+  case class Admin(id: AdminId, userId: UserId, name: String) extends Entity[AdminId]
   case class AdminEdit(         userId: UserId, name: String)
 
 
-  case class Course(id: CourseId, name: String, archived: Boolean)
+  case class Course(id: CourseId, name: String, archived: Boolean) extends Entity[CourseId] with Archiveable
   case class CourseEdit(          name: String, archived: Boolean)
 
-  case class Group(id: GroupId, name: String, year: Int, course: CourseId, archived: Boolean)
+  case class Group(id: GroupId, name: String, year: Int, course: CourseId, archived: Boolean) extends Entity[GroupId] with Archiveable
   case class GroupEdit(         name: String, year: Int, course: CourseId, archived: Boolean)
 
+
+  case class Event(id:EventId, name:String, description:String, archived: Boolean)  extends Entity[EventId] with Archiveable
+  case class EventEdit(        name:String, description:String, archived: Boolean)
+
+  case class Venue(id: VenueId, name:String, description:String, archived: Boolean) extends Entity[VenueId] with Archiveable
+  case class VenueEdit(         name:String, description:String, archived: Boolean)
+
+  case class Show(id: ShowId, eventId: EventId, venueId: VenueId, date:DateTime, archived: Boolean) extends Entity[ShowId] with Archiveable
+  case class ShowEdit(        eventId: EventId, venueId: VenueId, date:DateTime, archived: Boolean)
 }
 
 object ids {

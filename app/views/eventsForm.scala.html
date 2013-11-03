@@ -1,0 +1,11 @@
+@(eventForm: Form[entities.EventEdit])
+
+@import helper._
+@import views.Bootstrap._
+
+<fieldset>
+
+    @inputText(eventForm("name"), '_label -> "Name",  'class -> "form-control")
+    @inputText(eventForm("description"), '_label -> "Description", 'class -> "form-control")
+    @twCheckbox(eventForm("archived"), '_label -> "Archived")
+</fieldset>
