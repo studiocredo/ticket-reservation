@@ -25,7 +25,7 @@ class GroupsService {
     val values = filter.foldLeft {
       paginate(active, page, pageSize)
     } {
-      (query, filter) => query.filter(_.name.like(filter)) // should replace with lucene
+      (query, filter) => query.filter(q => iLike(q.name, filter.toLowerCase)) // should replace with lucene
     }.run
     Page(values, page, pageSize, offset, total)
   }
