@@ -52,7 +52,7 @@ class MemberService {
   def memberDetails(id: MemberId)(implicit s: Session): Option[MemberDetail] = {
     for {
       member <- get(id)
-    } yield MemberDetail(member, groupService.listForMemeber(member.id))
+    } yield MemberDetail(member, groupService.listForMember(member.id))
   }
 
 }

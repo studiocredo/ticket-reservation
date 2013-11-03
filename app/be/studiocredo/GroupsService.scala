@@ -52,12 +52,13 @@ class GroupsService {
     (for {c <- Groups if c.courseId === id} yield c).sortBy(_.year.desc).run.toList
   }
 
-  def listForMemeber(id: MemberId)(implicit s: Session): List[Group] = {
-    (for {(gm, g) <- GroupMembers leftJoin Groups on (_.groupId === _.id) if gm.memberId === id} yield g).sortBy(group => (group.year.desc, group.name.asc)).run.toList
+  def listForMember(id: MemberId)(implicit s: Session): List[Group] = {
+    (for {gm <- GroupMembers ; g <- gm.group if gm.memberId === id} yield g).sortBy(group => (group.year.desc, group.name.asc)).run.toList
   }
 
   def listMemberInGroup(id: GroupId)(implicit s: Session): List[Member] = {
-    (for {(gm, m) <- GroupMembers leftJoin Members on (_.memberId === _.id) if gm.groupId === id} yield m).sortBy(_.name.asc).run.toList
+    //(for {(gm, m) <- GroupMembers leftJoin Members on (_.memberId === _.id) if gm.groupId === id} yield m).sortBy(_.name.asc).run.toList
+    (for {gm <- GroupMembers; m <- gm.member if gm.groupId === id} yield m).sortBy(_.name.asc).run.toList
   }
 
 
