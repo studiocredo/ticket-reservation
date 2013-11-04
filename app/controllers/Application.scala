@@ -13,8 +13,8 @@ object Application extends Controller {
 
 
   def javascriptRoutes = Action { implicit request =>
-    import routes.javascript._
-    Ok(
+    import admin.routes.javascript._
+     Ok(
       Routes.javascriptRouter("jsRoutes")(
         GroupDetails.ajaxMembers, MemberDetails.ajaxGroups
       )).as("text/javascript")

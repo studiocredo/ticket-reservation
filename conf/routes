@@ -10,61 +10,64 @@ GET         /                                 controllers.Application.index
 #POST        /signup               controllers.SignUp.submit
 
 
-GET         /members                          controllers.Members.list(p:Int ?= 0)
-GET         /members/new                      controllers.Members.create
-POST        /members                          controllers.Members.save
-GET         /members/:id/edit                 controllers.Members.edit(id:Long)
-POST        /members/:id/edit                 controllers.Members.update(id:Long)
-POST        /members/:id/delete               controllers.Members.delete(id:Long)
+GET         /admin/members                          controllers.admin.Members.list(p:Int ?= 0)
+GET         /admin/members/new                      controllers.admin.Members.create
+POST        /admin/members                          controllers.admin.Members.save
+GET         /admin/members/:id/edit                 controllers.admin.Members.edit(id:Long)
+POST        /admin/members/:id/edit                 controllers.admin.Members.update(id:Long)
+POST        /admin/members/:id/delete               controllers.admin.Members.delete(id:Long)
 
-GET         /member/:id                       controllers.MemberDetails.view(id:Long)
-POST        /member/:id/groups                controllers.MemberDetails.addGroups(id: Long)
-GET         /member/:id/ajax/groups           controllers.MemberDetails.ajaxGroups(id:Long)
-
-
-GET         /courses                          controllers.Courses.list(p:Int ?= 0)
-GET         /courses/new                      controllers.Courses.create
-POST        /courses                          controllers.Courses.save
-GET         /courses/:id                      controllers.Courses.view(id:Long)
-GET         /courses/:id/edit                 controllers.Courses.edit(id:Long)
-POST        /courses/:id/edit                 controllers.Courses.update(id:Long)
-POST        /courses/:id/delete               controllers.Courses.delete(id:Long)
+GET         /admin/member/:id                       controllers.admin.MemberDetails.view(id:Long)
+POST        /admin/member/:id/groups                controllers.admin.MemberDetails.addGroups(id: Long)
+GET         /admin/member/:id/ajax/groups           controllers.admin.MemberDetails.ajaxGroups(id:Long)
 
 
-GET         /groups                           controllers.Groups.list(p:Int ?= 0)
-GET         /groups/new                       controllers.Groups.create
-GET         /groups/new/course/:id            controllers.Groups.createForCourse(id: Long)
-POST        /groups                           controllers.Groups.save
-GET         /groups/:id/edit                  controllers.Groups.edit(id:Long)
-POST        /groups/:id/edit                  controllers.Groups.update(id:Long)
-POST        /groups/:id/delete                controllers.Groups.delete(id:Long)
-
-GET         /group/:id                        controllers.GroupDetails.view(id:Long)
-POST        /group/:id/members                controllers.GroupDetails.addMembers(id: Long)
-GET         /group/:id/ajax/members           controllers.GroupDetails.ajaxMembers(id:Long)
+GET         /admin/courses                          controllers.admin.Courses.list(p:Int ?= 0)
+GET         /admin/courses/new                      controllers.admin.Courses.create
+POST        /admin/courses                          controllers.admin.Courses.save
+GET         /admin/courses/:id                      controllers.admin.Courses.view(id:Long)
+GET         /admin/courses/:id/edit                 controllers.admin.Courses.edit(id:Long)
+POST        /admin/courses/:id/edit                 controllers.admin.Courses.update(id:Long)
+POST        /admin/courses/:id/delete               controllers.admin.Courses.delete(id:Long)
 
 
-GET         /venues                           controllers.Venues.list(p:Int ?= 0)
-GET         /venues/new                       controllers.Venues.create
-POST        /venues                           controllers.Venues.save
-GET         /venues/:id/edit                  controllers.Venues.edit(id:Long)
-POST        /venues/:id/edit                  controllers.Venues.update(id:Long)
-POST        /venues/:id/delete                controllers.Venues.delete(id:Long)
+GET         /admin/groups                           controllers.admin.Groups.list(p:Int ?= 0)
+GET         /admin/groups/new                       controllers.admin.Groups.create
+GET         /admin/groups/new/course/:id            controllers.admin.Groups.createForCourse(id: Long)
+POST        /admin/groups                           controllers.admin.Groups.save
+GET         /admin/groups/:id/edit                  controllers.admin.Groups.edit(id:Long)
+POST        /admin/groups/:id/edit                  controllers.admin.Groups.update(id:Long)
+POST        /admin/groups/:id/delete                controllers.admin.Groups.delete(id:Long)
+
+GET         /admin/group/:id                        controllers.admin.GroupDetails.view(id:Long)
+POST        /admin/group/:id/members                controllers.admin.GroupDetails.addMembers(id: Long)
+GET         /admin/group/:id/ajax/members           controllers.admin.GroupDetails.ajaxMembers(id:Long)
 
 
-GET         /events                           controllers.Events.list(p:Int ?= 0)
-GET         /events/new                       controllers.Events.create
-POST        /events                           controllers.Events.save
-GET         /events/:id/edit                  controllers.Events.edit(id:Long)
-POST        /events/:id/edit                  controllers.Events.update(id:Long)
-POST        /events/:id/delete                controllers.Events.delete(id:Long)
+GET         /admin/venues                           controllers.admin.Venues.list(p:Int ?= 0)
+GET         /admin/venues/new                       controllers.admin.Venues.create
+POST        /admin/venues                           controllers.admin.Venues.save
+GET         /admin/venues/:id/edit                  controllers.admin.Venues.edit(id:Long)
+POST        /admin/venues/:id/edit                  controllers.admin.Venues.update(id:Long)
+POST        /admin/venues/:id/delete                controllers.admin.Venues.delete(id:Long)
 
-GET         /event/:id                        controllers.EventDetails.view(id:Long)
-POST        /event/:id/addshow                controllers.EventDetails.addShow(id:Long)
 
-GET         /test/fakedata                    controllers.FakeData.insert()
+GET         /admin/events                           controllers.admin.Events.list(p:Int ?= 0)
+GET         /admin/events/new                       controllers.admin.Events.create
+POST        /admin/events                           controllers.admin.Events.save
+GET         /admin/events/:id/edit                  controllers.admin.Events.edit(id:Long)
+POST        /admin/events/:id/edit                  controllers.admin.Events.update(id:Long)
+POST        /admin/events/:id/delete                controllers.admin.Events.delete(id:Long)
 
-GET         /assets/javascripts/routes        controllers.Application.javascriptRoutes
-# Map static resources from the /public folder to the /assets URL path
-GET         /assets/*file                     controllers.Assets.at(path="/public", file)
-GET         /webjars/*file                    controllers.WebJarAssets.at(file)
+GET         /admin/event/:id                        controllers.admin.EventDetails.view(id:Long)
+POST        /admin/event/:id/addshow                controllers.admin.EventDetails.addShow(id:Long)
+
+GET         /admin/test/fakedata                    controllers.admin.FakeData.insert()
+
+
+
+
+
+GET         /assets/javascripts/routes              controllers.Application.javascriptRoutes
+GET         /assets/*file                           controllers.Assets.at(path="/public", file)
+GET         /webjars/*file                          controllers.WebJarAssets.at(file)

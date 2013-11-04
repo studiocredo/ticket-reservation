@@ -1,0 +1,19 @@
+@(groupForm: Form[entities.GroupEdit], courses: views.helper.Options[entities.Course])(implicit flash: Flash)
+@import controllers.admin.routes
+@import helper._
+
+@base("Add class") {
+
+    <h1>Add new class</h1>
+
+    @form(action = routes.Groups.save(), 'class -> "form form-horizontal") {
+
+        @groupsForm(groupForm, courses)
+
+        <div class="actions">
+            <input type="submit" value="Add Class" class="btn btn-primary">
+            <a href="@routes.Groups.list()" class="btn btn-warning">Cancel</a>
+        </div>
+
+    }
+}

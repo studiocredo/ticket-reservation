@@ -1,0 +1,40 @@
+@(currentPage: Page[entities.Venue])(implicit flash: Flash)
+@import controllers.admin.routes
+@base("Venues") {
+
+    <div>
+    <a class="btn btn-primary" id="add" href="@routes.Venues.create()">Add new</a>
+    </div>
+
+    @if(!currentPage.isEmpty) {
+        <table class="table table-hover table-striped">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Name</th>
+                    <th>description</th>
+                    <th>Archived</th>
+                </tr>
+            </thead>
+            <tbody>
+            @currentPage.items.map { venue =>
+                <tr>
+                    <td>@venue.id</td>
+                    <td>@venue.name</td>
+                    <td>@venue.description</td>
+                    <td>@venue.archived</td>
+                    <td><a class="btn btn-default btn-xs" href="@{routes.Venues.edit(venue.id)}">Edit</a></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+
+        @helper.paging(currentPage, (page:Int) => routes.Venues.list(page))
+    } else {
+        <div class="well">
+            <em>No venues found</em>
+        </div>
+
+    }
+
+}

@@ -1,0 +1,19 @@
+@(courseForm: Form[entities.CourseEdit])(implicit flash: Flash)
+@import controllers.admin.routes
+@import helper._
+
+@base("Add course") {
+
+    <h1>Add new course</h1>
+
+    @form(action = routes.Courses.save(), 'class -> "form form-horizontal") {
+
+        @coursesForm(courseForm)
+
+        <div class="actions">
+            <input type="submit" value="Add Course" class="btn btn-primary">
+            <a href="@routes.Courses.list()" class="btn btn-warning">Cancel</a>
+        </div>
+
+    }
+}
