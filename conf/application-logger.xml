@@ -2,6 +2,7 @@
 <configuration debug="false" scan="true" scanPeriod="5 seconds">
 
     <logger name="be.studiocredo" level="debug"/>
+    <logger name="be.studiocredo.requests" level="info"/>
     <logger name="play" level="INFO" />
 
     <logger name="scala.slick" level="debug"/>

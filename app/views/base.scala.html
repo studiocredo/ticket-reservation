@@ -71,10 +71,14 @@
         <div id="content" class="container">
             @content
         </div>
-            <script type="text/javascript">
-                @flash.get("success").map { message =>
-                    credo.flash("success", "@message");
-                }
-            </script>
-        </body>
+        <hr>
+        <footer>
+            <p>&copy; Studio Credo 2013</p>
+        </footer>
+        <script type="text/javascript">
+            @flash.get("success").map { message =>
+                credo.flash("success", "@message");
+            }
+        </script>
+    </body>
 </html>
