@@ -3,12 +3,17 @@ package controllers
 import play.api._
 import play.api.mvc._
 import play.api.data._
+import be.studiocredo.ShowService
+import play.api.db.slick._
+import play.api.Play.current
 
 
 object Application extends Controller {
 
-  def index = Action { implicit request =>
-    Ok(views.html.index())
+  val showService = new ShowService
+
+  def index = DBAction { implicit request =>
+    Ok(views.html.index(showService.nextShows(3)))
   }
 
 

@@ -44,18 +44,18 @@ object FakeData extends Controller {
     val ven2 = venueService.insert(VenueEdit("Big room 2", "", archived = false))
     val ven3 = venueService.insert(VenueEdit("Small room", "", archived = false))
 
-    showService.insert(ShowEdit(event1, ven1, new DateTime(2013, 2, 5, 17, 0), archived = false))
-    showService.insert(ShowEdit(event1, ven1, new DateTime(2013, 2, 5, 19, 0), archived = false))
-    showService.insert(ShowEdit(event1, ven1, new DateTime(2013, 2, 6, 17, 0), archived = false))
-    showService.insert(ShowEdit(event1, ven1, new DateTime(2013, 2, 6, 19, 0), archived = false))
-    showService.insert(ShowEdit(event1, ven2, new DateTime(2013, 2, 9, 19, 0), archived = false))
+    showService.insert(ShowEdit(event1, ven1, new DateTime(2013, 12, 5, 17, 0), archived = false))
+    showService.insert(ShowEdit(event1, ven1, new DateTime(2013, 12, 5, 19, 0), archived = false))
+    showService.insert(ShowEdit(event1, ven1, new DateTime(2013, 12, 6, 17, 0), archived = false))
+    showService.insert(ShowEdit(event1, ven1, new DateTime(2014, 2, 6, 19, 0), archived = false))
+    showService.insert(ShowEdit(event1, ven2, new DateTime(2013, 12, 9, 19, 0), archived = false))
 
-    showService.insert(ShowEdit(event2, ven2, new DateTime(2013, 2, 5, 17, 0), archived = false))
-    showService.insert(ShowEdit(event2, ven3, new DateTime(2013, 2, 5, 19, 0), archived = false))
-    showService.insert(ShowEdit(event2, ven1, new DateTime(2013, 2, 6, 17, 0), archived = false))
-    showService.insert(ShowEdit(event2, ven1, new DateTime(2013, 2, 6, 19, 0), archived = false))
+    showService.insert(ShowEdit(event2, ven2, new DateTime(2013, 12, 5, 17, 0), archived = false))
+    showService.insert(ShowEdit(event2, ven3, new DateTime(2013, 12, 5, 19, 0), archived = false))
+    showService.insert(ShowEdit(event2, ven1, new DateTime(2014, 4, 6, 17, 0), archived = false))
+    showService.insert(ShowEdit(event2, ven1, new DateTime(2014, 5, 6, 19, 0), archived = false))
 
-    Ok(views.html.index())
+    Redirect(controllers.routes.Application.index())
   }
 }
 

@@ -4,6 +4,8 @@ import play.api.db.slick.Config.driver.simple._
 import models._
 import models.entities._
 import models.ids._
+import org.joda.time.DateTime
+import com.github.tototoshi.slick.JodaSupport._
 
 class ShowService {
   import models.queries._
@@ -43,9 +45,19 @@ class ShowService {
 
 
   def listForEvent(id: EventId)(implicit s: Session): Map[Venue, List[Show]] = {
-    val list = (for (s <- Shows; v <- s.venue if s.eventId === id) yield (s, v)).list
+    val list = (for (s <- active; v <- s.venue if s.eventId === id) yield (s, v)).list
 
     list.groupBy(_._2).mapValues(_.map(_._1))
   }
 
+
+  def nextShows(limit: Int)(implicit s: Session): List[ShowOverview] = {
+    val next = active.filter(_.date >= DateTime.now())
+    val list = (for (s <- next; e <- s.event) yield (s, e)).sortBy(_._1.date).take(limit).list
+
+    list map {
+      case (show, event) => ShowOverview(event.name, show.date)
+    }
+
+  }
 }
