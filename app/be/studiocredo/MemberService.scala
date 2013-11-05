@@ -6,9 +6,10 @@ import models.entities._
 import models.{MemberDetail, Page}
 import scala.slick.session.Session
 import models.ids._
+import com.google.inject.Inject
 
-class MemberService {
-  val groupService = new GroupsService
+class MemberService @Inject()(groupService: GroupsService) {
+
   import models.queries._
   import models.schema.tables._
 
@@ -19,12 +20,14 @@ class MemberService {
   def page(page: Int = 0, pageSize: Int = 10, orderBy: Int = 1, filter: Option[String] = None)(implicit s: Session): Page[Member] = {
     val offset = pageSize * page
     val total = active.length.run
+    /* todo
     val values = filter.foldLeft {
       paginate(active, page, pageSize)
     } {
       (query, filter) => query.filter(q => iLike(q.name, filter)) // should replace with lucene
     }.run
-    Page(values, page, pageSize, offset, total)
+    */
+    Page(active.run, page, pageSize, offset, total)
   }
 
 
@@ -42,8 +45,8 @@ class MemberService {
 
   def getEdit(id: MemberId)(implicit s: Session): Option[MemberEdit] = get(id).map(toEdit)
 
-  def toEdit(m: Member) = MemberEdit(m.name, m.email, m.address, m.phone, m.archived)
-  def toEntity(id: MemberId, m: MemberEdit) =  Member(id, m.name, m.email, m.address, m.phone, m.archived)
+  def toEdit(m: Member) = MemberEdit(m.userId, m.archived)
+  def toEntity(id: MemberId, m: MemberEdit) =  Member(id, m.userId, m.archived)
 
   def delete(id: MemberId)(implicit s: Session) = {
     MembersQ.filter(_.id === id).delete

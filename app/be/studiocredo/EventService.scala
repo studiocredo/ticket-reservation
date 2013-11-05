@@ -4,11 +4,11 @@ import play.api.db.slick.Config.driver.simple._
 import models._
 import models.entities._
 import models.ids._
+import com.google.inject.Inject
 
-class EventService {
+class EventService @Inject()(showService: ShowService) {
   import models.queries._
   import models.schema.tables._
-  val showService = new ShowService()
 
   val EventsQ = Query(Events)
 

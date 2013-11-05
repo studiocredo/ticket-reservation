@@ -3,6 +3,7 @@ package models
 import scala.Predef._
 import scala.slick.lifted.MappedTypeMapper
 import org.joda.time.DateTime
+import be.studiocredo.auth.{Roles, Password}
 
 object entities {
 
@@ -19,20 +20,21 @@ object entities {
     }
   }
   import interfaces._
-
   // Well it's either an extra classes or using -1 id or be really annoyed with optional ids (that are always there except when used in forms), seem to hate this option the least at the moment
-  case class User(id: UserId, email: String, password: String)
-  case class UserEdit(        email: String, password: String)
 
-  case class Guest(id: GuestId, userId: UserId, name: String, email: String, address: Option[String], phone: Option[String]) extends Entity[GuestId]
-  case class GuestEdit(         userId: UserId, name: String, email: String, address: Option[String], phone: Option[String])
+  import Roles._
 
+  case class User(id: UserId, name: String, username: String, password: Password)
+  case class UserEdit(        name: String, username: String, password: Password)
 
-  case class Member(id: MemberId, name: String, email: Option[String], address: Option[String], phone: Option[String], archived: Boolean) extends Entity[MemberId] with Archiveable
-  case class MemberEdit(          name: String, email: Option[String], address: Option[String], phone: Option[String], archived: Boolean)
+  case class UserDetail(id: UserId, email: Option[String], address: Option[String], phone: Option[String])
+  case class UserDetailEdit(        email: Option[String], address: Option[String], phone: Option[String])
 
-  case class Admin(id: AdminId, userId: UserId, name: String) extends Entity[AdminId]
-  case class AdminEdit(         userId: UserId, name: String)
+  case class Member(id: MemberId, userId: UserId, archived: Boolean) extends Entity[MemberId] with Archiveable
+  case class MemberEdit(          userId: UserId, archived: Boolean)
+
+  case class Admin(id: AdminId, userId: UserId, creation: DateTime) extends Entity[AdminId]
+  case class AdminEdit(         userId: UserId, creation: DateTime)
 
 
   case class Course(id: CourseId, name: String, archived: Boolean) extends Entity[CourseId] with Archiveable
@@ -55,7 +57,6 @@ object entities {
 object ids {
   case class UserId(id: Long) extends AnyVal with TypedId
   case class AdminId(id: Long) extends AnyVal with TypedId
-  case class GuestId(id: Long) extends AnyVal with TypedId
   case class MemberId(id: Long) extends AnyVal with TypedId
   case class CourseId(id: Long) extends AnyVal with TypedId
   case class GroupId(id: Long) extends AnyVal with TypedId
@@ -68,7 +69,6 @@ object ids {
 
   implicit object UserId extends IdFactory[UserId]
   implicit object AdminId extends IdFactory[AdminId]
-  implicit object GuestId extends IdFactory[GuestId]
   implicit object MemberId extends IdFactory[MemberId]
   implicit object CourseId extends IdFactory[CourseId]
   implicit object GroupId extends IdFactory[GroupId]

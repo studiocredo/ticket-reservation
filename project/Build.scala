@@ -19,6 +19,8 @@ object ApplicationBuild extends Build {
 
     "com.chuusai" % "shapeless_2.10.2" % "2.0.0-M1", /* cross CrossVersion.full */
 
+    "com.google.inject" % "guice" % "3.0",
+    "net.codingwell" % "scala-guice_2.10" % "3.0.2",
 
     play.Project.cache,
     "com.typesafe.play" % "play-slick_2.10" % "0.5.0.8",

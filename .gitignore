@@ -1,4 +1,5 @@
 conf/secrets.conf
+conf/generated.keystore
 logs
 project/project
 project/target

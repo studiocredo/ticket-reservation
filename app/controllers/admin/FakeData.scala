@@ -11,16 +11,17 @@ import models.entities.GroupEdit
 import models.entities.MemberEdit
 import scala.Some
 import org.joda.time.DateTime
+import com.google.inject.Inject
 
-object FakeData extends Controller {
-  val memberService = new MemberService()
-  val courseService = new CourseService()
-  val groupService = new GroupsService()
-  val venueService = new VenueService()
-  val eventService = new EventService()
-  val showService = new ShowService()
+class FakeData @Inject()(memberService: MemberService,
+                         courseService: CourseService,
+                         groupService: GroupsService,
+                         venueService: VenueService,
+                         eventService: EventService,
+                         showService: ShowService) extends Controller {
 
   def insert() = DBAction { implicit rs =>
+    /*
     val thomas = memberService.insert(MemberEdit("Thomas", Some("thomas@example.com"), None, None, archived = false))
     val sven = memberService.insert(MemberEdit("sven", Some("sven@example.com"), None, None, archived = false))
     val jantje = memberService.insert(MemberEdit("Jantje", None, Some("veldstraat 20 gent"), Some("09/2345435453435"), archived = false))
@@ -54,7 +55,7 @@ object FakeData extends Controller {
     showService.insert(ShowEdit(event2, ven3, new DateTime(2013, 12, 5, 19, 0), archived = false))
     showService.insert(ShowEdit(event2, ven1, new DateTime(2014, 4, 6, 17, 0), archived = false))
     showService.insert(ShowEdit(event2, ven1, new DateTime(2014, 5, 6, 19, 0), archived = false))
-
+    */
     Redirect(controllers.routes.Application.index())
   }
 }

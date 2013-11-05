@@ -1,4 +1,4 @@
-@(id: Long, eventForm: Form[entities.EventEdit])(implicit flash: Flash)
+@(id: Long, eventForm: Form[entities.EventEdit])(implicit request: be.studiocredo.auth.SecureRequest[_])
 @import controllers.admin.routes
 @import helper._
 
@@ -15,9 +15,9 @@
 
         @eventsForm(eventForm)
 
-        <div class="actions">
+        @twFormActions {
             <input type="submit" value="Update event" class="btn btn-primary">
             <a href="@routes.Events.list()" class="btn btn-warning">Cancel</a>
-        </div>
+        }
     }
 }

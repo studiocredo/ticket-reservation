@@ -9,10 +9,8 @@ import play.api.data.Forms._
 import models.ids._
 import scala.Some
 import models.entities._
-
-object Members extends Controller {
-  val memberService = new MemberService()
-
+/*
+class Members @Inject()(memberService: MemberService, val authService: AuthenticatorService) extends AdminController {
   val ListPage = Redirect(routes.Members.list())
 
   val memberForm = Form(
@@ -25,16 +23,16 @@ object Members extends Controller {
     )(MemberEdit.apply)(MemberEdit.unapply)
   )
 
-  def list(page: Int) = DBAction { implicit rs =>
+  def list(page: Int) = AuthDBAction { implicit rs =>
     val list = memberService.page(page)
     Ok(views.html.admin.members(list))
   }
 
 
-  def create() = Action { implicit request =>
+  def create() = AuthAction { implicit request =>
     Ok(views.html.admin.membersCreateForm(memberForm))
   }
-  def save() = DBAction { implicit rs =>
+  def save() = AuthDBAction { implicit rs =>
     memberForm.bindFromRequest.fold(
       formWithErrors => BadRequest(views.html.admin.membersCreateForm(formWithErrors)),
       member => {
@@ -45,13 +43,13 @@ object Members extends Controller {
     )
   }
 
-  def edit(id: MemberId) = DBAction { implicit rs =>
+  def edit(id: MemberId) = AuthDBAction { implicit rs =>
     memberService.getEdit(id) match {
       case None => ListPage
       case Some(member) => Ok(views.html.admin.membersEditForm(id, memberForm.fillAndValidate(member)))
     }
   }
-  def update(id: MemberId) = DBAction { implicit rs =>
+  def update(id: MemberId) = AuthDBAction { implicit rs =>
     memberForm.bindFromRequest.fold(
       formWithErrors => BadRequest(views.html.admin.membersEditForm(id, formWithErrors)),
       member => {
@@ -61,9 +59,10 @@ object Members extends Controller {
       }
     )
   }
-  def delete(id: MemberId) = DBAction { implicit rs =>
+  def delete(id: MemberId) = AuthDBAction { implicit rs =>
     memberService.delete(id)
 
     ListPage.flashing("success" -> "Member has been deleted")
   }
 }
+*/

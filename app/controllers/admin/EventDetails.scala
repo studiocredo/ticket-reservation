@@ -1,24 +1,20 @@
 package controllers.admin
 
-import play.api.db.slick._
 import be.studiocredo._
-import play.api.Play.current
 import models.ids._
 import play.api._
-import play.api.mvc._
 import org.joda.time.format.DateTimeFormat
 import play.api.data.Form
 import play.api.data.Forms._
 import models.NewShow
 import views.helper.Options
 import models.entities.ShowEdit
+import com.google.inject.Inject
+import be.studiocredo.auth.{AuthenticatorService, SecuredDBRequest}
 
 
-object EventDetails extends Controller {
+class EventDetails @Inject()(eventService: EventService, showService: ShowService, venueService: VenueService, val authService: AuthenticatorService) extends AdminController {
   val logger = Logger("group-details")
-  val eventService = new EventService()
-  val showService = new ShowService()
-  val venueService = new VenueService()
 
   implicit val dateFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm")
 
@@ -29,11 +25,11 @@ object EventDetails extends Controller {
     )(NewShow.apply)(NewShow.unapply)
   )
 
-  def view(id: EventId) = DBAction { implicit rs =>
+  def view(id: EventId) = AuthDBAction { implicit rs =>
     page(id)
   }
 
-  def addShow(id: EventId) = DBAction { implicit rs =>
+  def addShow(id: EventId) = AuthDBAction { implicit rs =>
     showForm.bindFromRequest.fold(
       formWithErrors => page(id, formWithErrors, BadRequest),
       newShow => {
@@ -44,7 +40,7 @@ object EventDetails extends Controller {
     )
   }
 
-  def page(id: EventId, form: Form[NewShow] = showForm, status: Status = Ok)(implicit rs: DBSessionRequest[_]) = {
+  def page(id: EventId, form: Form[NewShow] = showForm, status: Status = Ok)(implicit rs: SecuredDBRequest[_]) = {
     eventService.eventDetails(id) match {
       case None => BadRequest(s"Failed to retrieve details for event $id")
       case Some(details) => status(views.html.admin.event(details, views.html.admin.eventAddshow(id, form, Options.apply(venueService.list(), Options.VenueRenderer))))

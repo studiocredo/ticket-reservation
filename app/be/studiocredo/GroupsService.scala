@@ -7,13 +7,12 @@ import models.{GroupDetail, Page}
 import scala.slick.session.Session
 import models.ids.{MemberId, CourseId, GroupId}
 import play.api.Logger
+import com.google.inject.Inject
 
-class GroupsService {
+class GroupsService @Inject()(courseService: CourseService) {
 
   import models.queries._
   import models.schema.tables._
-
-  val courseService = new CourseService()
 
   val GroupsQ = Query(Groups)
 
@@ -58,7 +57,8 @@ class GroupsService {
 
   def listMemberInGroup(id: GroupId)(implicit s: Session): List[Member] = {
     //(for {(gm, m) <- GroupMembers leftJoin Members on (_.memberId === _.id) if gm.groupId === id} yield m).sortBy(_.name.asc).run.toList
-    (for {gm <- GroupMembers; m <- gm.member if gm.groupId === id} yield m).sortBy(_.name.asc).run.toList
+    //(for {gm <- GroupMembers; m <- gm.member if gm.groupId === id} yield m).sortBy(_.name.asc).run.toList todo
+    List()
   }
 
 

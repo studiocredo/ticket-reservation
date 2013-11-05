@@ -8,23 +8,23 @@ import play.api._
 import play.api.mvc._
 import models.entities.{Group, Member}
 import be.studiocredo.util.Select2
+import com.google.inject.Inject
+import be.studiocredo.auth.AuthenticatorService
 
 
-object MemberDetails extends Controller {
+class MemberDetails @Inject()(groupService: GroupsService, courseService: CourseService, memberService: MemberService, val authService: AuthenticatorService) extends AdminController {
   val logger = Logger("group-details")
-  val groupService = new GroupsService()
-  val courseService = new CourseService()
-  val memberService = new MemberService()
 
 
-  def view(id: MemberId) = DBAction { implicit rs =>
+
+  def view(id: MemberId) = AuthDBAction { implicit rs =>
     memberService.memberDetails(id) match {
       case None => BadRequest(s"Failed to retrieve details for member $id")
       case Some(details) => Ok(views.html.admin.member(details))
     }
   }
 
-  def addGroups(memberId: MemberId) = DBAction(parse.urlFormEncoded) { implicit rs =>
+  def addGroups(memberId: MemberId) = AuthDBAction(parse.urlFormEncoded) { implicit rs =>
     val groups = rs.request.body.get("class")
     Logger.debug(s"add member $memberId to group $groups")
     groups.foreach(ids => ids.map(id => GroupId(id.toInt)).foreach (id => groupService.addMembers(id, memberId)))
@@ -32,8 +32,8 @@ object MemberDetails extends Controller {
     Redirect(routes.MemberDetails.view(memberId)).flashing("success" -> "Added to class")
   }
 
-  def ajaxGroups(id: MemberId) = DBAction { implicit rs =>
-    Select2.parse(rs.request).map {
+  def ajaxGroups(id: MemberId) = AuthDBAction(ajaxCall = true) { implicit rs =>
+    Select2.parse(rs).map {
       query => {
         val result = groupService.page(query.page, query.limit, filter = Some(query.query + '%'))
 

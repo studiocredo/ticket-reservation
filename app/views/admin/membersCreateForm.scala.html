@@ -1,7 +1,7 @@
-@(memberForm: Form[entities.MemberEdit])(implicit flash: Flash)
+@(memberForm: Form[entities.MemberEdit])(implicit request: be.studiocredo.auth.SecureRequest[_])
 @import controllers.admin.routes
 @import helper._
-
+    @*
 @base("Add member") {
 
     <h1>Add new member</h1>
@@ -10,10 +10,11 @@
 
         @membersForm(memberForm)
 
-        <div class="actions">
+        @twFormActions {
             <input type="submit" value="Add member" class="btn btn-primary">
             <a href="@routes.Members.list()" class="btn btn-warning">Cancel</a>
-        </div>
+        }
 
     }
 }
+*@

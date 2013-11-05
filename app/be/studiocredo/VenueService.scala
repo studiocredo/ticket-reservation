@@ -1,13 +1,12 @@
 package be.studiocredo
 
-
-import scala.slick.session.Session
 import play.api.db.slick.Config.driver.simple._
 import models._
 import models.entities._
 import models.ids._
+import com.google.inject.Inject
 
-class VenueService {
+class VenueService @Inject()() {
   import models.queries._
   import models.schema.tables._
 

@@ -3,13 +3,14 @@ package models
 import org.joda.time.DateTime
 import play.api.db.slick.Config.driver.simple._
 import com.github.tototoshi.slick.JodaSupport._
+import be.studiocredo.auth.{EmailToken, AuthToken, Password}
 
 object schema {
 
   object tables {
 
     val Users = new Users
-    val Guests = new Guests
+    val UserDetails = new UserDetails
     val Members = new Members
     val Admins = new Admins
     val Courses = new Courses
@@ -24,6 +25,9 @@ object schema {
     val Orders = new Orders
     val TicketOrders = new TicketOrders
     val TicketSeatOrders = new TicketSeatOrders
+
+    val AuthTokens = new AuthTokens
+    val EmailAuthTokens = new EmailAuthTokens
   }
 
   import tables._
@@ -35,50 +39,55 @@ object schema {
     def archived = column[Boolean]("archived", O.Default(false))
   }
 
+
   class Users extends Table[User]("user") {
     def id = column[UserId]("id", O.PrimaryKey, O.AutoInc)
-    def email = column[String]("email")
+    def name = column[String]("name")
+    def username = column[String]("username")
     def password = column[String]("password")
+    def salt = column[String]("salt")
 
-    def * = id ~ email ~ password <>(User, User.unapply _)
+    def * = id ~ name ~ username ~ password  ~ salt <>(
+      { (id, name, username, password, salt) => User(id, name, username, Password(password, salt))},
+      {(user: User) => Some((user.id, user.name, user.username, user.password.hashed, user.password.salt))}
+      )
 
-    def autoInc = email ~ password <>(UserEdit, UserEdit.unapply _) returning id
+    def autoInc = name ~ username ~ password ~ salt <>(
+      {(name, username, password, salt) => UserEdit(name, username, Password(password, salt))},
+      {(user: UserEdit) => Some((user.name, user.username, user.password.hashed, user.password.salt))}
+      ) returning id
 
-    def uniqueEmail = index("idx_email", email, unique = true)
+    def uniqueUserName = index("idx_username", username, unique = true)
   }
 
-  class Guests extends Table[Guest]("guest") {
-    def id = column[GuestId]("id", O.PrimaryKey, O.AutoInc)
-    def userId = column[UserId]("user_id")
-    def name = column[String]("name")
-    def email = column[String]("email")
-    def address = column[Option[String]]("address")
-    def phone = column[Option[String]]("phone")
-
-    def * = id ~ userId ~ name ~ email ~ address ~ phone <>(Guest, Guest.unapply _)
-
-    def user = foreignKey("user_fk", userId, Users)(_.id)
-  }
-
-  class Members extends Table[Member]("member") with Archiveable {
-    def id = column[MemberId]("id", O.PrimaryKey, O.AutoInc)
-    def name = column[String]("name")
+  class UserDetails extends Table[UserDetail]("user_detail") {
+    def id = column[UserId]("id", O.PrimaryKey)
     def email = column[Option[String]]("email")
     def address = column[Option[String]]("address")
     def phone = column[Option[String]]("phone")
 
-    def * = id ~ name ~ email ~ address ~ phone ~ archived <>(Member, Member.unapply _)
+    def * = id ~ email ~ address ~ phone <>(UserDetail.apply _, UserDetail.unapply _)
 
-    def autoInc = name ~ email ~ address ~ phone ~ archived<>(MemberEdit, MemberEdit.unapply _) returning id
+    def user = foreignKey("user_fk", id, Users)(_.id)
+  }
+
+  class Members extends Table[Member]("member") with Archiveable {
+    def id = column[MemberId]("id", O.PrimaryKey, O.AutoInc)
+    def userId = column[UserId]("user_id")
+
+    def * = id ~ userId ~ archived <>(Member, Member.unapply _)
+    def autoInc = userId ~ archived <>(MemberEdit, MemberEdit.unapply _) returning id
+
+    def user = foreignKey("user_fk", userId, Users)(_.id)
   }
 
   class Admins extends Table[Admin]("admin") {
     def id = column[AdminId]("id", O.PrimaryKey, O.AutoInc)
     def userId = column[UserId]("user_id")
-    def name = column[String]("name")
+    def creation = column[DateTime]("creation")
 
-    def * = id ~ userId ~ name <>(Admin, Admin.unapply _)
-    def autoInc = userId ~ name <>(AdminEdit, AdminEdit.unapply _) returning id
+    def * = id ~ userId ~ creation<>(Admin, Admin.unapply _)
+    def autoInc = userId ~ creation<>(AdminEdit, AdminEdit.unapply _) returning id
 
     def user = foreignKey("user_fk", userId, Users)(_.id)
   }
@@ -228,8 +237,29 @@ object schema {
   }
 
 
+  class AuthTokens extends Table[AuthToken]("auth_tokens") {
+    def id = column[String]("id", O.PrimaryKey)
+    def userId = column[UserId]("user_id")
+    def creation = column[DateTime]("creation")
+    def lastUsed = column[DateTime]("last_used")
+    def expiration = column[DateTime]("expiration")
+
+    def * = id ~ userId ~ creation ~ lastUsed ~ expiration <>(AuthToken.apply _, AuthToken.unapply _)
+  }
+
+  class EmailAuthTokens extends Table[EmailToken]("auth_tokens_email") {
+    def id = column[String]("id", O.PrimaryKey)
+    def email = column[String]("email")
+    def userId = column[Option[UserId]]("user_id")
+    def creation = column[DateTime]("creation")
+    def lastUsed = column[DateTime]("last_used")
+    def expiration = column[DateTime]("expiration")
+
+    def * = id ~ email ~ userId ~ creation ~ lastUsed ~ expiration <>(EmailToken.apply _, EmailToken.unapply _)
+  }
+
+
   implicit val userIdType = MappedTypeMapper.base[UserId, Long](_.id, new UserId(_))
-  implicit val guestIdType = MappedTypeMapper.base[GuestId, Long](_.id, new GuestId(_))
   implicit val adminIdType = MappedTypeMapper.base[AdminId, Long](_.id, new AdminId(_))
   implicit val memberIdType = MappedTypeMapper.base[MemberId, Long](_.id, new MemberId(_))
   implicit val eventIdType = MappedTypeMapper.base[EventId, Long](_.id, new EventId(_))

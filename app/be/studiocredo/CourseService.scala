@@ -6,8 +6,9 @@ import models.entities._
 import models.Page
 import scala.slick.session.Session
 import models.ids.CourseId
+import com.google.inject.Inject
 
-class CourseService {
+class CourseService @Inject()() {
 
   import models.queries._
   import models.schema.tables._

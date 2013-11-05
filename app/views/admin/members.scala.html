@@ -1,4 +1,5 @@
-@(currentPage: Page[entities.Member])(implicit flash: Flash)
+@(currentPage: Page[entities.Member])(implicit request: be.studiocredo.auth.SecureRequest[_])
+@*
 @import controllers.admin.routes
 @base("Members") {
 
@@ -41,3 +42,4 @@
     }
 
 }
+*@

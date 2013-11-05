@@ -12,12 +12,10 @@ import models.entities._
 import views.helper.Options
 import scala.slick.session.Session
 import org.joda.time.DateTime
+import com.google.inject.Inject
+import be.studiocredo.auth.AuthenticatorService
 
-object Groups extends Controller {
-  val groupService = new GroupsService()
-  val courseService = new CourseService()
-  val memberService = new MemberService()
-
+class Groups @Inject()(groupService: GroupsService, courseService: CourseService, memberService: MemberService, val authService: AuthenticatorService) extends AdminController {
   val ListPage = Redirect(routes.Groups.list())
 
   val groupForm = Form(
@@ -29,19 +27,19 @@ object Groups extends Controller {
     )(GroupEdit.apply)(GroupEdit.unapply)
   )
 
-  def list(page: Int) = DBAction { implicit rs =>
+  def list(page: Int) = AuthDBAction { implicit rs =>
     val list = groupService.page(page)
     Ok(views.html.admin.groups(list))
   }
 
-  def createForCourse(id: CourseId) = DBAction { implicit rs =>
+  def createForCourse(id: CourseId) = AuthDBAction { implicit rs =>
     Ok(views.html.admin.groupsCreateForm(groupForm.fill(GroupEdit("", DateTime.now().year().get(), id, archived = false)), courseOptions))
   }
 
-  def create() = DBAction { implicit rs =>
+  def create() = AuthDBAction { implicit rs =>
     Ok(views.html.admin.groupsCreateForm(groupForm, courseOptions))
   }
-  def save() = DBAction { implicit rs =>
+  def save() = AuthDBAction { implicit rs =>
     groupForm.bindFromRequest.fold(
       formWithErrors => BadRequest(views.html.admin.groupsCreateForm(formWithErrors, courseOptions)),
       group => {
@@ -52,13 +50,13 @@ object Groups extends Controller {
     )
   }
 
-  def edit(id: GroupId) = DBAction { implicit rs =>
+  def edit(id: GroupId) = AuthDBAction { implicit rs =>
     groupService.getEdit(id) match {
       case None => ListPage
       case Some(group) => Ok(views.html.admin.groupsEditForm(id, groupForm.fillAndValidate(group), courseOptions))
     }
   }
-  def update(id: GroupId) = DBAction { implicit rs =>
+  def update(id: GroupId) = AuthDBAction { implicit rs =>
     groupForm.bindFromRequest.fold(
       formWithErrors => BadRequest(views.html.admin.groupsEditForm(id, formWithErrors, courseOptions)),
       group => {
@@ -68,7 +66,7 @@ object Groups extends Controller {
       }
     )
   }
-  def delete(id: GroupId) = DBAction { implicit rs =>
+  def delete(id: GroupId) = AuthDBAction { implicit rs =>
     groupService.delete(id)
 
     ListPage.flashing("success" -> "Group has been deleted")

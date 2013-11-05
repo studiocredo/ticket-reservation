@@ -9,9 +9,10 @@ import models.ids._
 import scala.Some
 import models.entities._
 import be.studiocredo.VenueService
+import com.google.inject.Inject
+import be.studiocredo.auth.AuthenticatorService
 
-object Venues extends Controller {
-  val venueService = new VenueService()
+class Venues @Inject()(venueService: VenueService, val authService: AuthenticatorService) extends AdminController {
 
   val ListPage = Redirect(routes.Venues.list())
 
@@ -23,16 +24,16 @@ object Venues extends Controller {
     )(VenueEdit.apply)(VenueEdit.unapply)
   )
 
-  def list(page: Int) = DBAction { implicit rs =>
+  def list(page: Int) = AuthDBAction { implicit rs =>
     val list = venueService.page(page)
     Ok(views.html.admin.venues(list))
   }
 
 
-  def create() = Action { implicit request =>
+  def create() = AuthAction { implicit request =>
     Ok(views.html.admin.venuesCreateForm(venueForm))
   }
-  def save() = DBAction { implicit rs =>
+  def save() = AuthDBAction { implicit rs =>
     venueForm.bindFromRequest.fold(
       formWithErrors => BadRequest(views.html.admin.venuesCreateForm(formWithErrors)),
       venue => {
@@ -43,13 +44,13 @@ object Venues extends Controller {
     )
   }
 
-  def edit(id: VenueId) = DBAction { implicit rs =>
+  def edit(id: VenueId) = AuthDBAction { implicit rs =>
     venueService.getEdit(id) match {
       case None => ListPage
       case Some(venue) => Ok(views.html.admin.venuesEditForm(id, venueForm.fillAndValidate(venue)))
     }
   }
-  def update(id: VenueId) = DBAction { implicit rs =>
+  def update(id: VenueId) = AuthDBAction { implicit rs =>
     venueForm.bindFromRequest.fold(
       formWithErrors => BadRequest(views.html.admin.venuesEditForm(id, formWithErrors)),
       venue => {
@@ -59,7 +60,7 @@ object Venues extends Controller {
       }
     )
   }
-  def delete(id: VenueId) = DBAction { implicit rs =>
+  def delete(id: VenueId) = AuthDBAction { implicit rs =>
     venueService.delete(id)
 
     ListPage.flashing("success" -> "Venue has been deleted")

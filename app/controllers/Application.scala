@@ -2,17 +2,15 @@ package controllers
 
 import play.api._
 import play.api.mvc._
-import play.api.data._
 import be.studiocredo.ShowService
-import play.api.db.slick._
-import play.api.Play.current
 
+import com.google.inject.Inject
+import be.studiocredo.auth.{Secure, Authorization, AuthenticatorService}
 
-object Application extends Controller {
+class Application @Inject()(showService:ShowService, val authService: AuthenticatorService) extends Controller with Secure {
+  val defaultAuthorization = None
 
-  val showService = new ShowService
-
-  def index = DBAction { implicit request =>
+  def index = AuthAwareDBAction { implicit request =>
     Ok(views.html.index(showService.nextShows(3)))
   }
 

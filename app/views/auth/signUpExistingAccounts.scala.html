@@ -1,0 +1,19 @@
+@(startForm: Form[String], email: String)(implicit request: be.studiocredo.auth.SecureRequest[_])
+@import helper._
+@import views.Bootstrap._
+
+@base("Sign up") {
+    <div class="page-header">
+        <h1>Sign up</h1>
+    </div>
+
+
+    <div class="alert alert-warning">
+
+        <p>There are already one or more accounts using the email '@email'.</p>
+        <p>If you forgot your credentials you can recover them <a href="@controllers.auth.routes.Registration.startResetPassword()">
+            here</a></p>
+        <p>If you wish to create a new account anyway <a href="@controllers.auth.routes.Registration.forceHandleStartSignUp(email)">
+            click here</a></p>
+    </div>
+}
