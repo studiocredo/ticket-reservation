@@ -8,8 +8,6 @@ object ApplicationBuild extends Build {
   val appVersion = "1.0-SNAPSHOT"
 
   val appDependencies = Seq(
-    "com.typesafe.play" % "play-slick_2.10" % "0.5.0.8",
-
     "org.webjars" %% "webjars-play" % "2.2.0",
     "org.webjars" % "bootstrap" % "3.0.1",
     "org.webjars" % "jquery" % "2.0.3-1",
@@ -21,12 +19,20 @@ object ApplicationBuild extends Build {
 
     "com.chuusai" % "shapeless_2.10.2" % "2.0.0-M1", /* cross CrossVersion.full */
 
-    play.Project.cache
+
+    play.Project.cache,
+    "com.typesafe.play" % "play-slick_2.10" % "0.5.0.8",
+    "org.mindrot" % "jbcrypt" % "0.3m",
+
+    "org.apache.commons" % "commons-email" % "1.3.1",
+    "com.typesafe" % "play-plugins-util_2.10" % "2.2.0" notTransitive(),
+    "com.typesafe" % "play-plugins-mailer_2.10" % "2.2.0" notTransitive()
   )
 
   val main = Project(appName, appVersion, appDependencies).settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*).settings(
     organization := "be.studiocredo"
     , scalaVersion := "2.10.3"
     , scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-language:implicitConversions")
+    , resolvers += Resolver.url("sbt-plugin-releases", new URL("http://repo.scala-sbt.org/scalasbt/sbt-plugin-releases/"))(Resolver.ivyStylePatterns)
   )
 }
