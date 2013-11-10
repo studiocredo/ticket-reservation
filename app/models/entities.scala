@@ -4,6 +4,7 @@ import scala.Predef._
 import scala.slick.lifted.MappedTypeMapper
 import org.joda.time.DateTime
 import be.studiocredo.auth.{Roles, Password}
+import be.studiocredo.RichUser
 
 object entities {
 
@@ -24,6 +25,13 @@ object entities {
 
   import Roles._
 
+  case class Identity(user: RichUser, roles: List[Role]) {
+    def id = user.id
+    def name = user.name
+    def username = user.username
+    def email = user.email
+  }
+
   case class User(id: UserId, name: String, username: String, password: Password)
   case class UserEdit(        name: String, username: String, password: Password)
 
@@ -33,9 +41,7 @@ object entities {
   case class Member(id: MemberId, userId: UserId, archived: Boolean) extends Entity[MemberId] with Archiveable
   case class MemberEdit(          userId: UserId, archived: Boolean)
 
-  case class Admin(id: AdminId, userId: UserId, creation: DateTime) extends Entity[AdminId]
-  case class AdminEdit(         userId: UserId, creation: DateTime)
-
+  case class UserRole(id: UserId, role: Roles.Role)
 
   case class Course(id: CourseId, name: String, archived: Boolean) extends Entity[CourseId] with Archiveable
   case class CourseEdit(          name: String, archived: Boolean)

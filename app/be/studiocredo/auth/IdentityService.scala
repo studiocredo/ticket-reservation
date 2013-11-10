@@ -7,23 +7,27 @@ import models.entities._
 import play.api.Play.current
 import models.schema.tables._
 import com.google.inject.Inject
+import be.studiocredo.{MemberService, RichUser, UserService}
+import scala.slick.session.Session
 
-class IdentityService @Inject()() {
+class IdentityService @Inject()(userService: UserService, memberService: MemberService) {
   val UsersQ = Query(Users)
 
-  def userToIdentity(user: User): Identity = Identity(user, Roles.Member) // todo role
 
   def find(id: UserId): Option[Identity] = {
     DB.withSession { implicit session =>
-      UsersQ.filter(_.id === id).firstOption map userToIdentity
+      userService.find(id) map toIdentity
     }
   }
 
   def findByUserName(user: String): Option[Identity] = {
     DB.withSession { implicit session =>
-      UsersQ.filter(_.username.toLowerCase === user.toLowerCase).firstOption map userToIdentity
+      userService.findByUserName(user) map toIdentity
     }
   }
 
+  def toIdentity(user: RichUser)(implicit s: Session): Identity = {
+    Identity(user, userService.findRoles(user.id))
+  }
 }
 

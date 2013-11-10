@@ -23,6 +23,7 @@
         }
     } else {
         @form(action = controllers.auth.routes.PasswordChange.handlePasswordChange(), 'class -> "form form-horizontal") {
+            @globalFormErrors(passwordChangeForm)
             <fieldset>
                 @helper.inputPassword(
                     passwordChangeForm("current"),
@@ -31,15 +32,15 @@
                 )
 
                 @helper.inputPassword(
-                    passwordChangeForm("newPassword"),
+                    passwordChangeForm("password.password"),
                     '_label -> "New Password",
                     'class -> "form-control"
                 )
 
                 @helper.inputPassword(
-                    passwordChangeForm("newPasswordConfirm"),
+                    passwordChangeForm("password.confirmation"),
                     '_label -> "New Password Confirmation",
-                    '_error -> passwordChangeForm.error("newPassword"),
+                    '_error -> passwordChangeForm.error("password"),
                     'class -> "form-control"
                 )
             </fieldset>

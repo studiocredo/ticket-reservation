@@ -1,6 +1,8 @@
 @(title: String)(content: Html)(implicit request: be.studiocredo.auth.SecureRequest[_])
 @import controllers.admin
 @import controllers.auth
+@import views.helper.Auth
+@import be.studiocredo.auth.Roles._
 
 <!DOCTYPE html>
 <html>
@@ -16,9 +18,9 @@
         <link rel='stylesheet' href='@routes.Assets.at("css/main.css")'>
 
         <script type='text/javascript' src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery.min.js"))'></script>
-            <!--[if lt IE 9]>
+        <!--[if lt IE 9]>
             <script type='text/javascript' src='@routes.WebJarAssets.at(WebJarAssets.locate("html5shiv.min.js"))'> </script>
-        <script type='text/javascript' src='@routes.Assets.at("js/respond.min.js")'></script>
+            <script type='text/javascript' src='@routes.Assets.at("js/respond.min.js")'></script>
         <![endif]-->
         <script type='text/javascript' src='@routes.WebJarAssets.at(WebJarAssets.locate("js/bootstrap.min.js"))'></script>
         <script type='text/javascript' src='@routes.WebJarAssets.at(WebJarAssets.locate("select2.js"))'></script>
@@ -40,23 +42,25 @@
                     <a class="navbar-brand" href="@routes.Application.index()">Credo</a>
                 </div>
                 <div class="navbar-collapse collapse">
-                    <ul class="nav navbar-nav">
-                        <li class="dropdown">
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Org <b class="caret"></b></a>
-                            <ul class="dropdown-menu">
-                                <li><a href="@admin.routes.Courses.list()">Courses</a></li>
-                                @*<li><a href="@admin.routes.Members.list()">Members</a></li>*@
-                                <li><a href="@admin.routes.Groups.list()">Classes</a></li>
-                            </ul>
-                        </li>
-                        <li class="dropdown">
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Events <b class="caret"></b></a>
-                            <ul class="dropdown-menu">
-                                <li><a href="@admin.routes.Venues.list()">Venues</a></li>
-                                <li><a href="@admin.routes.Events.list()">Events</a></li>
-                            </ul>
-                        </li>
-                    </ul>
+                    @Auth.restrictAdmin {
+                        <ul class="nav navbar-nav">
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Org <b class="caret"></b></a>
+                                <ul class="dropdown-menu">
+                                    <li><a href="@admin.routes.Courses.list()">Courses</a></li>
+                                    @*<li><a href="@admin.routes.Members.list()">Members</a></li>*@
+                                    <li><a href="@admin.routes.Groups.list()">Classes</a></li>
+                                </ul>
+                            </li>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Events <b class="caret"></b></a>
+                                <ul class="dropdown-menu">
+                                    <li><a href="@admin.routes.Venues.list()">Venues</a></li>
+                                    <li><a href="@admin.routes.Events.list()">Events</a></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    }
 
 
                     @if(request.currentUser.isDefined) {
@@ -64,6 +68,8 @@
                             <li class="dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">@request.currentUser.get.name (@request.currentUser.get.username) <b class="caret"></b></a>
                                 <ul class="dropdown-menu">
+                                    <li><a href="@auth.routes.PasswordChange.page()">Change password</a></li>
+                                    <li class="divider"></li>
                                     <li><a href="@auth.routes.LoginPage.logout()">Logout</a></li>
                                 </ul>
                             </li>
@@ -72,7 +78,7 @@
                         <ul class="nav navbar-nav navbar-right">
                             <li><a href="@auth.routes.LoginPage.login()">Login</a></li>
 
-                            <li><a href="@auth.routes.Registration.startSignUp()">SignUp</a></li>
+                            <li><a href="@auth.routes.SignUp.startSignUp()">SignUp</a></li>
                         </ul>
                     }
                 </div>

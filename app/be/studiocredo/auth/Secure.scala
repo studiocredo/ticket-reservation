@@ -27,6 +27,8 @@ import scala.concurrent.Future
 import be.studiocredo.util.DBSupport._
 import be.studiocredo.util.DBImplicits
 import play.Logger
+import play.api.data.{FormError, Form}
+import models.entities.{Identity, User}
 
 
 sealed abstract class SecureRequest[A](request: Request[A], val currentUser: Option[Identity]) extends WrappedRequest(request)

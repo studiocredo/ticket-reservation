@@ -31,6 +31,8 @@ import scala.Some
 import play.api.mvc.SimpleResult
 import play.api.mvc.DiscardingCookie
 import play.api.mvc.Cookie
+import play.api.data.validation.{Valid, Invalid, Constraint}
+import models.entities.{Identity, User}
 
 class AuthenticatorService @Inject()(store: AuthTokenStore, identityService: IdentityService) {
   val cookieName = "id"
@@ -47,7 +49,7 @@ class AuthenticatorService @Inject()(store: AuthTokenStore, identityService: Ide
       failure(TryAgain("Database error"))
     )(
       user => {
-        if (Passwords.matches(user.password, credentials.password)) {
+        if (Passwords.matches(user.user.password, credentials.password)) {
           success.withCookies(authCookie(create(user)))
           //failure(TryAgain("Error creating authenticator"))
         } else
@@ -140,7 +142,17 @@ case class Credentials(user: String, password: String) {
   def userOnly = this.copy(password = "")
 }
 
+case class Password(hashed: String, salt: String)
+
 object Passwords {
+  val validPassword: Constraint[String] = Constraint({
+    plainText =>
+      if (plainText.length < 8)
+        Invalid("Password must be at least 8 chars long")
+      else
+        Valid
+  })
+
   def hash(plainPassword: String): Password = {
     val salt = BCrypt.gensalt(13)
     Password(BCrypt.hashpw(plainPassword, salt), salt)

@@ -1,0 +1,7 @@
+@(form: Form[_])
+
+@form.globalErrors.map(e => play.api.i18n.Messages(e.message, e.args: _*)).map { error =>
+    <div class="alert alert-warning">
+        @error
+    </div>
+}

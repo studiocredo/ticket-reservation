@@ -3,7 +3,6 @@
 
 # --- !Ups
 
-create table "admin" ("id" SERIAL NOT NULL PRIMARY KEY,"user_id" BIGINT NOT NULL,"creation" TIMESTAMP NOT NULL);
 create table "auth_tokens" ("id" VARCHAR(254) NOT NULL PRIMARY KEY,"user_id" BIGINT NOT NULL,"creation" TIMESTAMP NOT NULL,"last_used" TIMESTAMP NOT NULL,"expiration" TIMESTAMP NOT NULL);
 create table "course" ("id" SERIAL NOT NULL PRIMARY KEY,"name" VARCHAR(254) NOT NULL,"archived" BOOLEAN DEFAULT false NOT NULL);
 create table "dvd" ("id" SERIAL NOT NULL PRIMARY KEY,"event_id" BIGINT NOT NULL,"name" VARCHAR(254) NOT NULL,"price" INTEGER NOT NULL,"available-start" TIMESTAMP NOT NULL,"available-end" TIMESTAMP,"archived" BOOLEAN DEFAULT false NOT NULL);
@@ -23,10 +22,11 @@ alter table "ticket-reservation" add constraint "ticket-reservation_pkey" primar
 create table "order-ticket-seat" ("ticket_order_id" BIGINT NOT NULL,"show_id" BIGINT NOT NULL,"member_id" BIGINT);
 alter table "order-ticket-seat" add constraint "order-ticket-seat_pkey" primary key("ticket_order_id","show_id");
 create table "user_detail" ("id" BIGINT NOT NULL PRIMARY KEY,"email" VARCHAR(254),"address" VARCHAR(254),"phone" VARCHAR(254));
+create table "roles" ("id" BIGINT NOT NULL,"role" VARCHAR(254) NOT NULL);
+create unique index "idx_userrole" on "roles" ("id","role");
 create table "user" ("id" SERIAL NOT NULL PRIMARY KEY,"name" VARCHAR(254) NOT NULL,"username" VARCHAR(254) NOT NULL,"password" VARCHAR(254) NOT NULL,"salt" VARCHAR(254) NOT NULL);
 create unique index "idx_username" on "user" ("username");
 create table "venue" ("id" SERIAL NOT NULL PRIMARY KEY,"name" VARCHAR(254) NOT NULL,"description" VARCHAR(254) NOT NULL,"archived" BOOLEAN DEFAULT false NOT NULL);
-alter table "admin" add constraint "user_fk" foreign key("user_id") references "user"("id") on update NO ACTION on delete NO ACTION;
 alter table "dvd" add constraint "event_fk" foreign key("event_id") references "event"("id") on update NO ACTION on delete NO ACTION;
 alter table "event-participants" add constraint "event_fk" foreign key("event_id") references "event"("id") on update NO ACTION on delete NO ACTION;
 alter table "event-participants" add constraint "member_fk" foreign key("member_id") references "member"("id") on update NO ACTION on delete NO ACTION;
@@ -45,10 +45,10 @@ alter table "order-ticket-seat" add constraint "ticket_order_fk" foreign key("ti
 alter table "order-ticket-seat" add constraint "show_fk" foreign key("show_id") references "show"("id") on update NO ACTION on delete NO ACTION;
 alter table "order-ticket-seat" add constraint "member_fk" foreign key("member_id") references "member"("id") on update NO ACTION on delete NO ACTION;
 alter table "user_detail" add constraint "user_fk" foreign key("id") references "user"("id") on update NO ACTION on delete NO ACTION;
+alter table "roles" add constraint "user_fk" foreign key("id") references "user"("id") on update NO ACTION on delete NO ACTION;
 
 # --- !Downs
 
-alter table "admin" drop constraint "user_fk";
 alter table "dvd" drop constraint "event_fk";
 alter table "event-participants" drop constraint "event_fk";
 alter table "event-participants" drop constraint "member_fk";
@@ -67,7 +67,7 @@ alter table "order-ticket-seat" drop constraint "ticket_order_fk";
 alter table "order-ticket-seat" drop constraint "show_fk";
 alter table "order-ticket-seat" drop constraint "member_fk";
 alter table "user_detail" drop constraint "user_fk";
-drop table "admin";
+alter table "roles" drop constraint "user_fk";
 drop table "auth_tokens";
 drop table "course";
 drop table "dvd";
@@ -87,6 +87,7 @@ drop table "ticket-reservation";
 alter table "order-ticket-seat" drop constraint "order-ticket-seat_pkey";
 drop table "order-ticket-seat";
 drop table "user_detail";
+drop table "roles";
 drop table "user";
 drop table "venue";
 

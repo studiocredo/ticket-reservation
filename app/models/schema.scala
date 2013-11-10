@@ -3,7 +3,7 @@ package models
 import org.joda.time.DateTime
 import play.api.db.slick.Config.driver.simple._
 import com.github.tototoshi.slick.JodaSupport._
-import be.studiocredo.auth.{EmailToken, AuthToken, Password}
+import be.studiocredo.auth.{Roles, EmailToken, AuthToken, Password}
 
 object schema {
 
@@ -12,7 +12,8 @@ object schema {
     val Users = new Users
     val UserDetails = new UserDetails
     val Members = new Members
-    val Admins = new Admins
+    val UserRoles = new UserRoles
+
     val Courses = new Courses
     val Groups = new Groups
     val GroupMembers = new GroupMembers
@@ -81,15 +82,15 @@ object schema {
     def user = foreignKey("user_fk", userId, Users)(_.id)
   }
 
-  class Admins extends Table[Admin]("admin") {
-    def id = column[AdminId]("id", O.PrimaryKey, O.AutoInc)
-    def userId = column[UserId]("user_id")
-    def creation = column[DateTime]("creation")
+  class UserRoles extends Table[UserRole]("roles") {
+    def userId = column[UserId]("id")
+    def role = column[String]("role")
 
-    def * = id ~ userId ~ creation<>(Admin, Admin.unapply _)
-    def autoInc = userId ~ creation<>(AdminEdit, AdminEdit.unapply _) returning id
+    def * = userId ~ role <>({(userId, role) => UserRole(userId, Roles.toRole(role))}, {(userRole:UserRole) => Some(userRole.id, Roles.toString(userRole.role))})
 
     def user = foreignKey("user_fk", userId, Users)(_.id)
+
+    def unique = index("idx_userrole", userId ~ role, unique = true)
   }
 
   //////////////////////////////////

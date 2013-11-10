@@ -7,14 +7,9 @@
         <h1>Reset Password</h1>
     </div>
 
-    @request.flash.get("error").map { msg =>
-        <div class="alert alert-danger">
-            @msg
-        </div>
-    }
+    @form(action = controllers.auth.routes.PasswordReset.handleStartResetPassword(), 'class -> "form form-horizontal") {
+        @globalFormErrors(startForm)
 
-
-    @form(action = controllers.auth.routes.Registration.handleStartResetPassword(), 'class -> "form form-horizontal") {
         <fieldset>
             @helper.inputText(
                 startForm("email"),

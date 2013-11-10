@@ -6,15 +6,27 @@ import play.api.Logger
 import play.api.libs.concurrent.Akka
 import java.nio.charset.StandardCharsets
 import play.api.mvc.RequestHeader
+import be.studiocredo.RichUser
+import be.studiocredo.auth.EmailToken
 
 object Mailer {
   val fromAddress = current.configuration.getString("smtp.from").get
 
 
-  def sendSignUpEmail(to: String, token: String)(implicit request: RequestHeader)  {
-    val txtAndHtml  = (None, Some(views.html.auth.mails.signUpEmail(token)))
+  def sendSignUpEmail(to: String, token: EmailToken)(implicit request: RequestHeader)  {
+    val txtAndHtml  = (None, Some(views.html.auth.mails.signUpEmail(token.id)))
 
     sendEmail("Sign up instructions", to, txtAndHtml)
+  }
+
+  def sendPasswordResetEmail(to: String, users: List[RichUser], token: EmailToken)(implicit request: RequestHeader) {
+    val txtAndHtml = (None, Some(views.html.auth.mails.passwordReset(users, token.id)))
+    sendEmail("Password reset instructions", to, txtAndHtml)
+  }
+
+  def sendPasswordChangedNotification(to: String, user: RichUser)(implicit request: RequestHeader) = {
+    val txtAndHtml = (None, Some(views.html.auth.mails.passwordChangedNotice(user)))
+    sendEmail("Password change confirmation", to, txtAndHtml)
   }
 
 

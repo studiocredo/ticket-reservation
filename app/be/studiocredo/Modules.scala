@@ -47,7 +47,8 @@ object Modules {
       bind[controllers.auth.Auth].in[Singleton]
       bind[controllers.auth.LoginPage].in[Singleton]
       bind[controllers.auth.PasswordChange].in[Singleton]
-      bind[controllers.auth.Registration].in[Singleton]
+      bind[controllers.auth.SignUp].in[Singleton]
+      bind[controllers.auth.PasswordReset].in[Singleton]
     }
   }
 }

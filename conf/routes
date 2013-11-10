@@ -14,16 +14,16 @@ GET         /logout                                 @controllers.auth.LoginPage.
 GET         /not-authorized                         @controllers.auth.Auth.notAuthorized
 
 # User Registration and password handling (only needed if you are using UsernamePasswordProvider)
-GET         /signup                                 @controllers.auth.Registration.startSignUp
-POST        /signup                                 @controllers.auth.Registration.handleStartSignUp
-GET         /signup/emailed                         @controllers.auth.Registration.signUpAwaitEmail
-POST        /signup/force                           @controllers.auth.Registration.forceHandleStartSignUp(email: String)
-GET         /signup/:token                          @controllers.auth.Registration.signUp(token)
-POST        /signup/:token                          @controllers.auth.Registration.handleSignUp(token:String)
-GET         /reset                                  @controllers.auth.Registration.startResetPassword
-POST        /reset                                  @controllers.auth.Registration.handleStartResetPassword
-GET         /reset/:token                           @controllers.auth.Registration.resetPassword(token:String)
-POST        /reset/:token                           @controllers.auth.Registration.handleResetPassword(token:String)
+GET         /signup                                 @controllers.auth.SignUp.startSignUp
+POST        /signup                                 @controllers.auth.SignUp.handleStartSignUp
+GET         /signup/emailed                         @controllers.auth.SignUp.signUpAwaitEmail
+POST        /signup/force                           @controllers.auth.SignUp.forceHandleStartSignUp(email: String)
+GET         /signup/:token                          @controllers.auth.SignUp.signUp(token)
+POST        /signup/:token                          @controllers.auth.SignUp.handleSignUp(token:String)
+GET         /reset                                  @controllers.auth.PasswordReset.startResetPassword
+POST        /reset                                  @controllers.auth.PasswordReset.handleStartResetPassword
+GET         /reset/:token/:username                 @controllers.auth.PasswordReset.resetPassword(token:String, username: String)
+POST        /reset/:token/:username                 @controllers.auth.PasswordReset.handleResetPassword(token:String, username: String)
 GET         /password                               @controllers.auth.PasswordChange.page
 POST        /password                               @controllers.auth.PasswordChange.handlePasswordChange
 

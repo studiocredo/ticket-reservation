@@ -1,6 +1,5 @@
 package controllers.auth
 
-
 import play.api.mvc._
 import com.google.inject.Inject
 import be.studiocredo.auth._
@@ -9,14 +8,15 @@ import play.api.data.Forms._
 import play.api.data.validation.Constraints._
 import be.studiocredo.UserService
 import scala.Some
-import be.studiocredo.auth.EmailToken
 import play.api.mvc.SimpleResult
-import play.api.mvc.Call
-import play.api.data.validation.{Constraint, ValidationError, Valid, Invalid}
-import models.entities.{UserDetailEdit, UserDetail, UserEdit}
+import play.api.data.validation.{Constraint, Valid, Invalid}
+import models.entities.{UserDetailEdit, UserEdit}
 import be.studiocredo.util.DBSupport
 
-class Registration @Inject()(userService: UserService, val authService: AuthenticatorService) extends Controller with SecureUtils with Secure {
+case class PasswordSet(newPassword: String, confirmation: String)
+case class RegistrationInfo(name:String, username: String, password: PasswordSet)
+
+class SignUp @Inject()(userService: UserService, val authService: AuthenticatorService) extends Controller with SecureUtils with Secure with AuthUtils {
   val defaultAuthorization = None
 
   val startForm = Form(
@@ -25,16 +25,16 @@ class Registration @Inject()(userService: UserService, val authService: Authenti
 
 
   def startSignUp = AuthAwareAction { implicit request =>
-    withReferrerAsOriginalUrl(Ok(views.html.auth.startSignUp(startForm)))
+    withReferrerAsOriginalUrl(Ok(views.html.auth.signUpStart(startForm)))
   }
 
   def signUpAwaitEmail = AuthAwareAction { implicit request =>
-    Ok(views.html.auth.signUpAwaitEmail())
+    Ok(views.html.auth.signUpEmail())
   }
 
   def handleStartSignUp = AuthAwareDBAction { implicit request =>
     startForm.bindFromRequest.fold({
-      errors => BadRequest(views.html.auth.startSignUp(errors))
+      errors => BadRequest(views.html.auth.signUpStart(errors))
     }, {
       email =>
         if (userService.findByEmail(email).isEmpty) {
@@ -52,20 +52,14 @@ class Registration @Inject()(userService: UserService, val authService: Authenti
   private def doSignUp(email: String)(implicit request: SecureRequest[_]): SimpleResult = {
     val token = authService.createEmailToken(email)
 
-    Mailer.sendSignUpEmail(email, token.id)
-    Redirect(routes.Registration.signUpAwaitEmail())
+    Mailer.sendSignUpEmail(email, token)
+    Redirect(routes.SignUp.signUpAwaitEmail())
   }
 
   // ----------------
   // ----------------
 
-  val validPassword: Constraint[String] = Constraint({
-    plainText =>
-      if (plainText.length < 8)
-        Invalid("Password must be at least 8 chars long")
-      else
-        Valid
-  })
+  import Passwords._
 
   val validUsername: Constraint[String] = Constraint({
     username =>
@@ -94,55 +88,24 @@ class Registration @Inject()(userService: UserService, val authService: Authenti
   )
 
   def signUp(token: String) = AuthAwareAction { implicit req =>
-    executeForToken(token, routes.Registration.startSignUp(), token => {
-      Ok(views.html.auth.signUp(registerForm, token.id))
+    executeForToken(token, routes.SignUp.startSignUp(), token => {
+      Ok(views.html.auth.signUpForm(registerForm, token.id))
     })
   }
 
   def handleSignUp(token: String) = AuthAwareDBAction { implicit req => {
-    executeForToken(token, routes.Registration.startSignUp(), token => {
+    executeForToken(token, routes.SignUp.startSignUp(), token => {
       registerForm.bindFromRequest.fold(errors => {
-        BadRequest(views.html.auth.signUp(errors, token.id))
+        BadRequest(views.html.auth.signUpForm(errors, token.id))
       }, {
         info => {
           val userId = userService.insert(
             UserEdit(info.name, info.username, Passwords.hash(info.password.newPassword)),
             UserDetailEdit(Some(token.email), None, None)
           )
-          // Mailer.sendWelcomeEmail(
-          Redirect(routes.LoginPage.login()).flashing("success" -> "Thank you for signing up.  You can log in now")
+          Redirect(routes.LoginPage.login()).flashing("success" -> "Thank you for signing up. You can log in now")
         }
       })
     })
   }}
-
-
-  // ----------------
-  // ----------------
-
-  def startResetPassword() = AuthAwareAction { implicit request =>
-    NotImplemented
-  }
-
-  def handleStartResetPassword() = AuthAwareAction { implicit request =>
-    NotImplemented
-  }
-
-
-  def resetPassword(token: String) = AuthAwareAction { implicit request =>
-    NotImplemented
-  }
-
-  def handleResetPassword(token: String) = AuthAwareAction { implicit request =>
-    NotImplemented
-  }
-
-  private def executeForToken(token: String, error: Call, f: EmailToken => SimpleResult)(implicit request: SecureRequest[_]): SimpleResult = {
-    authService.checkEmailToken(token).fold(
-      Redirect(error).flashing("error" -> "The link you followed no longer valid")
-    )(
-      f
-    )
-  }
-
 }
