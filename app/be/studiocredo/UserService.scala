@@ -9,17 +9,7 @@ import models.schema.tables._
 import com.google.inject.Inject
 import be.studiocredo.auth.Password
 import be.studiocredo.auth.Roles
-
-
-case class RichUser(user: User, detail: UserDetail) {
-  def id = user.id
-  def name = user.name
-  def username = user.username
-  def password = user.password
-  def email = detail.email
-  def address = detail.address
-  def phone = detail.phone
-}
+import models.admin._
 
 class UserService @Inject()() {
   val UsersQ = Query(Users)

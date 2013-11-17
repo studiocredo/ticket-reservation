@@ -13,6 +13,7 @@ import scala.Some
 import org.joda.time.DateTime
 import com.google.inject.Inject
 import be.studiocredo.auth.{Roles, Passwords}
+import models.admin.MemberFormData
 
 class FakeData @Inject()(memberService: MemberService,
                          userService: UserService,
@@ -26,16 +27,9 @@ class FakeData @Inject()(memberService: MemberService,
     val userAdmin = userService.insert(UserEdit("Thomas", "selckin", Passwords.hash("qsdfghjklm")), UserDetailEdit(Some("selckin@selckin.be"), None, None))
     userService.addRole(userAdmin, Roles.Admin)
 
-    val userThomas = userService.insert(UserEdit("Thomas", "thomas", Passwords.hash("qsdfghjklm")), UserDetailEdit(Some("selckin@selckin.be"), None, None))
-    val userSven = userService.insert(UserEdit("sven", "sven", Passwords.hash("qsdfghjklm")), UserDetailEdit(Some("sven@example.com"), None, None))
-    val userJantje = userService.insert(UserEdit("Jantje", "jantje", Passwords.hash("qsdfghjklm")), UserDetailEdit(Some("selckin@selckin.be"), Some("veldstraat 20 gent"), Some("09/2345435453435")))
-
-    userService.addRole(userThomas, Roles.Member)
-    userService.addRole(userSven, Roles.Member)
-
-    val memberThomas = memberService.insert(MemberEdit(userThomas, archived = false))
-    val memberSven = memberService.insert(MemberEdit(userSven, archived = false))
-    val memberJantje = memberService.insert(MemberEdit(userJantje, archived = false))
+    val thomas = memberService.insert(MemberFormData("Thomas", "thomas", Some("selckin@selckin.be"), None, None))
+    val sven = memberService.insert(MemberFormData("sven", "sven",Some("sven@example.com"), None, None))
+    val jantje = memberService.insert(MemberFormData("Jantje", "jantje", Some("selckin@selckin.be"), Some("veldstraat 20 gent"), Some("09/2345435453435")))
 
     val course1 = courseService.insert(CourseEdit("Indian rain dancing", archived = false))
     val course2 = courseService.insert(CourseEdit("Advanced roboting", archived = false))
@@ -45,9 +39,9 @@ class FakeData @Inject()(memberService: MemberService,
     val classB = groupService.insert(GroupEdit("class B", 2013, course1, archived = false))
     val classD = groupService.insert(GroupEdit("class D", 2014, course2, archived = false))
 
-    groupService.addMembers(classA, List(memberThomas, memberSven, memberJantje))
-    groupService.addMembers(classB, List(memberThomas, memberJantje))
-    groupService.addMembers(classD, List(memberJantje))
+    groupService.addMembers(classA, List(thomas, sven, jantje))
+    groupService.addMembers(classB, List(thomas, jantje))
+    groupService.addMembers(classD, List(jantje))
 
     val event1 = eventService.insert(EventEdit("xmas special", "", archived = false))
     val event2 = eventService.insert(EventEdit("Big show 2013", "", archived = false))

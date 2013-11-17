@@ -2,8 +2,8 @@ package be.studiocredo
 
 import play.api.db.slick.Config.driver.simple._
 import models.entities._
-
-import models.{GroupDetail, Page}
+import models.admin._
+import models.{Page}
 import scala.slick.session.Session
 import models.ids.{MemberId, CourseId, GroupId}
 import play.api.Logger
@@ -55,12 +55,18 @@ class GroupsService @Inject()(courseService: CourseService) {
     (for {gm <- GroupMembers ; g <- gm.group if gm.memberId === id} yield g).sortBy(group => (group.year.desc, group.name.asc)).run.toList
   }
 
-  def listMemberInGroup(id: GroupId)(implicit s: Session): List[Member] = {
+  def listMemberInGroup(id: GroupId)(implicit s: Session): List[UserMember] = {
     //(for {(gm, m) <- GroupMembers leftJoin Members on (_.memberId === _.id) if gm.groupId === id} yield m).sortBy(_.name.asc).run.toList
     //(for {gm <- GroupMembers; m <- gm.member if gm.groupId === id} yield m).sortBy(_.name.asc).run.toList todo
-    List()
-  }
+    import MemberQueries._
 
+    val q = for {
+      gm <- GroupMembers filter (_.groupId is id)
+      (m, u, d) <- members if gm.memberId is m.id
+    } yield (m, u, d)
+
+    q.list.map(toUserMember)
+  }
 
   def addMembers(id: GroupId, members: List[MemberId])(implicit s: Session) {
     members.foreach(addMembers(id, _))

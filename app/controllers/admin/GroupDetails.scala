@@ -1,6 +1,5 @@
 package controllers.admin
 
-import play.api.db.slick._
 import be.studiocredo.{MemberService, CourseService, GroupsService}
 import play.api.Play.current
 import models.ids._
@@ -10,6 +9,7 @@ import models.entities.{Member, Group}
 import be.studiocredo.util.Select2
 import com.google.inject.Inject
 import be.studiocredo.auth.AuthenticatorService
+import models.admin.UserMember
 
 
 class GroupDetails @Inject()(groupService: GroupsService, courseService: CourseService, memberService: MemberService, val authService: AuthenticatorService) extends AdminController {
@@ -24,7 +24,8 @@ class GroupDetails @Inject()(groupService: GroupsService, courseService: CourseS
 
   def addMembers(id: GroupId) = AuthDBAction(parse.urlFormEncoded) { implicit rs =>
     rs.request.body.get("member").foreach { ids =>
-      groupService.addMembers(id, (ids map (id => MemberId(id.toLong))).toList)
+
+      groupService.addMembers(id, (ids filter(_.length > 0) map (id => MemberId(id.toLong))).toList)
     }
 
     Redirect(routes.GroupDetails.view(id)).flashing("success" -> "Member has been added")
@@ -35,7 +36,7 @@ class GroupDetails @Inject()(groupService: GroupsService, courseService: CourseS
       query => {
         val result = memberService.page(query.page, query.limit, filter = Some(query.query + '%'))
 
-        Ok(Select2.respond(result, (m: Member) => m.id.toString, (m: Member) => m.userId.toString)) // TODO name
+        Ok(Select2.respond(result)(m => m.id.toString, m => m.name))
       }
     }.getOrElse(BadRequest("Missing parameters"))
   }

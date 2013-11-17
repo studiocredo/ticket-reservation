@@ -1,6 +1,5 @@
 package controllers.admin
 
-import play.api.db.slick._
 import be.studiocredo.{MemberService, CourseService, GroupsService}
 import play.api.Play.current
 import models.ids._
@@ -37,7 +36,7 @@ class MemberDetails @Inject()(groupService: GroupsService, courseService: Course
       query => {
         val result = groupService.page(query.page, query.limit, filter = Some(query.query + '%'))
 
-        Ok(Select2.respond(result, (g: Group) => g.id.toString, (g: Group) => s"(${g.year}) ${g.name}"))
+        Ok(Select2.respond(result)(g => g.id.toString, g => s"(${g.year}) ${g.name}"))
       }
     }.getOrElse(BadRequest("Missing parameters"))
   }

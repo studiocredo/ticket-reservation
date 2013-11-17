@@ -5,6 +5,7 @@ import models._
 import models.entities._
 import models.ids._
 import com.google.inject.Inject
+import models.admin._
 
 class VenueService @Inject()() {
   import models.queries._

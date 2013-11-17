@@ -25,11 +25,11 @@ simpleSelect2 = ($input, route, perPage, placeHolder) ->
 
 $(document).ready ->
   $input = $("input.member-sel2")
-  route = jsRoutes.controllers.GroupDetails.ajaxMembers($input.attr("data-group-id"))
+  route = jsRoutes.controllers.admin.GroupDetails.ajaxMembers($input.attr("data-group-id"))
   simpleSelect2($input, route, 10, "Select member to add")
 
 
 $(document).ready ->
   $input = $("input.class-sel2")
-  route = jsRoutes.controllers.MemberDetails.ajaxGroups($input.attr("data-member-id"))
+  route = jsRoutes.controllers.admin.MemberDetails.ajaxGroups($input.attr("data-member-id"))
   simpleSelect2($input, route, 10, "Select class")

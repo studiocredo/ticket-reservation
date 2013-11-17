@@ -7,8 +7,9 @@ import models.entities._
 import play.api.Play.current
 import models.schema.tables._
 import com.google.inject.Inject
-import be.studiocredo.{MemberService, RichUser, UserService}
+import be.studiocredo.{MemberService, UserService}
 import scala.slick.session.Session
+import models.admin.RichUser
 
 class IdentityService @Inject()(userService: UserService, memberService: MemberService) {
   val UsersQ = Query(Users)

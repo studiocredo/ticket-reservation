@@ -165,6 +165,8 @@ object Passwords {
   def matches(passwordInfo: Password, credentials: Credentials): Boolean = {
     matches(passwordInfo, credentials.password)
   }
+
+  def random(): Password = hash(IdGenerator.generate(16))
 }
 
 sealed trait SignInError
@@ -176,8 +178,10 @@ object IdGenerator {
 
   val random = new SecureRandom()
 
-  def generate: String = {
-    val randomValue = new Array[Byte](96)
+  def generate: String = generate(96)
+
+  def generate(size: Int): String = {
+    val randomValue = new Array[Byte](size)
     random.nextBytes(randomValue)
     Codecs.toHexString(randomValue)
   }

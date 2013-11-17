@@ -4,7 +4,7 @@ import scala.Predef._
 import scala.slick.lifted.MappedTypeMapper
 import org.joda.time.DateTime
 import be.studiocredo.auth.{Roles, Password}
-import be.studiocredo.RichUser
+import models.admin.RichUser
 
 object entities {
 

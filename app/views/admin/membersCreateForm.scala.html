@@ -1,7 +1,7 @@
-@(memberForm: Form[entities.MemberEdit])(implicit request: be.studiocredo.auth.SecureRequest[_])
+@(memberForm: Form[models.admin.MemberFormData])(implicit request: be.studiocredo.auth.SecureRequest[_])
 @import controllers.admin.routes
 @import helper._
-    @*
+
 @base("Add member") {
 
     <h1>Add new member</h1>
@@ -17,4 +17,4 @@
 
     }
 }
-*@
+

@@ -1,7 +1,6 @@
 package controllers.admin
 
 import play.api.mvc._
-import play.api.db.slick._
 import be.studiocredo.{MemberService, CourseService, GroupsService}
 import play.api.Play.current
 import play.api.data.Form

@@ -6,12 +6,12 @@ import play.api._
 import org.joda.time.format.DateTimeFormat
 import play.api.data.Form
 import play.api.data.Forms._
-import models.NewShow
 import views.helper.Options
 import models.entities.ShowEdit
 import com.google.inject.Inject
 import be.studiocredo.auth.{AuthenticatorService, SecuredDBRequest}
 
+import models.admin._
 
 class EventDetails @Inject()(eventService: EventService, showService: ShowService, venueService: VenueService, val authService: AuthenticatorService) extends AdminController {
   val logger = Logger("group-details")

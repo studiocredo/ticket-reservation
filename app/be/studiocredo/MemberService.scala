@@ -2,51 +2,74 @@ package be.studiocredo
 
 import play.api.db.slick.Config.driver.simple._
 import models.entities._
-
-import models.{MemberDetail, Page}
+import models.admin._
+import models.{schema, Page}
 import scala.slick.session.Session
 import models.ids._
 import com.google.inject.Inject
+import be.studiocredo.auth.{Roles, Passwords}
+import models.schema.tables._
 
-class MemberService @Inject()(groupService: GroupsService) {
+object MemberQueries {
+  val MembersQ = Query(Members)
+  val UsersQ = Query(Users)
+  val UserRolesQ = Query(UserRoles)
+
+  val members = for {
+    m <- MembersQ
+    u <- m.user
+    d <- UserDetails if u.id === d.id
+  } yield (m, u, d)
+
+  val active = members.filter(_._1.archived === false)
+
+  def toUserMember(data:(Member, User, UserDetail)) = UserMember(RichUser(data._2, data._3), data._1)
+}
+
+class MemberService @Inject()(groupService: GroupsService, userService: UserService) {
 
   import models.queries._
   import models.schema.tables._
 
-  val MembersQ = Query(Members)
+  import MemberQueries._
 
-  val active = MembersQ.filter(_.archived === false)
-
-  def page(page: Int = 0, pageSize: Int = 10, orderBy: Int = 1, filter: Option[String] = None)(implicit s: Session): Page[Member] = {
+  def page(page: Int = 0, pageSize: Int = 10, orderBy: Int = 1, filter: Option[String] = None)(implicit s: Session): Page[UserMember] = {
     val offset = pageSize * page
     val total = active.length.run
-    /* todo
     val values = filter.foldLeft {
       paginate(active, page, pageSize)
     } {
-      (query, filter) => query.filter(q => iLike(q.name, filter)) // should replace with lucene
-    }.run
-    */
-    Page(active.run, page, pageSize, offset, total)
+      (query, filter) => query.filter(q => iLike(q._2.name, filter)) // should replace with lucene
+    }.run map toUserMember
+    Page(values, page, pageSize, offset, total)
   }
 
-
-  def insert(member: MemberEdit)(implicit s: Session): MemberId = {
-    Members.autoInc.insert(member)
+  def get(id: MemberId)(implicit s: Session): Option[UserMember] = {
+    members.filter(_._1.id === id).firstOption map toUserMember
   }
 
-  def update(id: MemberId, member: MemberEdit)(implicit s: Session) = {
-    MembersQ.filter(_.id === id).update(toEntity(id, member))
+  def getEdit(id: MemberId)(implicit s: Session): Option[MemberFormData] = {
+    get(id) map {um => MemberFormData(um.name, um.username, um.email, um.address, um.phone)}
   }
 
-  def get(id: MemberId)(implicit s: Session): Option[Member] = {
-    MembersQ.filter(_.id === id).firstOption
+  def insert(data: MemberFormData)(implicit s: Session): MemberId = {
+    s.withTransaction {
+      val userId = userService.insert(UserEdit(data.name, data.username, Passwords.random()), UserDetailEdit(data.email, data.address, data.phone))
+      val memberId = Members.autoInc insert MemberEdit(userId, archived = false)
+      userService.addRole(userId, Roles.Member)
+      memberId
+    }
   }
 
-  def getEdit(id: MemberId)(implicit s: Session): Option[MemberEdit] = get(id).map(toEdit)
+  def update(id: MemberId, data: MemberFormData)(implicit s: Session) = {
+   val updateQuery = for {
+      m <- MembersQ if m.id is id
+      u <- m.user
+      d <- UserDetails if u.id is d.id
+    } yield (Users.name ~ Users.username ~ UserDetails.email ~ UserDetails.address ~ UserDetails.phone) <>(MemberFormData.apply _, MemberFormData.unapply _)
 
-  def toEdit(m: Member) = MemberEdit(m.userId, m.archived)
-  def toEntity(id: MemberId, m: MemberEdit) =  Member(id, m.userId, m.archived)
+    updateQuery.update(data)
+  }
 
   def delete(id: MemberId)(implicit s: Session) = {
     MembersQ.filter(_.id === id).delete

@@ -1,33 +1,32 @@
 package controllers.admin
 
-import play.api.mvc._
-import play.api.db.slick._
 import be.studiocredo.MemberService
-import play.api.Play.current
 import play.api.data.Form
 import play.api.data.Forms._
 import models.ids._
-import scala.Some
 import models.entities._
-/*
+import com.google.inject.Inject
+import be.studiocredo.auth.AuthenticatorService
+
+import models.admin._
+
 class Members @Inject()(memberService: MemberService, val authService: AuthenticatorService) extends AdminController {
   val ListPage = Redirect(routes.Members.list())
 
   val memberForm = Form(
     mapping(
       "name" -> nonEmptyText,
+      "username" -> nonEmptyText,
       "email" -> optional(email),
       "address" -> optional(text),
-      "phone" -> optional(text),
-      "arhived" -> boolean
-    )(MemberEdit.apply)(MemberEdit.unapply)
+      "phone" -> optional(text)
+    )(MemberFormData.apply)(MemberFormData.unapply)
   )
 
   def list(page: Int) = AuthDBAction { implicit rs =>
     val list = memberService.page(page)
     Ok(views.html.admin.members(list))
   }
-
 
   def create() = AuthAction { implicit request =>
     Ok(views.html.admin.membersCreateForm(memberForm))
@@ -38,7 +37,7 @@ class Members @Inject()(memberService: MemberService, val authService: Authentic
       member => {
         memberService.insert(member)
 
-        ListPage.flashing("success" -> "Member '%s' has been created".format(member.name))
+        ListPage.flashing("success" -> "Member has been created")
       }
     )
   }
@@ -55,7 +54,7 @@ class Members @Inject()(memberService: MemberService, val authService: Authentic
       member => {
         memberService.update(id, member)
 
-        ListPage.flashing("success" -> "Member '%s' has been updated".format(member.name))
+        ListPage.flashing("success" -> "Member has been updated")
       }
     )
   }
@@ -65,4 +64,3 @@ class Members @Inject()(memberService: MemberService, val authService: Authentic
     ListPage.flashing("success" -> "Member has been deleted")
   }
 }
-*/

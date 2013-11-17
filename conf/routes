@@ -28,12 +28,12 @@ GET         /password                               @controllers.auth.PasswordCh
 POST        /password                               @controllers.auth.PasswordChange.handlePasswordChange
 
 
-#GET         /admin/members                       @controllers.admin.Members.list(p:Int ?= 0)
-#GET         /admin/members/new                   @controllers.admin.Members.create
-#POST        /admin/members                       @controllers.admin.Members.save
-#GET         /admin/members/:id/edit              @controllers.admin.Members.edit(id:Long)
-#POST        /admin/members/:id/edit              @controllers.admin.Members.update(id:Long)
-#POST        /admin/members/:id/delete            @controllers.admin.Members.delete(id:Long)
+GET         /admin/members                          @controllers.admin.Members.list(p:Int ?= 0)
+GET         /admin/members/new                      @controllers.admin.Members.create
+POST        /admin/members                          @controllers.admin.Members.save
+GET         /admin/members/:id/edit                 @controllers.admin.Members.edit(id:Long)
+POST        /admin/members/:id/edit                 @controllers.admin.Members.update(id:Long)
+POST        /admin/members/:id/delete               @controllers.admin.Members.delete(id:Long)
 
 GET         /admin/member/:id                       @controllers.admin.MemberDetails.view(id:Long)
 POST        /admin/member/:id/groups                @controllers.admin.MemberDetails.addGroups(id: Long)

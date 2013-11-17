@@ -6,8 +6,8 @@ import play.api.Logger
 import play.api.libs.concurrent.Akka
 import java.nio.charset.StandardCharsets
 import play.api.mvc.RequestHeader
-import be.studiocredo.RichUser
 import be.studiocredo.auth.EmailToken
+import models.admin.RichUser
 
 object Mailer {
   val fromAddress = current.configuration.getString("smtp.from").get

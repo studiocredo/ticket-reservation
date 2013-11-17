@@ -1,17 +1,12 @@
 package controllers.admin
 
-import play.api.mvc._
-import be.studiocredo.{UserService, GroupsService, CourseService}
+import be.studiocredo.{GroupsService, CourseService}
 import play.api.data.Form
 import play.api.data.Forms._
 import models.ids._
-import models.entities._
 import com.google.inject.Inject
 import be.studiocredo.auth._
 import models.entities.CourseEdit
-import scala.Some
-import be.studiocredo.auth.SecuredDBRequest
-
 
 class Courses @Inject()(courseService: CourseService, groupService: GroupsService,val authService: AuthenticatorService) extends AdminController {
 

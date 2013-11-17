@@ -1,4 +1,4 @@
-@(info: GroupDetail)(implicit request: be.studiocredo.auth.SecureRequest[_])
+@(info: models.admin.GroupDetail)(implicit request: be.studiocredo.auth.SecureRequest[_])
 @import helper._
 @import controllers.admin.routes
 @base("Class: " + info.group.name) {
@@ -21,9 +21,9 @@
             <tbody>
             @info.members.map { member =>
                 <tr>
-                    @*<td><a href="@routes.MemberDetails.view(member.id)">@member.name</a></td>*@
-                    @*<td>@member.address</td>*@
-                    @*<td>@member.phone</td>*@
+                    <td><a href="@routes.MemberDetails.view(member.id)">@member.name</a></td>
+                    <td>@member.address</td>
+                    <td>@member.phone</td>
                 </tr>
             }
             </tbody>
