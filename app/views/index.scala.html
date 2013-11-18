@@ -1,6 +1,9 @@
 @(nextShows: List[ShowOverview])(implicit request: be.studiocredo.auth.SecureRequest[_])
 
 @base("Studio Credo") {
+<div class="pull-left cropped-logo">
+    <img src="@routes.Assets.at("images/logo.png")"/>
+</div>
     <div class="jumbotron">
         <div class="container">
             <h1>Studio Credo</h1>

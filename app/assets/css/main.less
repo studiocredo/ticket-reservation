@@ -11,8 +11,19 @@ body {
 
 .jumbotron {
     .gradient(@credo-yellow, darken(@credo-yellow, 10%), lighten(@credo-yellow, 5%));
+    padding-bottom: 0px;
+    .box-shadow(0 10px 20px #999);
 
     h1 {
         .title-font();
+    }
+}
+
+.cropped-logo {
+    width: 270px;
+    height: 300px;
+    overflow: hidden;
+    img {
+        margin: -20px 0 0 -30px;
     }
 }
