@@ -43,13 +43,6 @@ object entities {
 
   case class UserRole(id: UserId, role: Roles.Role)
 
-  case class Course(id: CourseId, name: String, archived: Boolean) extends Entity[CourseId] with Archiveable
-  case class CourseEdit(          name: String, archived: Boolean)
-
-  case class Group(id: GroupId, name: String, year: Int, course: CourseId, archived: Boolean) extends Entity[GroupId] with Archiveable
-  case class GroupEdit(         name: String, year: Int, course: CourseId, archived: Boolean)
-
-
   case class Event(id:EventId, name:String, description:String, archived: Boolean)  extends Entity[EventId] with Archiveable
   case class EventEdit(        name:String, description:String, archived: Boolean)
 
@@ -64,8 +57,6 @@ object ids {
   case class UserId(id: Long) extends AnyVal with TypedId
   case class AdminId(id: Long) extends AnyVal with TypedId
   case class MemberId(id: Long) extends AnyVal with TypedId
-  case class CourseId(id: Long) extends AnyVal with TypedId
-  case class GroupId(id: Long) extends AnyVal with TypedId
   case class EventId(id: Long) extends AnyVal with TypedId
   case class VenueId(id: Long) extends AnyVal with TypedId
   case class ShowId(id: Long) extends AnyVal with TypedId
@@ -76,8 +67,6 @@ object ids {
   implicit object UserId extends IdFactory[UserId]
   implicit object AdminId extends IdFactory[AdminId]
   implicit object MemberId extends IdFactory[MemberId]
-  implicit object CourseId extends IdFactory[CourseId]
-  implicit object GroupId extends IdFactory[GroupId]
   implicit object EventId extends IdFactory[EventId]
   implicit object VenueId extends IdFactory[VenueId]
   implicit object ShowId extends IdFactory[ShowId]

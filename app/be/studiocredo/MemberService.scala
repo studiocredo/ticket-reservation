@@ -3,7 +3,7 @@ package be.studiocredo
 import play.api.db.slick.Config.driver.simple._
 import models.entities._
 import models.admin._
-import models.{schema, Page}
+import models.Page
 import scala.slick.session.Session
 import models.ids._
 import com.google.inject.Inject
@@ -26,7 +26,7 @@ object MemberQueries {
   def toUserMember(data:(Member, User, UserDetail)) = UserMember(RichUser(data._2, data._3), data._1)
 }
 
-class MemberService @Inject()(groupService: GroupsService, userService: UserService) {
+class MemberService @Inject()(userService: UserService) {
 
   import models.queries._
   import models.schema.tables._
@@ -74,11 +74,4 @@ class MemberService @Inject()(groupService: GroupsService, userService: UserServ
   def delete(id: MemberId)(implicit s: Session) = {
     MembersQ.filter(_.id === id).delete
   }
-
-  def memberDetails(id: MemberId)(implicit s: Session): Option[MemberDetail] = {
-    for {
-      member <- get(id)
-    } yield MemberDetail(member, groupService.listForMember(member.id))
-  }
-
 }

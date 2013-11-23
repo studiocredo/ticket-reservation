@@ -19,7 +19,7 @@ class Application @Inject()(showService:ShowService, val authService: Authentica
     import admin.routes.javascript._
      Ok(
       Routes.javascriptRouter("jsRoutes")(
-        GroupDetails.ajaxMembers, MemberDetails.ajaxGroups
+
       )).as("text/javascript")
   }
 

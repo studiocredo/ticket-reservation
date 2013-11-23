@@ -10,9 +10,7 @@ object Modules {
       binder().disableCircularProxies()
 
       import be.studiocredo._
-      bind[CourseService].in[Singleton]
       bind[EventService].in[Singleton]
-      bind[GroupsService].in[Singleton]
       bind[MemberService].in[Singleton]
       bind[UserService].in[Singleton]
       bind[VenueService].in[Singleton]
@@ -20,12 +18,9 @@ object Modules {
 
 
       bind[controllers.Application].in[Singleton]
-      bind[controllers.admin.Courses].in[Singleton]
       bind[controllers.admin.EventDetails].in[Singleton]
       bind[controllers.admin.Events].in[Singleton]
       bind[controllers.admin.FakeData].in[Singleton]
-      bind[controllers.admin.GroupDetails].in[Singleton]
-      bind[controllers.admin.Groups].in[Singleton]
       bind[controllers.admin.MemberDetails].in[Singleton]
       bind[controllers.admin.Venues].in[Singleton]
 

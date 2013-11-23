@@ -6,9 +6,6 @@ import be.studiocredo._
 import play.api.Play.current
 import models.entities._
 import models.entities.VenueEdit
-import models.entities.CourseEdit
-import models.entities.GroupEdit
-import models.entities.MemberEdit
 import scala.Some
 import org.joda.time.DateTime
 import com.google.inject.Inject
@@ -17,31 +14,17 @@ import models.admin.MemberFormData
 
 class FakeData @Inject()(memberService: MemberService,
                          userService: UserService,
-                         courseService: CourseService,
-                         groupService: GroupsService,
                          venueService: VenueService,
                          eventService: EventService,
                          showService: ShowService) extends Controller {
 
   def insert() = DBAction { implicit rs =>
-    val userAdmin = userService.insert(UserEdit("Thomas", "selckin", Passwords.hash("qsdfghjklm")), UserDetailEdit(Some("selckin@selckin.be"), None, None))
+    val userAdmin = userService.insert(UserEdit("Admin", "admin", Passwords.hash("qsdfghjklm")), UserDetailEdit(Some("selckin@selckin.be"), None, None))
     userService.addRole(userAdmin, Roles.Admin)
 
     val thomas = memberService.insert(MemberFormData("Thomas", "thomas", Some("selckin@selckin.be"), None, None))
     val sven = memberService.insert(MemberFormData("sven", "sven",Some("sven@example.com"), None, None))
     val jantje = memberService.insert(MemberFormData("Jantje", "jantje", Some("selckin@selckin.be"), Some("veldstraat 20 gent"), Some("09/2345435453435")))
-
-    val course1 = courseService.insert(CourseEdit("Indian rain dancing", archived = false))
-    val course2 = courseService.insert(CourseEdit("Advanced roboting", archived = false))
-
-    groupService.insert(GroupEdit("class A", 2010, course1, archived = false))
-    val classA = groupService.insert(GroupEdit("class A", 2013, course1, archived = false))
-    val classB = groupService.insert(GroupEdit("class B", 2013, course1, archived = false))
-    val classD = groupService.insert(GroupEdit("class D", 2014, course2, archived = false))
-
-    groupService.addMembers(classA, List(thomas, sven, jantje))
-    groupService.addMembers(classB, List(thomas, jantje))
-    groupService.addMembers(classD, List(jantje))
 
     val event1 = eventService.insert(EventEdit("xmas special", "", archived = false))
     val event2 = eventService.insert(EventEdit("Big show 2013", "", archived = false))

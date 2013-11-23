@@ -1,9 +1,8 @@
 package views.helper
 
-import models.entities.{Venue, Course}
+import models.entities.{Venue}
 
 object Options {
-  val CourseRenderer = Renderer[Course](_.id.toString, _.name)
   val VenueRenderer = Renderer[Venue](_.id.toString, _.name)
 
   def apply[T](options: Seq[T], renderer: Renderer[T]) = new Options[T](options, renderer)

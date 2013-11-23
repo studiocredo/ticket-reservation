@@ -36,30 +36,6 @@ POST        /admin/members/:id/edit                 @controllers.admin.Members.u
 POST        /admin/members/:id/delete               @controllers.admin.Members.delete(id:Long)
 
 GET         /admin/member/:id                       @controllers.admin.MemberDetails.view(id:Long)
-POST        /admin/member/:id/groups                @controllers.admin.MemberDetails.addGroups(id: Long)
-GET         /admin/member/:id/ajax/groups           @controllers.admin.MemberDetails.ajaxGroups(id:Long)
-
-
-GET         /admin/courses                          @controllers.admin.Courses.list(p:Int ?= 0)
-GET         /admin/courses/new                      @controllers.admin.Courses.create
-POST        /admin/courses                          @controllers.admin.Courses.save
-GET         /admin/courses/:id                      @controllers.admin.Courses.view(id:Long)
-GET         /admin/courses/:id/edit                 @controllers.admin.Courses.edit(id:Long)
-POST        /admin/courses/:id/edit                 @controllers.admin.Courses.update(id:Long)
-POST        /admin/courses/:id/delete               @controllers.admin.Courses.delete(id:Long)
-
-
-GET         /admin/groups                           @controllers.admin.Groups.list(p:Int ?= 0)
-GET         /admin/groups/new                       @controllers.admin.Groups.create
-GET         /admin/groups/new/course/:id            @controllers.admin.Groups.createForCourse(id: Long)
-POST        /admin/groups                           @controllers.admin.Groups.save
-GET         /admin/groups/:id/edit                  @controllers.admin.Groups.edit(id:Long)
-POST        /admin/groups/:id/edit                  @controllers.admin.Groups.update(id:Long)
-POST        /admin/groups/:id/delete                @controllers.admin.Groups.delete(id:Long)
-
-GET         /admin/group/:id                        @controllers.admin.GroupDetails.view(id:Long)
-POST        /admin/group/:id/members                @controllers.admin.GroupDetails.addMembers(id: Long)
-GET         /admin/group/:id/ajax/members           @controllers.admin.GroupDetails.ajaxMembers(id:Long)
 
 
 GET         /admin/venues                           @controllers.admin.Venues.list(p:Int ?= 0)

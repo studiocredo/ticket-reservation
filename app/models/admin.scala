@@ -22,10 +22,6 @@ object admin {
     def id = event.id
   }
 
-  case class GroupDetail(group: Group, course: Course, members: List[UserMember]) {
-    def id = group.id
-  }
-
   case class UserMember(user: RichUser, member: Member) {
     def id = member.id
     def name = user.name
@@ -34,17 +30,6 @@ object admin {
     def email = user.email
     def address = user.address
     def phone = user.phone
-    def archived = member.archived
-  }
-
-  case class MemberDetail(member: UserMember, groups: List[Group]) {
-    def id = member.id
-    def name = member.name
-    def username = member.username
-    def password = member.password
-    def email = member.email
-    def address = member.address
-    def phone = member.phone
     def archived = member.archived
   }
 

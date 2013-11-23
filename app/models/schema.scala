@@ -14,9 +14,6 @@ object schema {
     val Members = new Members
     val UserRoles = new UserRoles
 
-    val Courses = new Courses
-    val Groups = new Groups
-    val GroupMembers = new GroupMembers
     val Events = new Events
     val Venues = new Venues
     val Shows = new Shows
@@ -93,38 +90,6 @@ object schema {
     def unique = index("idx_userrole", userId ~ role, unique = true)
   }
 
-  //////////////////////////////////
-
-  class Courses extends Table[Course]("course") with Archiveable {
-    def id = column[CourseId]("id", O.PrimaryKey, O.AutoInc)
-    def name = column[String]("name")
-
-    def * = id ~ name ~ archived <>(Course.apply _, Course.unapply _)
-    def autoInc = name ~ archived <>( CourseEdit, CourseEdit.unapply _) returning id
-  }
-
-  class Groups extends Table[Group]("group") with Archiveable {
-    def id = column[GroupId]("id", O.PrimaryKey, O.AutoInc)
-    def name = column[String]("name")
-    def year = column[Int]("year")
-    def courseId = column[CourseId]("course_id")
-
-    def * = id ~ name ~ year ~ courseId ~ archived<>(Group.apply _, Group.unapply _)
-    def autoInc = name ~ year ~ courseId ~ archived<>(GroupEdit.apply _, GroupEdit.unapply _) returning id
-
-    def course = foreignKey("course_fk", courseId, Courses)(_.id)
-  }
-
-  class GroupMembers extends Table[(GroupId, MemberId)]("group-members") {
-    def groupId = column[GroupId]("group_id")
-    def memberId = column[MemberId]("member_id")
-
-    def * = groupId ~ memberId
-    def pk = primaryKey("group-members-pkey", (groupId, memberId))
-
-    def group = foreignKey("group_fk", groupId, Groups)(_.id)
-    def member = foreignKey("member_fk", memberId, Members)(_.id)
-  }
 
   //////////////////////////////////
 
@@ -269,6 +234,4 @@ object schema {
   implicit val dvdIdType = MappedTypeMapper.base[DvdId, Long](_.id, new DvdId(_))
   implicit val orderIdType = MappedTypeMapper.base[OrderId, Long](_.id, new OrderId(_))
   implicit val ticketOrderIdType = MappedTypeMapper.base[TicketOrderId, Long](_.id, new TicketOrderId(_))
-  implicit val courseIdType = MappedTypeMapper.base[CourseId, Long](_.id, new CourseId(_))
-  implicit val groupIdType = MappedTypeMapper.base[GroupId, Long](_.id, new GroupId(_))
 }
