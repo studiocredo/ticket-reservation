@@ -18,7 +18,6 @@ object schema {
     val Venues = new Venues
     val Shows = new Shows
     val Dvds = new Dvds
-    val EventParticipants = new EventParticipants
     val TicketReservations = new TicketReservations
     val Orders = new Orders
     val TicketOrders = new TicketOrders
@@ -136,19 +135,6 @@ object schema {
     def * = id ~ eventId ~ name ~ price ~ availableStart ~ availableEnd ~ archived
 
     def event = foreignKey("event_fk", eventId, Events)(_.id)
-  }
-
-  class EventParticipants extends Table[(EventId, MemberId, Int)]("event-participants") {
-    def eventId = column[EventId]("event_id")
-    def memberId = column[MemberId]("member_id")
-    def allowedTicketReservation = column[Int]("allowed-ticket-reservations")
-
-    def * = eventId ~ memberId ~ allowedTicketReservation
-
-    def pk = primaryKey("event-participants_pkey", (eventId, memberId))
-
-    def event = foreignKey("event_fk", eventId, Events)(_.id)
-    def member = foreignKey("member_fk", memberId, Members)(_.id)
   }
 
   class TicketReservations extends Table[(ShowId, MemberId, Int)]("ticket-reservation") {
