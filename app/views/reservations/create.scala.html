@@ -1,0 +1,26 @@
+@(info: models.admin.EventDetail)(implicit request: be.studiocredo.auth.SecureRequest[_], dateFormatter: org.joda.time.format.DateTimeFormatter)
+
+@base("Reservation for " + info.event.name, helper.counterScripts()) {
+
+<div class="page-header">
+    <h1>Reservation for @info.event.name </h1>
+</div>
+
+@if(!info.shows.isEmpty) {
+<table>
+    @info.shows.map { case (venue, shows) =>
+    @shows.map { show =>
+    <tr>
+        <td>Voorstelling @dateFormatter.print(show.date)<br/>@venue.name</td>
+        <td>@helper.counterInput("counter-"+show.id, 0)</td>
+    </tr>
+    }
+    }
+</table>
+} else {
+<div class="well">
+    <em>No shows planned for this event.</em>
+</div>
+}
+
+}

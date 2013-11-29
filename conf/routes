@@ -58,8 +58,7 @@ POST        /admin/event/:id/addshow                @controllers.admin.EventDeta
 
 GET         /admin/test/fakedata                    @controllers.admin.FakeData.insert()
 
-
-
+GET         /reservation/:id/new                    @controllers.reservation.Reservations.create(id:Long)
 
 GET         /assets/javascripts/routes              @controllers.Application.javascriptRoutes
 GET         /assets/*file                           controllers.Assets.at(path="/public", file)

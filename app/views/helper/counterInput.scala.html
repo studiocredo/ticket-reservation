@@ -1,0 +1,15 @@
+@(id: String, init: Int = 0, min: Int = 0, max: Int = 9)
+
+<div class="row counter-input" id="@id">
+    <div class="col-xs-2">
+        <input type="number" min="@min" max="@max" maxlength="1" class="form-control input-xl" value="@init" onkeypress="return CounterInput.isNumberKey(event);">
+    </div>
+    <div class="col-xs-1">
+        <div class="row btn-plusmin">
+            <button type="button" class="btn btn-default btn-xs" onclick="CounterInput.increment($('#@id .form-control'),@max);">+</button>
+        </div>
+        <div class="row btn-plusmin">
+            <button type="button" class="btn btn-default btn-xs" onclick="CounterInput.decrement($('#@id .form-control'),@min);">-</button>
+        </div>
+    </div>
+</div>
