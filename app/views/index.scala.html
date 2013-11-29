@@ -1,23 +1,31 @@
 @(nextShows: List[ShowOverview])(implicit request: be.studiocredo.auth.SecureRequest[_])
 
 @base("Studio Credo") {
-<div class="pull-left cropped-logo">
-    <img src="@routes.Assets.at("images/logo.png")"/>
+
+<div class="jumbotron front-page-banner">
+    <div class="inner-1">
+        <div class="inner-2">
+            <div class="inner-3">
+                <h1>Studio Credo</h1>
+
+                <p>Reserveer hier je tickets voor onze slotshow</p>
+
+                <p><a class="btn btn-primary btn-lg">Upcoming shows &raquo;</a></p>
+            </div>
+        </div>
+    </div>
 </div>
-    <div class="jumbotron">
-        <div class="container">
-            <h1>Studio Credo</h1>
-            <p>Reserveer hier je tickets voor onze slotshow</p>
-            <p><a class="btn btn-primary btn-lg">Upcoming shows &raquo;</a></p>
-        </div>
-    </div>
-    <div class="row">
+
+
+<div class="row">
     @nextShows.map { info =>
-        <div class="col-lg-4">
-            <h2>@info.name</h2>
-            <p>@info.date</p>
-            <p><a class="btn btn-default" href="#">View details &raquo;</a></p>
-        </div>
-    }
+    <div class="col-lg-4">
+        <h2>@info.name</h2>
+
+        <p>@info.date</p>
+
+        <p><a class="btn btn-default" href="#">View details &raquo;</a></p>
     </div>
+    }
+</div>
 }

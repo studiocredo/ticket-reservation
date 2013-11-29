@@ -9,20 +9,45 @@ body {
     padding-bottom: 20px;
 }
 
-.jumbotron {
+.jumbotron.front-page-banner {
     .gradient(@credo-yellow, darken(@credo-yellow, 10%), lighten(@credo-yellow, 5%));
-    padding-bottom: 0px;
+    padding: 0;
+    margin: -20px 0 0 0;
     .box-shadow(0 10px 20px #999);
+
+    .inner-1 {
+        background-image: url('../images/logo.png');
+        background-repeat: no-repeat;
+        background-position: -10px 10px;
+        padding: 0;
+        margin: 0;
+
+        .inner-2 {
+            background-image: url('../images/tickets.png');
+            background-repeat:no-repeat;
+            background-position:110% -10px;
+            padding: 0;
+            margin: 0;
+
+            .inner-3 {
+                padding-left: 200px;
+                padding-top: 32px;
+                padding-bottom: 32px;
+            }
+        }
+    }
 
     h1 {
         .title-font();
     }
+
 }
 
 .cropped-logo {
     width: 270px;
     height: 300px;
     overflow: hidden;
+
     img {
         margin: -20px 0 0 -30px;
     }
