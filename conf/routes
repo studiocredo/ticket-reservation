@@ -44,7 +44,9 @@ POST        /admin/venues                           @controllers.admin.Venues.sa
 GET         /admin/venues/:id/edit                  @controllers.admin.Venues.edit(id:Long)
 POST        /admin/venues/:id/edit                  @controllers.admin.Venues.update(id:Long)
 POST        /admin/venues/:id/delete                @controllers.admin.Venues.delete(id:Long)
-
+GET         /admin/floorplan/:id                    @controllers.admin.Floorplans.view(id:Long)
+GET         /admin/ajax/floorplan/:id               @controllers.admin.Floorplans.ajaxFloorPlan(id:Long)
+POST        /admin/ajax/floorplan/:id               @controllers.admin.Floorplans.ajaxSaveFloorPlan(id: Long)
 
 GET         /admin/events                           @controllers.admin.Events.list(p:Int ?= 0)
 GET         /admin/events/new                       @controllers.admin.Events.create

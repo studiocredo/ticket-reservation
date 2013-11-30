@@ -5,6 +5,7 @@ import scala.slick.lifted.MappedTypeMapper
 import org.joda.time.DateTime
 import be.studiocredo.auth.{Roles, Password}
 import models.admin.RichUser
+import controllers.EnumUtils
 
 object entities {
 
@@ -20,9 +21,8 @@ object entities {
       def archived: Boolean
     }
   }
-  import interfaces._
-  // Well it's either an extra classes or using -1 id or be really annoyed with optional ids (that are always there except when used in forms), seem to hate this option the least at the moment
 
+  import interfaces._
   import Roles._
 
   case class Identity(user: RichUser, roles: List[Role]) {
@@ -43,14 +43,76 @@ object entities {
 
   case class UserRole(id: UserId, role: Roles.Role)
 
-  case class Event(id:EventId, name:String, description:String, archived: Boolean)  extends Entity[EventId] with Archiveable
-  case class EventEdit(        name:String, description:String, archived: Boolean)
+  case class Event(id: EventId, name: String, description: String, archived: Boolean) extends Entity[EventId] with Archiveable
+  case class EventEdit(         name: String, description: String, archived: Boolean)
 
-  case class Venue(id: VenueId, name:String, description:String, archived: Boolean) extends Entity[VenueId] with Archiveable
-  case class VenueEdit(         name:String, description:String, archived: Boolean)
+  case class Venue(id: VenueId, name: String, description: String, floorplan: Option[FloorPlan], archived: Boolean) extends Entity[VenueId] with Archiveable
+  case class VenueEdit(         name: String, description: String, archived: Boolean)
 
-  case class Show(id: ShowId, eventId: EventId, venueId: VenueId, date:DateTime, archived: Boolean) extends Entity[ShowId] with Archiveable
-  case class ShowEdit(        eventId: EventId, venueId: VenueId, date:DateTime, archived: Boolean)
+  object SeatType extends Enumeration {
+    type SeatType = Value
+    val Normal = Value("normal")
+    val Vip = Value("vip")
+    val Disabled = Value("disabled")
+  }
+
+  import SeatType._
+
+  case class Show(id: ShowId, eventId: EventId, venueId: VenueId, date: DateTime, archived: Boolean) extends Entity[ShowId] with Archiveable
+  case class ShowEdit(        eventId: EventId, venueId: VenueId, date: DateTime, archived: Boolean)
+
+  case class ShowOverview(name: String, date: DateTime)
+
+
+  sealed trait RowContent
+  case class Seat(kind: SeatType) extends RowContent
+  case class Spacer(width: Int) extends RowContent
+  object RowContent {
+    val SEAT_TYPE = "seat"
+    val SPACER_TYPE = "spacer"
+  }
+
+  case class Row(content: List[RowContent])
+  case class FloorPlan(rows: List[Row])
+
+  object FloorPlanJson {
+
+    import play.api.libs.json._
+    import play.api.libs.functional.syntax._
+
+    implicit val seatTypeFmt = EnumUtils.enumFormat(SeatType)
+    implicit val seatFmt = Json.format[Seat]
+    implicit val spacerFmt = Json.format[Spacer]
+
+
+    implicit val rowContentFmt: Format[RowContent] = new Format[RowContent] {
+      def reads(json: JsValue): JsResult[RowContent] = {
+        json \ "ct" match {
+          case JsString(RowContent.SEAT_TYPE) => Json.fromJson[Seat](json)(seatFmt)
+          case JsString(RowContent.SPACER_TYPE) => Json.fromJson[Spacer](json)(spacerFmt)
+          case other  => JsError(s"Unexpected json content '$other'")
+        }
+      }
+
+      def writes(content: RowContent): JsValue = {
+        content match {
+          case b: Seat => toJson(RowContent.SEAT_TYPE, Json.toJson(b)(seatFmt))
+          case b: Spacer => toJson(RowContent.SPACER_TYPE, Json.toJson(b)(spacerFmt))
+        }
+      }
+
+      def toJson(kind: String, b: JsValue): JsValue = {
+        b match {
+          case obj: JsObject => Json.obj("ct" -> kind) ++ obj
+          case other => throw new IllegalArgumentException
+        }
+      }
+    }
+
+
+    implicit val rowFmt = Json.format[Row]
+    implicit val floorPlanFmt = Json.format[FloorPlan]
+  }
 }
 
 object ids {
@@ -77,6 +139,7 @@ object ids {
 
   trait TypedId extends Any {
     def id: Long
+
     override def toString: String = id.toString
   }
 

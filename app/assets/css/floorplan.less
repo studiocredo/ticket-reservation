@@ -1,0 +1,95 @@
+@seat-size: 14px;
+@spacer-size: @seat-size / 2;
+
+.activeomg {
+  background-color: crimson;
+  border: 5px solid crimson;
+}
+
+.fp {
+  margin-top: 3em;
+  padding: 3em;
+  .row-controls {
+      margin-bottom: 2em;
+  }
+  .seat {
+    @seat-border: 1px solid black;
+
+    display: inline-block;
+    border: @seat-border;
+    margin-left: -1px;
+    width: @seat-size;
+    height: @seat-size;
+  }
+
+  .seat-normal {
+    background-color: #f2f4ee;
+  }
+
+  .seat-vip {
+    background-color: #94bff4;
+  }
+  .seat-disabled {
+    background-color: #f4e78e;
+  }
+  .delete-paint {
+    background-color: #f40000;
+  }
+  .spacer {
+    display: inline-block;
+    border: none;
+    margin-left: -1px;
+    height: @seat-size;
+  }
+  .spacer-1 {
+    width: @spacer-size * 1;
+  }
+  .spacer-2 {
+    width: @spacer-size * 2;
+  }
+  .spacer-3 {
+    width: @spacer-size * 3;
+  }
+  .spacer-4 {
+    width: @spacer-size * 4;
+  }
+  .spacer-5 {
+    width: @spacer-size * 5;
+  }
+  .spacer-6 {
+    width: @spacer-size * 6;
+  }
+  .spacer-7 {
+    width: @spacer-size * 7;
+  }
+  .spacer-8 {
+    width: @spacer-size * 8;
+  }
+
+  .seat-palette > div {
+    cursor: pointer;
+  }
+  input[type=number] {
+    width: 3em;
+  }
+}
+
+.fp-grid {
+  background-color: #EEEEEE;
+
+  .selected {
+    background-color: #f9f8cb;
+  }
+  .content {
+    display: inline-block;
+  }
+  .seat-row {
+    display: block;
+    margin-bottom: 2px;
+    margin-top: 2px;
+    font-size: @seat-size;
+  }
+
+}
+
+

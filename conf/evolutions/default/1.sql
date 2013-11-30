@@ -4,23 +4,23 @@
 # --- !Ups
 
 create table "auth_tokens" ("id" VARCHAR(254) NOT NULL PRIMARY KEY,"user_id" BIGINT NOT NULL,"creation" TIMESTAMP NOT NULL,"last_used" TIMESTAMP NOT NULL,"expiration" TIMESTAMP NOT NULL);
-create table "dvd" ("id" SERIAL NOT NULL PRIMARY KEY,"event_id" BIGINT NOT NULL,"name" VARCHAR(254) NOT NULL,"price" INTEGER NOT NULL,"available-start" TIMESTAMP NOT NULL,"available-end" TIMESTAMP,"archived" BOOLEAN DEFAULT false NOT NULL);
-create table "auth_tokens_email" ("id" VARCHAR(254) NOT NULL PRIMARY KEY,"email" VARCHAR(254) NOT NULL,"user_id" BIGINT,"creation" TIMESTAMP NOT NULL,"last_used" TIMESTAMP NOT NULL,"expiration" TIMESTAMP NOT NULL);
-create table "event" ("id" SERIAL NOT NULL PRIMARY KEY,"name" VARCHAR(254) NOT NULL,"description" VARCHAR(254) NOT NULL,"archived" BOOLEAN DEFAULT false NOT NULL);
+create table "dvd" ("id" SERIAL NOT NULL PRIMARY KEY,"event_id" BIGINT NOT NULL,"name" TEXT NOT NULL,"price" INTEGER NOT NULL,"available-start" TIMESTAMP NOT NULL,"available-end" TIMESTAMP,"archived" BOOLEAN DEFAULT false NOT NULL);
+create table "auth_tokens_email" ("id" VARCHAR(254) NOT NULL PRIMARY KEY,"email" TEXT NOT NULL,"user_id" BIGINT,"creation" TIMESTAMP NOT NULL,"last_used" TIMESTAMP NOT NULL,"expiration" TIMESTAMP NOT NULL);
+create table "event" ("id" SERIAL NOT NULL PRIMARY KEY,"name" TEXT NOT NULL,"description" TEXT NOT NULL,"archived" BOOLEAN DEFAULT false NOT NULL);
 create table "member" ("id" SERIAL NOT NULL PRIMARY KEY,"user_id" BIGINT NOT NULL,"archived" BOOLEAN DEFAULT false NOT NULL);
-create table "order" ("id" SERIAL NOT NULL PRIMARY KEY,"user_id" BIGINT NOT NULL,"date" TIMESTAMP NOT NULL,"billing-name" VARCHAR(254) NOT NULL,"billing-address" VARCHAR(254) NOT NULL);
+create table "order" ("id" SERIAL NOT NULL PRIMARY KEY,"user_id" BIGINT NOT NULL,"date" TIMESTAMP NOT NULL,"billing-name" TEXT NOT NULL,"billing-address" TEXT NOT NULL);
 create table "show" ("id" SERIAL NOT NULL PRIMARY KEY,"event_id" BIGINT NOT NULL,"venue_id" BIGINT NOT NULL,"date" TIMESTAMP NOT NULL,"archived" BOOLEAN DEFAULT false NOT NULL);
 create table "order-ticket" ("id" SERIAL NOT NULL PRIMARY KEY,"order_id" BIGINT NOT NULL,"show_id" BIGINT NOT NULL);
 create table "ticket-reservation" ("show_id" BIGINT NOT NULL,"member_id" BIGINT NOT NULL,"amount" INTEGER NOT NULL);
 alter table "ticket-reservation" add constraint "ticket-reservation_pkey" primary key("show_id","member_id");
 create table "order-ticket-seat" ("ticket_order_id" BIGINT NOT NULL,"show_id" BIGINT NOT NULL,"member_id" BIGINT);
 alter table "order-ticket-seat" add constraint "order-ticket-seat_pkey" primary key("ticket_order_id","show_id");
-create table "user_detail" ("id" BIGINT NOT NULL PRIMARY KEY,"email" VARCHAR(254),"address" VARCHAR(254),"phone" VARCHAR(254));
-create table "roles" ("id" BIGINT NOT NULL,"role" VARCHAR(254) NOT NULL);
+create table "user_detail" ("id" BIGINT NOT NULL PRIMARY KEY,"email" TEXT,"address" TEXT,"phone" TEXT);
+create table "roles" ("id" BIGINT NOT NULL,"role" TEXT NOT NULL);
 create unique index "idx_userrole" on "roles" ("id","role");
-create table "user" ("id" SERIAL NOT NULL PRIMARY KEY,"name" VARCHAR(254) NOT NULL,"username" VARCHAR(254) NOT NULL,"password" VARCHAR(254) NOT NULL,"salt" VARCHAR(254) NOT NULL);
+create table "user" ("id" SERIAL NOT NULL PRIMARY KEY,"name" TEXT NOT NULL,"username" TEXT NOT NULL,"password" TEXT NOT NULL,"salt" TEXT NOT NULL);
 create unique index "idx_username" on "user" ("username");
-create table "venue" ("id" SERIAL NOT NULL PRIMARY KEY,"name" VARCHAR(254) NOT NULL,"description" VARCHAR(254) NOT NULL,"archived" BOOLEAN DEFAULT false NOT NULL);
+create table "venue" ("id" SERIAL NOT NULL PRIMARY KEY,"name" TEXT NOT NULL,"description" TEXT NOT NULL,"floorplan" TEXT,"archived" BOOLEAN DEFAULT false NOT NULL);
 alter table "dvd" add constraint "event_fk" foreign key("event_id") references "event"("id") on update NO ACTION on delete NO ACTION;
 alter table "member" add constraint "user_fk" foreign key("user_id") references "user"("id") on update NO ACTION on delete NO ACTION;
 alter table "order" add constraint "user_fk" foreign key("user_id") references "user"("id") on update NO ACTION on delete NO ACTION;

@@ -5,15 +5,15 @@ import models._
 import models.entities._
 import models.ids._
 import com.google.inject.Inject
-import models.admin._
 
 class VenueService @Inject()() {
+
   import models.queries._
   import models.schema.tables._
 
   val VenuesQ = Query(Venues)
-
   val active = VenuesQ.filter(_.archived === false)
+
 
   def page(page: Int = 0, pageSize: Int = 10, orderBy: Int = 1, filter: Option[String] = None)(implicit s: Session): Page[Venue] = {
     val offset = pageSize * page
@@ -31,23 +31,32 @@ class VenueService @Inject()() {
   def insert(member: VenueEdit)(implicit s: Session): VenueId = {
     Venues.autoInc.insert(member)
   }
+  
+  def update(id: VenueId, venue: VenueEdit)(implicit s: Session) = {
+    editById(id).update(venue)
+  }
 
-  def update(id: VenueId, member: VenueEdit)(implicit s: Session) = {
-    VenuesQ.filter(_.id === id).update(toEntity(id, member))
+  def update(id: VenueId, floorPlan: FloorPlan)(implicit s: Session) = {
+    byId(id).map(_.floorplan).update(Some(floorPlan))
   }
 
   def get(id: VenueId)(implicit s: Session): Option[Venue] = {
-    VenuesQ.filter(_.id === id).firstOption
+    byId(id).firstOption
   }
 
-  def getEdit(id: VenueId)(implicit s: Session): Option[VenueEdit] = get(id).map(toEdit)
-
-  def toEdit(m: Venue) = VenueEdit(m.name, m.description, m.archived)
-  def toEntity(id: VenueId, m: VenueEdit) =  Venue(id, m.name, m.description, m.archived)
+  def getEdit(id: VenueId)(implicit s: Session): Option[VenueEdit] = {
+    editById(id).firstOption
+  }
 
   def delete(id: VenueId)(implicit s: Session) = {
-    VenuesQ.filter(_.id === id).delete
+    byId(id).delete
   }
 
+  private def byId(id: ids.VenueId)= {
+    VenuesQ.where(_.id === id)
+  }
 
+  private def editById(id: ids.VenueId) = {
+    byId(id).map(_.edit)
+  }
 }

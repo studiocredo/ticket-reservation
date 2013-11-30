@@ -23,7 +23,11 @@
                     <td>@venue.name</td>
                     <td>@venue.description</td>
                     <td>@venue.archived</td>
-                    <td><a class="btn btn-default btn-xs" href="@{routes.Venues.edit(venue.id)}">Edit</a></td>
+                    <td>
+                        <a class="btn btn-default btn-xs" href="@{routes.Venues.edit(venue.id)}">Edit</a>
+                        <a class="btn btn-default btn-xs" href="@{routes.Floorplans.view(venue.id)}">Floorplan</a>
+                    </td>
+
                 </tr>
             }
             </tbody>

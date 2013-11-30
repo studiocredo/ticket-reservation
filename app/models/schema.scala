@@ -4,6 +4,8 @@ import org.joda.time.DateTime
 import play.api.db.slick.Config.driver.simple._
 import com.github.tototoshi.slick.JodaSupport._
 import be.studiocredo.auth.{Roles, EmailToken, AuthToken, Password}
+import play.api.libs.json.Json
+import play.api.Logger
 
 object schema {
 
@@ -39,10 +41,10 @@ object schema {
 
   class Users extends Table[User]("user") {
     def id = column[UserId]("id", O.PrimaryKey, O.AutoInc)
-    def name = column[String]("name")
-    def username = column[String]("username")
-    def password = column[String]("password")
-    def salt = column[String]("salt")
+    def name = column[String]("name", O.DBType("TEXT"))
+    def username = column[String]("username", O.DBType("TEXT"))
+    def password = column[String]("password", O.DBType("TEXT"))
+    def salt = column[String]("salt", O.DBType("TEXT"))
 
     def * = id ~ name ~ username ~ password  ~ salt <>(
       { (id, name, username, password, salt) => User(id, name, username, Password(password, salt))},
@@ -59,9 +61,9 @@ object schema {
 
   class UserDetails extends Table[UserDetail]("user_detail") {
     def id = column[UserId]("id", O.PrimaryKey)
-    def email = column[Option[String]]("email")
-    def address = column[Option[String]]("address")
-    def phone = column[Option[String]]("phone")
+    def email = column[Option[String]]("email", O.DBType("TEXT"))
+    def address = column[Option[String]]("address", O.DBType("TEXT"))
+    def phone = column[Option[String]]("phone", O.DBType("TEXT"))
 
     def * = id ~ email ~ address ~ phone <>(UserDetail.apply _, UserDetail.unapply _)
 
@@ -80,7 +82,7 @@ object schema {
 
   class UserRoles extends Table[UserRole]("roles") {
     def userId = column[UserId]("id")
-    def role = column[String]("role")
+    def role = column[String]("role", O.DBType("TEXT"))
 
     def * = userId ~ role <>({(userId, role) => UserRole(userId, Roles.toRole(role))}, {(userRole:UserRole) => Some(userRole.id, Roles.toString(userRole.role))})
 
@@ -94,8 +96,8 @@ object schema {
 
   class Events extends Table[Event]("event") with Archiveable {
     def id = column[EventId]("id", O.PrimaryKey, O.AutoInc)
-    def name = column[String]("name")
-    def description = column[String]("description")
+    def name = column[String]("name", O.DBType("TEXT"))
+    def description = column[String]("description", O.DBType("TEXT"))
 
     def * = id ~ name ~ description ~ archived <>(Event.apply _, Event.unapply _)
     def autoInc = name ~ description ~ archived <>(EventEdit.apply _, EventEdit.unapply _) returning id
@@ -103,11 +105,16 @@ object schema {
 
   class Venues extends Table[Venue]("venue") with Archiveable {
     def id = column[VenueId]("id", O.PrimaryKey, O.AutoInc)
-    def name = column[String]("name")
-    def description = column[String]("description")
+    def name = column[String]("name", O.DBType("TEXT"))
+    def description = column[String]("description", O.DBType("TEXT"))
+    def floorplan = column[Option[FloorPlan]]("floorplan", O.DBType("TEXT"))
 
-    def * = id ~ name ~ description ~ archived <>(Venue.apply _, Venue.unapply _)
-    def autoInc = name ~ description ~ archived <>(VenueEdit.apply _, VenueEdit.unapply _) returning id
+
+    def * = id ~ name ~ description ~ floorplan ~ archived <>(Venue.apply _, Venue.unapply _)
+
+    def basic = name ~ description ~ archived
+    def edit = basic <>(VenueEdit.apply _, VenueEdit.unapply _)
+    def autoInc = edit returning id
   }
 
   class Shows extends Table[Show]("show") with Archiveable {
@@ -126,7 +133,7 @@ object schema {
   class Dvds extends Table[(DvdId, EventId, String, Int, DateTime, Option[DateTime], Boolean)]("dvd") {
     def id = column[DvdId]("id", O.PrimaryKey, O.AutoInc)
     def eventId = column[EventId]("event_id")
-    def name = column[String]("name")
+    def name = column[String]("name", O.DBType("TEXT"))
     def price = column[Int]("price")
     def availableStart = column[DateTime]("available-start")
     def availableEnd = column[Option[DateTime]]("available-end")
@@ -155,8 +162,8 @@ object schema {
     def id = column[OrderId]("id", O.PrimaryKey, O.AutoInc)
     def userId = column[UserId]("user_id")
     def date = column[DateTime]("date")
-    def billingName = column[String]("billing-name")
-    def billingAddress = column[String]("billing-address")
+    def billingName = column[String]("billing-name", O.DBType("TEXT"))
+    def billingAddress = column[String]("billing-address", O.DBType("TEXT"))
 
     def * = id ~ userId ~ date ~ billingName ~ billingAddress
 
@@ -201,7 +208,7 @@ object schema {
 
   class EmailAuthTokens extends Table[EmailToken]("auth_tokens_email") {
     def id = column[String]("id", O.PrimaryKey)
-    def email = column[String]("email")
+    def email = column[String]("email", O.DBType("TEXT"))
     def userId = column[Option[UserId]]("user_id")
     def creation = column[DateTime]("creation")
     def lastUsed = column[DateTime]("last_used")
@@ -220,4 +227,8 @@ object schema {
   implicit val dvdIdType = MappedTypeMapper.base[DvdId, Long](_.id, new DvdId(_))
   implicit val orderIdType = MappedTypeMapper.base[OrderId, Long](_.id, new OrderId(_))
   implicit val ticketOrderIdType = MappedTypeMapper.base[TicketOrderId, Long](_.id, new TicketOrderId(_))
+
+  import FloorPlanJson._
+
+  implicit val floorplanType = MappedTypeMapper.base[FloorPlan, String]({ plan => Json.stringify(Json.toJson(plan))}, { plan => Json.parse(plan).as[FloorPlan]})
 }

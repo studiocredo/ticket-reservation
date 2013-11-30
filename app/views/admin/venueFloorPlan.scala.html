@@ -1,0 +1,72 @@
+@(venue: entities.Venue)(implicit request: be.studiocredo.auth.SecureRequest[_])
+@import controllers.admin.routes
+@base("Venue floorplan " + venue.name) {
+
+    <script data-main="js/app" src="@controllers.routes.Assets.at("js/admin/floorplan.js")"></script>
+    <link rel='stylesheet' href='@controllers.routes.Assets.at("css/floorplan.css")'>
+
+    <div data-ng-app="floorplan" data-ng-controller="FloorPlanCtrl" data-ng-init="init(@venue.id)">
+        <h4> @venue.name</h4>
+        <p>@venue.description</p>
+
+        <div>
+            <div class="fp row" >
+                <div class="fp-grid col-md-10">
+                    <div class="row seat-row" data-ng-repeat="row in rows" data-ng-class="{selected: selectedRow == row }">
+                        <div class="col-xs-1">
+                            <a href="" data-ng-click="editRow(row)"><span class="glyphicon glyphicon-edit"></span></a>
+                            <a href="" data-ng-click="removeRow($index)"><span class="glyphicon glyphicon-remove"></span></a>
+                        </div>
+                        <div class="col-xs-11">
+                            <div data-ui-sortable="rowSortableOptions" data-ng-model="row.content">
+                                <div class="content" data-ng-repeat="content in row.content">
+                                    <div class="spacer spacer-{{content.width}}" data-ng-show="content.ct == 'spacer'" data-ng-click="paintSpacer(row, $index)"></div>
+                                    <div class="seat seat-{{content.kind}}" data-ng-show="content.ct == 'seat'" data-ng-click="paintSeat(row, $index)"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row seat-row">
+                        <div class="col-xs-1">
+                            <a href="" data-ng-click="addRow()" tooltip="Add row"><span class="glyphicon glyphicon-plus"></span></a>
+                        </div>
+                        <div class="col-xs-11">
+
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="row-controls" ng-show="selectedRow">
+                        Selected Row:
+                        <div>
+                            <p>
+                                <button class="btn btn-xs btn-default" data-ng-click="addSeat(selectedRow)">Add seat</button>
+                            </p>
+                            <p>
+                                <input type="number" min="0" max="8" data-ng-model="spacerSize">
+                                <button class="btn btn-xs btn-default" data-ng-click="addSpacer(selectedRow, spacerSize)">Add spacer</button>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="seat-palette">
+                        Paint:
+                        <div data-ng-click="paintNormal()"><div class="seat seat-normal"></div> Normal</div>
+                        <div data-ng-click="paintVip()"><div class="seat seat-vip"></div> VIP</div>
+                        <div data-ng-click="paintDisabled()"><div class="seat seat-disabled"></div> Disabled</div>
+                        <p></p>
+                        <div data-ng-click="paintDelete()"><div class="seat delete-paint"></div> Delete</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn btn-success" data-ng-click="save()">Save</button>
+
+        <div ng-repeat="msg in messages">
+            <div class="alert alert-{{msg.type}}">
+                {{msg.msg}}
+            </div>
+        </div>
+    </div>
+}

@@ -7,7 +7,7 @@ import be.studiocredo.ShowService
 import com.google.inject.Inject
 import be.studiocredo.auth.{Secure, Authorization, AuthenticatorService}
 
-class Application @Inject()(showService:ShowService, val authService: AuthenticatorService) extends Controller with Secure {
+class Application @Inject()(showService: ShowService, val authService: AuthenticatorService) extends Controller with Secure {
   val defaultAuthorization = None
 
   def index = AuthAwareDBAction { implicit request =>
@@ -17,9 +17,9 @@ class Application @Inject()(showService:ShowService, val authService: Authentica
 
   def javascriptRoutes = Action { implicit request =>
     import admin.routes.javascript._
-     Ok(
+    Ok(
       Routes.javascriptRouter("jsRoutes")(
-
+        Floorplans.ajaxSaveFloorPlan, Floorplans.ajaxFloorPlan
       )).as("text/javascript")
   }
 
