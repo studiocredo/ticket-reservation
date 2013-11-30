@@ -75,7 +75,8 @@ object schema {
     def userId = column[UserId]("user_id")
 
     def * = id ~ userId ~ archived <>(Member, Member.unapply _)
-    def autoInc = userId ~ archived <>(MemberEdit, MemberEdit.unapply _) returning id
+    def edit = userId ~ archived <>(MemberEdit, MemberEdit.unapply _)
+    def autoInc = edit returning id
 
     def user = foreignKey("user_fk", userId, Users)(_.id)
   }
@@ -100,7 +101,8 @@ object schema {
     def description = column[String]("description", O.DBType("TEXT"))
 
     def * = id ~ name ~ description ~ archived <>(Event.apply _, Event.unapply _)
-    def autoInc = name ~ description ~ archived <>(EventEdit.apply _, EventEdit.unapply _) returning id
+    def edit = name ~ description ~ archived <>(EventEdit.apply _, EventEdit.unapply _)
+    def autoInc = edit returning id
   }
 
   class Venues extends Table[Venue]("venue") with Archiveable {
@@ -124,7 +126,8 @@ object schema {
     def date = column[DateTime]("date")
 
     def * = id ~ eventId ~ venueId ~ date ~ archived <>(Show.apply _, Show.unapply _)
-    def autoInc = eventId ~ venueId ~ date ~ archived <>(ShowEdit.apply _, ShowEdit.unapply _) returning id
+    def edit = eventId ~ venueId ~ date ~ archived <>(ShowEdit.apply _, ShowEdit.unapply _)
+    def autoInc = edit returning id
 
     def event = foreignKey("event_fk", eventId, Events)(_.id)
     def venue = foreignKey("venue_fk", venueId, Venues)(_.id)

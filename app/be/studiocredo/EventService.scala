@@ -26,31 +26,18 @@ class EventService @Inject()(showService: ShowService) {
     Page(values, page, pageSize, offset, total)
   }
 
-  def insert(member: EventEdit)(implicit s: Session): EventId = {
-    Events.autoInc.insert(member)
-  }
+  def insert(event: EventEdit)(implicit s: Session): EventId = Events.autoInc.insert(event)
+  def update(id: EventId, event: EventEdit)(implicit s: Session) = editById(id).update(event)
 
-  def update(id: EventId, member: EventEdit)(implicit s: Session) = {
-    EventsQ.filter(_.id === id).update(toEntity(id, member))
-  }
+  def get(id: EventId)(implicit s: Session): Option[Event] = byId(id).firstOption
+  def getEdit(id: EventId)(implicit s: Session): Option[EventEdit] = editById(id).firstOption
 
-  def get(id: EventId)(implicit s: Session): Option[Event] = {
-    EventsQ.filter(_.id === id).firstOption
-  }
-
-  def getEdit(id: EventId)(implicit s: Session): Option[EventEdit] = get(id).map(toEdit)
-
-  def toEdit(m: Event) = EventEdit(m.name, m.description, m.archived)
-  def toEntity(id: EventId, m: EventEdit) =  Event(id, m.name, m.description, m.archived)
-
-  def delete(id: EventId)(implicit s: Session) = {
-    EventsQ.filter(_.id === id).delete
-  }
-
+  def delete(id: EventId)(implicit s: Session) = byId(id).delete
 
   def eventDetails(id: EventId)(implicit s: Session): Option[EventDetail] = {
     get(id).map{(event) => EventDetail(event, showService.listForEvent(event.id))}
-
   }
 
+  private def byId(id: ids.EventId)=  EventsQ.where(_.id === id)
+  private def editById(id: ids.EventId) = byId(id).map(_.edit)
 }

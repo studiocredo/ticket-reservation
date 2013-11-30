@@ -28,35 +28,15 @@ class VenueService @Inject()() {
 
   def list()(implicit s: Session) = active.list
 
-  def insert(member: VenueEdit)(implicit s: Session): VenueId = {
-    Venues.autoInc.insert(member)
-  }
-  
-  def update(id: VenueId, venue: VenueEdit)(implicit s: Session) = {
-    editById(id).update(venue)
-  }
+  def insert(member: VenueEdit)(implicit s: Session): VenueId = Venues.autoInc.insert(member)
+  def update(id: VenueId, venue: VenueEdit)(implicit s: Session) = editById(id).update(venue)
+  def update(id: VenueId, floorPlan: FloorPlan)(implicit s: Session) = byId(id).map(_.floorplan).update(Some(floorPlan))
 
-  def update(id: VenueId, floorPlan: FloorPlan)(implicit s: Session) = {
-    byId(id).map(_.floorplan).update(Some(floorPlan))
-  }
+  def get(id: VenueId)(implicit s: Session): Option[Venue] = byId(id).firstOption
+  def getEdit(id: VenueId)(implicit s: Session): Option[VenueEdit] = editById(id).firstOption
 
-  def get(id: VenueId)(implicit s: Session): Option[Venue] = {
-    byId(id).firstOption
-  }
+  def delete(id: VenueId)(implicit s: Session) = byId(id).delete
 
-  def getEdit(id: VenueId)(implicit s: Session): Option[VenueEdit] = {
-    editById(id).firstOption
-  }
-
-  def delete(id: VenueId)(implicit s: Session) = {
-    byId(id).delete
-  }
-
-  private def byId(id: ids.VenueId)= {
-    VenuesQ.where(_.id === id)
-  }
-
-  private def editById(id: ids.VenueId) = {
-    byId(id).map(_.edit)
-  }
+  private def byId(id: ids.VenueId)=  VenuesQ.where(_.id === id)
+  private def editById(id: ids.VenueId) = byId(id).map(_.edit)
 }

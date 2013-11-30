@@ -22,26 +22,15 @@ class ShowService {
     Page(values, page, pageSize, offset, total)
   }
 
-  def insert(member: ShowEdit)(implicit s: Session): ShowId = {
-    Shows.autoInc.insert(member)
-  }
 
-  def update(id: ShowId, member: ShowEdit)(implicit s: Session) = {
-    ShowsQ.filter(_.id === id).update(toEntity(id, member))
-  }
+  def get(id: ShowId)(implicit s: Session): Option[Show] =  byId(id).firstOption
+  def getEdit(id: ShowId)(implicit s: Session): Option[ShowEdit] = editById(id).firstOption
 
-  def get(id: ShowId)(implicit s: Session): Option[Show] = {
-    ShowsQ.filter(_.id === id).firstOption
-  }
+  def insert(member: ShowEdit)(implicit s: Session): ShowId = Shows.autoInc.insert(member)
+  def update(id: ShowId, member: ShowEdit)(implicit s: Session) = editById(id).update(member)
 
-  def getEdit(id: ShowId)(implicit s: Session): Option[ShowEdit] = get(id).map(toEdit)
 
-  def toEdit(m: Show) = ShowEdit(m.eventId, m.venueId, m.date, m.archived)
-  def toEntity(id: ShowId, m: ShowEdit) =  Show(id, m.eventId, m.venueId, m.date, m.archived)
-
-  def delete(id: ShowId)(implicit s: Session) = {
-    ShowsQ.filter(_.id === id).delete
-  }
+  def delete(id: ShowId)(implicit s: Session) = byId(id).delete
 
 
   def listForEvent(id: EventId)(implicit s: Session): Map[Venue, List[Show]] = {
@@ -50,7 +39,6 @@ class ShowService {
     list.groupBy(_._2).mapValues(_.map(_._1))
   }
 
-
   def nextShows(limit: Int)(implicit s: Session): List[ShowOverview] = {
     val next = active.filter(_.date >= DateTime.now())
     val list = (for (s <- next; e <- s.event) yield (s, e)).sortBy(_._1.date).take(limit).list
@@ -58,6 +46,8 @@ class ShowService {
     list map {
       case (show, event) => ShowOverview(event.name, show.date)
     }
-
   }
+
+  private def byId(id: ids.ShowId)=  ShowsQ.where(_.id === id)
+  private def editById(id: ids.ShowId) =  byId(id).map(_.edit)
 }

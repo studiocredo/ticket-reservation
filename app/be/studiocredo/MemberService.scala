@@ -71,7 +71,8 @@ class MemberService @Inject()(userService: UserService) {
     updateQuery.update(data)
   }
 
-  def delete(id: MemberId)(implicit s: Session) = {
-    MembersQ.filter(_.id === id).delete
-  }
+  def delete(id: MemberId)(implicit s: Session) = byId(id).delete
+
+  private def byId(id: MemberId) = MembersQ.where(_.id === id)
+  private def editById(id: MemberId) = byId(id).map(_.edit)
 }
