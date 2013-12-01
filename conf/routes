@@ -60,7 +60,7 @@ GET         /admin/event/:id                        @controllers.admin.EventDeta
 POST        /admin/event/:id/addshow                @controllers.admin.EventDetails.addShow(id:Long)
 
 # Users
-GET         /order/:id                              @controllers.Orders.start(id:Long)
+GET         /order                                  @controllers.Orders.start(event:Option[Long], show:Option[Long])
 GET         /event/:id                              @controllers.Events.view(id:Long)
 GET         /show/:id                               @controllers.Events.viewShow(id:Long)
 GET         /show/:id/floorplan                     @controllers.Events.ajaxFloorplan(id:Long)

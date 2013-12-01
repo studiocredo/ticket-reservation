@@ -52,6 +52,9 @@
                     <a class="navbar-brand" href="@routes.Application.index()">Credo</a>
                 </div>
                 <div class="navbar-collapse collapse">
+                    <ul class="nav navbar-nav">
+                        <li><a href="@routes.Orders.start(None, None)">Bestel</a></li>
+                    </ul>
                     @Auth.restrictAdmin {
                         <ul class="nav navbar-nav">
                             <li class="dropdown">
