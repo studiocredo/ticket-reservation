@@ -16,7 +16,6 @@ App.controller('FloorPlanCtrl', function ($scope, $http) {
         $scope.venueId = venueId;
 
         $http.get(jsRoutes.controllers.admin.Floorplans.ajaxFloorPlan($scope.venueId).url).success(function (plan) {
-            console.log("success", plan);
             $scope.plan = plan;
             $scope.rows = plan.rows;
         });
@@ -50,9 +49,7 @@ App.controller('FloorPlanCtrl', function ($scope, $http) {
     };
 
     function removeContent(row, index) {
-        console.log("remove", row, index);
         row.content.splice(index, 1);
-        console.log("remove", row, index);
     }
 
     $scope.paintSpacer = function (row, index) {
