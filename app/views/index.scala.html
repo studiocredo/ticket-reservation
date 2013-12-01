@@ -10,7 +10,9 @@
 
                 <p>Reserveer hier je tickets voor onze slotshow</p>
 
-                <p><a class="btn btn-primary btn-lg">Upcoming shows &raquo;</a></p>
+                @nextShows.headOption.map { next =>
+                    <p><a class="btn btn-primary btn-lg" href="@routes.Events.view(next.showId)">Upcoming shows &raquo;</a></p>
+                }
             </div>
         </div>
     </div>
@@ -22,9 +24,10 @@
     <div class="col-lg-4">
         <h2>@info.name</h2>
 
-        <p>@info.date</p>
+        <p>@HumanDateTime.formatDateTime(info.date) (binnen @HumanDateTime.formatDuration(info.date))</p>
+        <p></p>
 
-        <p><a class="btn btn-default" href="#">View details &raquo;</a></p>
+        <p><a class="btn btn-primary" href="@routes.Events.viewShow(info.showId)">View&raquo;</a></p>
     </div>
     }
 </div>

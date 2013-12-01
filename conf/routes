@@ -13,7 +13,7 @@ GET         /logout                                 @controllers.auth.LoginPage.
 
 GET         /not-authorized                         @controllers.auth.Auth.notAuthorized
 
-# User Registration and password handling (only needed if you are using UsernamePasswordProvider)
+# User Registration and password handling
 GET         /signup                                 @controllers.auth.SignUp.startSignUp
 POST        /signup                                 @controllers.auth.SignUp.handleStartSignUp
 GET         /signup/emailed                         @controllers.auth.SignUp.signUpAwaitEmail
@@ -28,6 +28,7 @@ GET         /password                               @controllers.auth.PasswordCh
 POST        /password                               @controllers.auth.PasswordChange.handlePasswordChange
 
 
+# Admin
 GET         /admin/members                          @controllers.admin.Members.list(p:Int ?= 0)
 GET         /admin/members/new                      @controllers.admin.Members.create
 POST        /admin/members                          @controllers.admin.Members.save
@@ -58,10 +59,20 @@ POST        /admin/events/:id/delete                @controllers.admin.Events.de
 GET         /admin/event/:id                        @controllers.admin.EventDetails.view(id:Long)
 POST        /admin/event/:id/addshow                @controllers.admin.EventDetails.addShow(id:Long)
 
-GET         /admin/test/fakedata                    @controllers.admin.FakeData.insert()
+# Users
+GET         /order/:id                              @controllers.Orders.start(id:Long)
+GET         /event/:id                              @controllers.Events.view(id:Long)
+GET         /show/:id                               @controllers.Events.viewShow(id:Long)
+GET         /show/:id/floorplan                     @controllers.Events.ajaxFloorplan(id:Long)
 
+# Members
 GET         /reservation/:id/new                    @controllers.reservation.Reservations.create(id:Long)
 
+
+# Assets
 GET         /assets/javascripts/routes              @controllers.Application.javascriptRoutes
 GET         /assets/*file                           controllers.Assets.at(path="/public", file)
 GET         /webjars/*file                          controllers.WebJarAssets.at(file)
+
+# Test
+GET         /admin/test/fakedata                    @controllers.admin.FakeData.insert()

@@ -5,12 +5,22 @@ import play.api.db.slick._
 import be.studiocredo._
 import play.api.Play.current
 import models.entities._
-import models.entities.VenueEdit
 import scala.Some
 import org.joda.time.DateTime
 import com.google.inject.Inject
 import be.studiocredo.auth.{Roles, Passwords}
 import models.admin.MemberFormData
+import models.admin.MemberFormData
+import models.entities.ShowEdit
+import models.entities.Row
+import models.entities.EventEdit
+import models.entities.UserDetailEdit
+import models.entities.VenueEdit
+import models.entities.FloorPlan
+import models.entities.UserEdit
+import models.entities.Spacer
+import scala.Some
+import models.entities.Seat
 
 class FakeData @Inject()(memberService: MemberService,
                          userService: UserService,
@@ -32,6 +42,34 @@ class FakeData @Inject()(memberService: MemberService,
     val ven1 = venueService.insert(VenueEdit("Big room 1", "", archived = false))
     val ven2 = venueService.insert(VenueEdit("Big room 2", "", archived = false))
     val ven3 = venueService.insert(VenueEdit("Small room", "", archived = false))
+
+    val NORM = Seat(SeatType.Normal)
+    val VIP = Seat(SeatType.Vip)
+    val DISA = Seat(SeatType.Disabled)
+
+    venueService.update(ven1, FloorPlan(List(
+      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA)),
+      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA)),
+      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA)),
+      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA)),
+      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA)),
+      Row(List(Spacer(1), NORM, NORM, NORM, NORM, NORM, NORM, DISA)),
+      Row(List(Spacer(2), NORM, NORM, NORM, NORM, NORM, DISA)),
+      Row(List(Spacer(2), VIP, VIP, VIP, VIP, VIP, DISA)),
+      Row(List(Spacer(4), VIP, VIP, VIP, VIP))
+    )))
+    venueService.update(ven2, FloorPlan(List(
+      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA)),
+      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA)),
+      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA)),
+      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA))
+    )))
+    venueService.update(ven3, FloorPlan(List(
+      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA)),
+      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA)),
+      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA)),
+      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA))
+    )))
 
     showService.insert(ShowEdit(event1, ven1, new DateTime(2013, 12, 5, 17, 0), archived = false))
     showService.insert(ShowEdit(event1, ven1, new DateTime(2013, 12, 5, 19, 0), archived = false))

@@ -6,6 +6,7 @@ import com.github.tototoshi.slick.JodaSupport._
 import be.studiocredo.auth.{Roles, EmailToken, AuthToken, Password}
 import play.api.libs.json.Json
 import play.api.Logger
+import be.studiocredo.util.Money
 
 object schema {
 
@@ -37,7 +38,6 @@ object schema {
     this:Table[_] =>
     def archived = column[Boolean]("archived", O.Default(false))
   }
-
 
   class Users extends Table[User]("user") {
     def id = column[UserId]("id", O.PrimaryKey, O.AutoInc)
@@ -184,20 +184,29 @@ object schema {
     def order = foreignKey("order_fk", orderId, Orders)(_.id)
   }
 
-  class TicketSeatOrders extends Table[(TicketOrderId, ShowId, Option[MemberId])]("order-ticket-seat") {
+  class TicketSeatOrders extends Table[(TicketOrderId, ShowId, Option[MemberId], Int, Int, Money)]("order-ticket-seat") {
     def ticketOrderId = column[TicketOrderId]("ticket_order_id")
     def showId = column[ShowId]("show_id")
     def memberId = column[Option[MemberId]]("member_id")
 
-    def * = ticketOrderId ~ showId ~ memberId
+    def row = column[Int]("row")
+    def seat = column[Int]("seat")
+
+    def price = column[Money]("price")
+
+    def * = ticketOrderId ~ showId ~ memberId ~ row ~ seat ~ price
 
     def pk = primaryKey("order-ticket-seat_pkey", (ticketOrderId, showId))
 
     def ticketOrder = foreignKey("ticket_order_fk", ticketOrderId, TicketOrders)(_.id)
     def show = foreignKey("show_fk", showId, Shows)(_.id)
     def member = foreignKey("member_fk", memberId, Members)(_.id)
+
+    def unqiueSeats = index("idx_showseat", showId ~ row ~ seat, unique = true)
   }
 
+
+  //////////////////////////////////
 
   class AuthTokens extends Table[AuthToken]("auth_tokens") {
     def id = column[String]("id", O.PrimaryKey)
@@ -231,7 +240,8 @@ object schema {
   implicit val orderIdType = MappedTypeMapper.base[OrderId, Long](_.id, new OrderId(_))
   implicit val ticketOrderIdType = MappedTypeMapper.base[TicketOrderId, Long](_.id, new TicketOrderId(_))
 
-  import FloorPlanJson._
+  implicit val moneyType = MappedTypeMapper.base[Money, BigDecimal](_.amount, Money(_))
 
+  import FloorPlanJson._
   implicit val floorplanType = MappedTypeMapper.base[FloorPlan, String]({ plan => Json.stringify(Json.toJson(plan))}, { plan => Json.parse(plan).as[FloorPlan]})
 }

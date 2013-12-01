@@ -18,6 +18,7 @@
         <link rel='stylesheet' href='@routes.WebJarAssets.at(WebJarAssets.locate("select2.css"))'>
         <link rel='stylesheet' href='@routes.WebJarAssets.at(WebJarAssets.locate("select2-bootstrap.css"))'>
         <link rel='stylesheet' href='@routes.Assets.at("css/main.css")'>
+        <link rel='stylesheet' href='@routes.Assets.at("css/admin/main.css")'>
         @styles
 
         <!--[if lt IE 9]>
@@ -34,11 +35,11 @@
         <script type='text/javascript' src='@routes.Assets.at("js/angular-dragdrop.js")'></script>
         <script type='text/javascript' src='@routes.Assets.at("js/angular-sortable.js")'></script>
 
+        <script type='text/javascript' src='@routes.Assets.at("js/utils.js")'></script>
         <script type='text/javascript' src='@routes.Assets.at("js/main.js")'></script>
-        <script type='text/javascript' src='@routes.Assets.at("js/admin.js")'></script>
         @scripts
     </head>
-    <body>
+    <body data-ng-app="credo">
 
         <div class="navbar navbar-inverse navbar-fixed-top">
             <div class="container">

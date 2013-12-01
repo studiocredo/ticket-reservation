@@ -1,17 +1,20 @@
 @seat-size: 14px;
 @spacer-size: @seat-size / 2;
 
-.activeomg {
-  background-color: crimson;
-  border: 5px solid crimson;
-}
-
 .fp {
-  margin-top: 3em;
   padding: 3em;
-  .row-controls {
-      margin-bottom: 2em;
+  background-color: #EEEEEE;
+  margin-right: 5em;
+
+  .content {
+    display: inline-block;
   }
+  .seat-row {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0px
+  }
+
   .seat {
     @seat-border: 1px solid black;
 
@@ -65,31 +68,7 @@
   .spacer-8 {
     width: @spacer-size * 8;
   }
-
-  .seat-palette > div {
-    cursor: pointer;
-  }
-  input[type=number] {
-    width: 3em;
-  }
 }
 
-.fp-grid {
-  background-color: #EEEEEE;
-
-  .selected {
-    background-color: #f9f8cb;
-  }
-  .content {
-    display: inline-block;
-  }
-  .seat-row {
-    display: block;
-    margin-bottom: 2px;
-    margin-top: 2px;
-    font-size: @seat-size;
-  }
-
-}
 
 

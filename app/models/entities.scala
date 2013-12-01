@@ -61,7 +61,7 @@ object entities {
   case class Show(id: ShowId, eventId: EventId, venueId: VenueId, date: DateTime, archived: Boolean) extends Entity[ShowId] with Archiveable
   case class ShowEdit(        eventId: EventId, venueId: VenueId, date: DateTime, archived: Boolean)
 
-  case class ShowOverview(name: String, date: DateTime)
+  case class ShowOverview(name: String, date: DateTime, showId: ShowId, eventId: EventId)
 
 
   sealed trait RowContent

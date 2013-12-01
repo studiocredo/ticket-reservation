@@ -21,7 +21,7 @@ object ApplicationBuild extends Build {
     "org.postgresql" % "postgresql" % "9.2-1003-jdbc4",
     "com.github.tototoshi" %% "slick-joda-mapper" % "0.4.0",
 
-    "com.chuusai" % "shapeless_2.10.2" % "2.0.0-M1", /* cross CrossVersion.full */
+    "org.joda" % "joda-money" % "0.9",
 
     "com.google.inject" % "guice" % "3.0",
     "net.codingwell" % "scala-guice_2.10" % "3.0.2",

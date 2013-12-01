@@ -16,10 +16,13 @@ class Application @Inject()(showService: ShowService, val authService: Authentic
 
 
   def javascriptRoutes = Action { implicit request =>
-    import admin.routes.javascript._
+    import admin.routes.{javascript => ar}
+    import routes.{javascript => mr}
     Ok(
       Routes.javascriptRouter("jsRoutes")(
-        Floorplans.ajaxSaveFloorPlan, Floorplans.ajaxFloorPlan
+        mr.Events.ajaxFloorplan,
+
+        ar.Floorplans.ajaxSaveFloorPlan, ar.Floorplans.ajaxFloorPlan
       )).as("text/javascript")
   }
 

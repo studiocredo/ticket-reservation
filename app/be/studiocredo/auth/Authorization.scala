@@ -12,6 +12,10 @@ object Authorization {
     def isAuthorized(user: Identity): Boolean = user.roles.contains(role)
   }
 
+  val ANY = new Authorization() {
+    def isAuthorized(user: Identity): Boolean = true
+  }
+
   val ADMIN = new RoleAuthorization(Roles.Admin)
   val MEMBER = new RoleAuthorization(Roles.Member)
 }

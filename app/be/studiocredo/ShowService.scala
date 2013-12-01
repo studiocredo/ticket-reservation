@@ -6,6 +6,7 @@ import models.entities._
 import models.ids._
 import org.joda.time.DateTime
 import com.github.tototoshi.slick.JodaSupport._
+import be.studiocredo.util.Joda
 
 class ShowService {
   import models.queries._
@@ -35,8 +36,8 @@ class ShowService {
 
   def listForEvent(id: EventId)(implicit s: Session): Map[Venue, List[Show]] = {
     val list = (for (s <- active; v <- s.venue if s.eventId === id) yield (s, v)).list
-
-    list.groupBy(_._2).mapValues(_.map(_._1))
+    import Joda._
+    list.groupBy(_._2).mapValues(_.map(_._1).sortBy(_.date))
   }
 
   def nextShows(limit: Int)(implicit s: Session): List[ShowOverview] = {
@@ -44,7 +45,7 @@ class ShowService {
     val list = (for (s <- next; e <- s.event) yield (s, e)).sortBy(_._1.date).take(limit).list
 
     list map {
-      case (show, event) => ShowOverview(event.name, show.date)
+      case (show, event) => ShowOverview(event.name, show.date, show.id, event.id)
     }
   }
 
