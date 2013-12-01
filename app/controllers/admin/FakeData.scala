@@ -48,27 +48,27 @@ class FakeData @Inject()(memberService: MemberService,
     val DISA = Seat(SeatType.Disabled)
 
     venueService.update(ven1, FloorPlan(List(
-      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA)),
-      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA)),
-      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA)),
-      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA)),
-      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA)),
-      Row(List(Spacer(1), NORM, NORM, NORM, NORM, NORM, NORM, DISA)),
-      Row(List(Spacer(2), NORM, NORM, NORM, NORM, NORM, DISA)),
-      Row(List(Spacer(2), VIP, VIP, VIP, VIP, VIP, DISA)),
-      Row(List(Spacer(4), VIP, VIP, VIP, VIP))
+      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA), 0),
+      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA), 0),
+      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA), 0),
+      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA), 0),
+      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA), 0),
+      Row(List(Spacer(1), NORM, NORM, NORM, NORM, NORM, NORM, DISA), 1),
+      Row(List(Spacer(2), NORM, NORM, NORM, NORM, NORM, DISA), 0),
+      Row(List(Spacer(2), VIP, VIP, VIP, VIP, VIP, DISA), 0),
+      Row(List(Spacer(4), VIP, VIP, VIP, VIP), 0)
     )))
     venueService.update(ven2, FloorPlan(List(
-      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA)),
-      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA)),
-      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA)),
-      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA))
+      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA), 0),
+      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA), 0),
+      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA), 1),
+      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA), 0)
     )))
     venueService.update(ven3, FloorPlan(List(
-      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA)),
-      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA)),
-      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA)),
-      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA))
+      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA), 0),
+      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA), 0),
+      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA), 0),
+      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA), 0)
     )))
 
     showService.insert(ShowEdit(event1, ven1, new DateTime(2013, 12, 5, 17, 0), archived = false))

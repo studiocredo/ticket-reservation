@@ -9,7 +9,7 @@
         <div>
             <div class="fp fp-edit row" >
                 <div class="col-md-10">
-                    <div class="row seat-row" data-ng-repeat="row in rows" data-ng-class="{selected: selectedRow == row }">
+                    <div class="row seat-row vspacer-{{row.vspace || 0}}" data-ng-repeat="row in rows" data-ng-class="{selected: selectedRow == row }">
                         <div class="col-xs-2">
                             <a href="" data-ng-click="editRow(row)"><span class="glyphicon glyphicon-edit"></span></a>
                             <a href="" data-ng-click="copyRow($index)"><span class="glyphicon glyphicon-tags"></span></a>
@@ -45,7 +45,11 @@
                             </p>
                             <p>
                                 <input type="number" min="0" max="8" data-ng-model="spacerSize">
-                                <button class="btn btn-xs btn-default" data-ng-click="addSpacer(selectedRow, spacerSize)">Add spacer</button>
+                                <button class="btn btn-xs btn-default" data-ng-click="addSpacer(selectedRow, spacerSize)">Add horizontal spacer</button>
+                            </p>
+                            <p>
+                                <input type="number" min="0" max="8" data-ng-model="verticalSpacerSize">
+                                <button class="btn btn-xs btn-default" data-ng-click="addVerticalSpacer(selectedRow, verticalSpacerSize)">Add vertical spacer</button>
                             </p>
                         </div>
                     </div>

@@ -12,7 +12,7 @@ import play.api.mvc.Result
 class Floorplans @Inject()(venueService: VenueService, val authService: AuthenticatorService) extends AdminController {
 
   import FloorPlanJson._
-  val defaultPlan = FloorPlan((1 to 10).map (_ => Row((1 to 20).map ( _=> Seat(SeatType.Normal)).toList)).toList)
+  val defaultPlan = FloorPlan((1 to 10).map (_ => Row((1 to 20).map ( _=> Seat(SeatType.Normal)).toList, 0)).toList)
 
   def view(id: VenueId) = AuthDBAction { implicit rs =>
     forVenue(id) { venue =>

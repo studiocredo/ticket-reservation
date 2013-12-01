@@ -58,10 +58,12 @@ App.controller "FloorPlanEditCtrl", ($scope, $http) ->
 
     # -------
     $scope.addRow = ->
-        $scope.rows.push content: [
-            ct: "seat"
-            kind: SEAT_NORMAL
-        ]
+        $scope.rows.push
+            content: [
+                ct: "seat"
+                kind: SEAT_NORMAL
+            ]
+            vspace: 0
 
     $scope.removeRow = (index) ->
         $scope.rows.splice index, 1
@@ -93,6 +95,9 @@ App.controller "FloorPlanEditCtrl", ($scope, $http) ->
             ct: "spacer"
             width: size
 
+    $scope.verticalSpacerSize = 0
+    $scope.addVerticalSpacer = (row, size) ->
+        row.vspace = size
 
     $scope.editRow = (row) ->
         $scope.selectedRow = row
@@ -111,7 +116,7 @@ App.directive 'floorplan', () ->
     restrict: 'EA'
     template: """
 <div class="fp">
-    <div class="row seat-row" data-ng-repeat="row in rows">
+    <div class="row seat-row vspacer-{{row.vspace || 0}}" data-ng-repeat="row in rows">
         <div data-ui-sortable="rowSortableOptions" data-ng-model="row.content">
             <div class="content" data-ng-repeat="content in row.content">
                 <div class="spacer spacer-{{content.width}}" data-ng-show="content.ct == 'spacer'"></div>

@@ -72,7 +72,7 @@ object entities {
     val SPACER_TYPE = "spacer"
   }
 
-  case class Row(content: List[RowContent])
+  case class Row(content: List[RowContent], vspace: Int)
   case class FloorPlan(rows: List[Row])
 
   object FloorPlanJson {
