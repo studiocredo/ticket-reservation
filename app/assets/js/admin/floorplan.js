@@ -72,7 +72,7 @@ App.controller('FloorPlanCtrl', function ($scope, $http) {
     // -------
     $scope.addRow = function () {
         $scope.rows.push({content: [
-            {ct: "seat"}
+            {ct: "seat", kind: SEAT_NORMAL}
         ]});
     };
     $scope.removeRow = function (index) {
