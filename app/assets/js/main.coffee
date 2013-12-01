@@ -1,5 +1,5 @@
 "use strict"
-App = angular.module("credo", ["ngDragDrop", "ui.sortable"])
+App = angular.module("credo", ["ngDragDrop", "ui.sortable", "ng"])
 
 App.controller "FloorPlanEditCtrl", ($scope, $http) ->
     # -------
@@ -65,6 +65,21 @@ App.controller "FloorPlanEditCtrl", ($scope, $http) ->
 
     $scope.removeRow = (index) ->
         $scope.rows.splice index, 1
+
+    $scope.moveRowUp = (index) ->
+        newPos = Math.max 0, index - 1
+        value = $scope.rows[index]
+        $scope.rows.splice index, 1
+        $scope.rows.splice newPos, 0, value
+
+    $scope.moveRowDown = (index) ->
+        newPos = Math.min $scope.rows.length - 1,index + 1
+        value = $scope.rows[index]
+        $scope.rows.splice index, 1
+        $scope.rows.splice newPos, 0, value
+
+    $scope.copyRow = (index) ->
+        $scope.rows.splice index, 0, angular.copy $scope.rows[index]
 
     $scope.addSeat = (row) ->
         row.content.push

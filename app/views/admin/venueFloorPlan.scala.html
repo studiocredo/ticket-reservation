@@ -10,11 +10,14 @@
             <div class="fp fp-edit row" >
                 <div class="col-md-10">
                     <div class="row seat-row" data-ng-repeat="row in rows" data-ng-class="{selected: selectedRow == row }">
-                        <div class="col-xs-1">
+                        <div class="col-xs-2">
                             <a href="" data-ng-click="editRow(row)"><span class="glyphicon glyphicon-edit"></span></a>
+                            <a href="" data-ng-click="copyRow($index)"><span class="glyphicon glyphicon-tags"></span></a>
+                            <a href="" data-ng-click="moveRowUp($index)"><span class="glyphicon glyphicon-arrow-up"></span></a>
+                            <a href="" data-ng-click="moveRowDown($index)"><span class="glyphicon glyphicon-arrow-down"></span></a>
                             <a href="" data-ng-click="removeRow($index)"><span class="glyphicon glyphicon-remove"></span></a>
                         </div>
-                        <div class="col-xs-11">
+                        <div class="col-xs-10">
                             <div data-ui-sortable="rowSortableOptions" data-ng-model="row.content">
                                 <div class="content" data-ng-repeat="content in row.content">
                                     <div class="spacer spacer-{{content.width}}" data-ng-show="content.ct == 'spacer'" data-ng-click="paintSpacer(row, $index)"></div>
@@ -25,10 +28,10 @@
                     </div>
 
                     <div class="row seat-row">
-                        <div class="col-xs-1">
+                        <div class="col-xs-2">
                             <a href="" data-ng-click="addRow()" tooltip="Add row"><span class="glyphicon glyphicon-plus"></span></a>
                         </div>
-                        <div class="col-xs-11">
+                        <div class="col-xs-10">
 
                         </div>
                     </div>
