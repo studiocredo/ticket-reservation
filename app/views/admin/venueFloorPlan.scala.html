@@ -9,7 +9,7 @@
         <div>
             <div class="fp fp-edit row" >
                 <div class="col-md-10">
-                    <div class="row seat-row vspacer-{{row.vspace || 0}}" data-ng-repeat="row in rows" data-ng-class="{selected: selectedRow == row }">
+                    <div class="row seat-row vspacer-{{row.vspace}}" data-ng-repeat="row in rows" data-ng-class="{selected: selectedRow == row }">
                         <div class="col-xs-2">
                             <a href="" data-ng-click="editRow(row)"><span class="glyphicon glyphicon-edit"></span></a>
                             <a href="" data-ng-click="copyRow($index)"><span class="glyphicon glyphicon-tags"></span></a>

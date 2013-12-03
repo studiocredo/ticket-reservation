@@ -116,7 +116,7 @@ App.directive 'floorplan', () ->
     restrict: 'EA'
     template: """
 <div class="fp fp-fancy">
-    <div class="row seat-row vspacer-{{row.vspace || 0}}" data-ng-repeat="row in rows">
+    <div class="row seat-row vspacer-{{row.vspace}}" data-ng-repeat="row in rows">
         <div data-ui-sortable="rowSortableOptions" data-ng-model="row.content">
             <div class="content" data-ng-repeat="content in row.content">
                 <div class="spacer spacer-{{content.width}}" data-ng-show="content.ct == 'spacer'"></div>
