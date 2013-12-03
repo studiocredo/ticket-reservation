@@ -115,7 +115,7 @@ App.controller "FloorPlanCtrl", ($scope, $http) ->
 App.directive 'floorplan', () ->
     restrict: 'EA'
     template: """
-<div class="fp">
+<div class="fp fp-fancy">
     <div class="row seat-row vspacer-{{row.vspace || 0}}" data-ng-repeat="row in rows">
         <div data-ui-sortable="rowSortableOptions" data-ng-model="row.content">
             <div class="content" data-ng-repeat="content in row.content">
