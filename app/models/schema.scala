@@ -205,6 +205,33 @@ object schema {
     def unqiueSeats = index("idx_showseat", showId ~ row ~ seat, unique = true)
   }
 
+  class ReservationQuota extends Table[(EventId, MemberId, Int)]("reservation-quota") {
+    def eventId = column[EventId]("event_id")
+    def memberId = column[MemberId]("member_id")
+
+    def quota = column[Int]("quota")
+
+    def * = eventId ~ memberId ~ quota
+
+    def pk = primaryKey("event-member_pkey", (eventId, memberId))
+
+    def event = foreignKey("event_fk", eventId, Events)(_.id)
+    def member = foreignKey("member_fk", memberId, Members)(_.id)
+  }
+
+  class ShowPrereservations extends Table[(ShowId, MemberId, Int)]("show-prereservations") {
+    def showId = column[ShowId]("show_id")
+    def memberId = column[MemberId]("member_id")
+
+    def quantity = column[Int]("quantity")
+
+    def * = showId ~ memberId ~ quantity
+
+    def pk = primaryKey("show-member_pkey", (showId, memberId))
+
+    def show = foreignKey("show_fk", showId, Shows)(_.id)
+    def member = foreignKey("member_fk", memberId, Members)(_.id)
+  }
 
   //////////////////////////////////
 
