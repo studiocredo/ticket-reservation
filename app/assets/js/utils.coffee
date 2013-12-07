@@ -39,4 +39,10 @@ $(document).ready ->
     $("[data-toggle=offcanvas]").click ->
         $(".row-offcanvas").toggleClass "active"
 
+$(document).ready ->
+    $('.pull-down').each ->
+ 	    $(this).css('margin-top', $(this).parent().height()-$(this).height())
 
+$(document).ready ->
+ 	$('.pull-middle').each ->
+     	$(this).css('margin-top', ($(this).parent().height()-$(this).height()) /2 )

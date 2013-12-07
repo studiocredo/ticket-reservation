@@ -7,16 +7,15 @@
 </div>
 
 @if(!info.shows.isEmpty) {
-<table>
     @info.shows.map { case (venue, shows) =>
     @shows.map { show =>
-    <tr>
-        <td>Voorstelling @dateFormatter.print(show.date)<br/>@venue.name</td>
-        <td>@helper.counterInput("counter-"+show.id, 0)</td>
-    </tr>
+    <div class="row">
+        <div class="col-xs-6">Voorstelling @dateFormatter.print(show.date)<br/>@venue.name</div>
+        <div class="col-xs-3">@helper.counterInput("counter-"+show.id, 0)</div>
+        <div class="col-xs-3"></div>
+    </div>
     }
     }
-</table>
 } else {
 <div class="well">
     <em>No shows planned for this event.</em>
