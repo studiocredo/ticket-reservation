@@ -20,6 +20,12 @@ object entities {
     trait Archiveable {
       def archived: Boolean
     }
+
+    trait HasTime {
+      def date: DateTime
+
+      def isDone: Boolean = date.isBeforeNow
+    }
   }
 
   import interfaces._
@@ -58,7 +64,7 @@ object entities {
 
   import SeatType._
 
-  case class Show(id: ShowId, eventId: EventId, venueId: VenueId, date: DateTime, archived: Boolean) extends Entity[ShowId] with Archiveable
+  case class Show(id: ShowId, eventId: EventId, venueId: VenueId, date: DateTime, archived: Boolean) extends Entity[ShowId] with Archiveable with HasTime
   case class ShowEdit(        eventId: EventId, venueId: VenueId, date: DateTime, archived: Boolean)
 
   case class ShowOverview(name: String, date: DateTime, showId: ShowId, eventId: EventId)

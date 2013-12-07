@@ -11,21 +11,6 @@ import java.util.Locale
 class Reservations @Inject()(eventService: EventService,
                              val authService: AuthenticatorService) extends AdminController {
 
-  implicit val dateFormatter = new DateTimeFormatterBuilder()
-    .appendDayOfWeekText()
-    .appendLiteral(' ')
-    .appendDayOfMonth(1)
-    .appendLiteral(' ')
-    .appendMonthOfYearText()
-    .appendLiteral(' ')
-    .appendYear(4,4)
-    .appendLiteral(" om ")
-    .appendHourOfDay(1)
-    .appendLiteral('u')
-    .appendMinuteOfHour(2)
-    .toFormatter()
-    .withLocale(Locale.forLanguageTag("nl"));
-
   def create(id: EventId) = AuthAwareDBAction {
     implicit rs =>
       eventService.eventDetails(id) match {

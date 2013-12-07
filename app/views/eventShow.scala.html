@@ -4,8 +4,13 @@
     <dl class="dl-horizontal">
         <dt>Datum</dt>
         <dd>@HumanDateTime.formatDateTime(show.date)</dd>
-        <dt>Binnen</dt>
+        @if(show.isDone) {
+        <dt/>
+        <dd>Deze show is afgelopen</dd>
+        } else {
+        <dt/>Binnen</dt>
         <dd>@HumanDateTime.formatDuration(show.date)</dd>
+        }
     </dl>
 </div>
 <div class="row">
