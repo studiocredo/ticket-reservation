@@ -16,6 +16,10 @@ class Events @Inject()(eventService: EventService, val authService: Authenticato
     mapping(
       "name" -> nonEmptyText,
       "description" -> text,
+      "preReservationStart" -> optional(jodaDate("yyyy-MM-dd HH:mm")),
+      "preReservationEnd" -> optional(jodaDate("yyyy-MM-dd HH:mm")),
+      "reservationStart" -> optional(jodaDate("yyyy-MM-dd HH:mm")),
+      "reservationEnd" -> optional(jodaDate("yyyy-MM-dd HH:mm")),
       "archived" -> boolean
     )(EventEdit.apply)(EventEdit.unapply)
   )

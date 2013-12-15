@@ -99,9 +99,13 @@ object schema {
     def id = column[EventId]("id", O.PrimaryKey, O.AutoInc)
     def name = column[String]("name", O.DBType("TEXT"))
     def description = column[String]("description", O.DBType("TEXT"))
+    def preReservationStart = column[Option[DateTime]]("preReservationStart")
+    def preReservationEnd = column[Option[DateTime]]("preReservationEnd")
+    def reservationStart = column[Option[DateTime]]("reservationStart")
+    def reservationEnd = column[Option[DateTime]]("reservationEnd")
 
-    def * = id ~ name ~ description ~ archived <>(Event.apply _, Event.unapply _)
-    def edit = name ~ description ~ archived <>(EventEdit.apply _, EventEdit.unapply _)
+    def * = id ~ name ~ description ~ preReservationStart ~ preReservationEnd ~ reservationStart ~ reservationEnd ~ archived <>(Event.apply _, Event.unapply _)
+    def edit = name ~ description ~ preReservationStart ~ preReservationEnd ~ reservationStart ~ reservationEnd ~ archived <>(EventEdit.apply _, EventEdit.unapply _)
     def autoInc = edit returning id
   }
 

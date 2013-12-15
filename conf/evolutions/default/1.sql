@@ -6,7 +6,7 @@
 create table "auth_tokens" ("id" VARCHAR(254) NOT NULL PRIMARY KEY,"user_id" BIGINT NOT NULL,"creation" TIMESTAMP NOT NULL,"last_used" TIMESTAMP NOT NULL,"expiration" TIMESTAMP NOT NULL);
 create table "dvd" ("id" SERIAL NOT NULL PRIMARY KEY,"event_id" BIGINT NOT NULL,"name" TEXT NOT NULL,"price" INTEGER NOT NULL,"available-start" TIMESTAMP NOT NULL,"available-end" TIMESTAMP,"archived" BOOLEAN DEFAULT false NOT NULL);
 create table "auth_tokens_email" ("id" VARCHAR(254) NOT NULL PRIMARY KEY,"email" TEXT NOT NULL,"user_id" BIGINT,"creation" TIMESTAMP NOT NULL,"last_used" TIMESTAMP NOT NULL,"expiration" TIMESTAMP NOT NULL);
-create table "event" ("id" SERIAL NOT NULL PRIMARY KEY,"name" TEXT NOT NULL,"description" TEXT NOT NULL,"archived" BOOLEAN DEFAULT false NOT NULL);
+create table "event" ("id" SERIAL NOT NULL PRIMARY KEY,"name" TEXT NOT NULL,"description" TEXT NOT NULL,"preReservationStart" TIMESTAMP,"preReservationEnd" TIMESTAMP,"reservationStart" TIMESTAMP,"reservationEnd" TIMESTAMP,"archived" BOOLEAN DEFAULT false NOT NULL);
 create table "member" ("id" SERIAL NOT NULL PRIMARY KEY,"user_id" BIGINT NOT NULL,"archived" BOOLEAN DEFAULT false NOT NULL);
 create table "order" ("id" SERIAL NOT NULL PRIMARY KEY,"user_id" BIGINT NOT NULL,"date" TIMESTAMP NOT NULL,"billing-name" TEXT NOT NULL,"billing-address" TEXT NOT NULL);
 create table "show" ("id" SERIAL NOT NULL PRIMARY KEY,"event_id" BIGINT NOT NULL,"venue_id" BIGINT NOT NULL,"date" TIMESTAMP NOT NULL,"archived" BOOLEAN DEFAULT false NOT NULL);

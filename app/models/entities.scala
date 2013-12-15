@@ -49,8 +49,8 @@ object entities {
 
   case class UserRole(id: UserId, role: Roles.Role)
 
-  case class Event(id: EventId, name: String, description: String, archived: Boolean) extends Entity[EventId] with Archiveable
-  case class EventEdit(         name: String, description: String, archived: Boolean)
+  case class Event(id: EventId, name: String, description: String, preReservationStart: Option[DateTime], preReservationEnd: Option[DateTime], reservationStart: Option[DateTime], reservationEnd: Option[DateTime], archived: Boolean) extends Entity[EventId] with Archiveable
+  case class EventEdit(         name: String, description: String, preReservationStart: Option[DateTime], preReservationEnd: Option[DateTime], reservationStart: Option[DateTime], reservationEnd: Option[DateTime], archived: Boolean)
 
   case class Venue(id: VenueId, name: String, description: String, floorplan: Option[FloorPlan], archived: Boolean) extends Entity[VenueId] with Archiveable
   case class VenueEdit(         name: String, description: String, archived: Boolean)
