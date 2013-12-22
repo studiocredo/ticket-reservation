@@ -32,7 +32,7 @@ class EventService @Inject()(showService: ShowService) {
   def get(id: EventId)(implicit s: Session): Option[Event] = byId(id).firstOption
   def getEdit(id: EventId)(implicit s: Session): Option[EventEdit] = editById(id).firstOption
 
-  def delete(id: EventId)(implicit s: Session) = byId(id).delete
+  def delete(id: EventId)(implicit s: Session) = (for (v <- EventsQ if v.id === id) yield v.archived).update(true)
 
   def eventDetails(id: EventId)(implicit s: Session): Option[EventDetail] = {
     get(id).map{(event) => EventDetail(event, showService.listForEvent(event.id))}

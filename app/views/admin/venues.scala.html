@@ -13,7 +13,6 @@
                     <th>Id</th>
                     <th>Name</th>
                     <th>description</th>
-                    <th>Archived</th>
                 </tr>
             </thead>
             <tbody>
@@ -22,7 +21,6 @@
                     <td>@venue.id</td>
                     <td>@venue.name</td>
                     <td>@venue.description</td>
-                    <td>@venue.archived</td>
                     <td>
                         <a class="btn btn-default btn-xs" href="@{routes.Venues.edit(venue.id)}">Edit</a>
                         <a class="btn btn-default btn-xs" href="@{routes.Floorplans.view(venue.id)}">Floorplan</a>

@@ -31,7 +31,7 @@ class ShowService {
   def update(id: ShowId, showEdit: ShowEdit)(implicit s: Session) = editById(id).update(showEdit)
 
 
-  def delete(id: ShowId)(implicit s: Session) = byId(id).delete
+  def delete(id: ShowId)(implicit s: Session) = (for (v <- ShowsQ if v.id === id) yield v.archived).update(true)
 
 
   def listForEvent(id: EventId)(implicit s: Session): Map[Venue, List[Show]] = {

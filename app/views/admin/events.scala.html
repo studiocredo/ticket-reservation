@@ -14,7 +14,6 @@
                     <th>Id</th>
                     <th>Name</th>
                     <th>description</th>
-                    <th>Archived</th>
                 </tr>
             </thead>
             <tbody>
@@ -23,7 +22,6 @@
                     <td>@event.id</td>
                     <td><a href="@routes.EventDetails.view(event.id)">@event.name</a></td>
                     <td>@event.description</td>
-                    <td>@event.archived</td>
                     <td><a class="btn btn-default btn-xs" href="@{routes.Events.edit(event.id)}">Edit</a></td>
                 </tr>
             }

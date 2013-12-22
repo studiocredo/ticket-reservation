@@ -22,8 +22,6 @@ object Modules {
       bind[controllers.admin.FakeData].in[Singleton]
       bind[controllers.admin.UserDetails].in[Singleton]
       bind[controllers.admin.Venues].in[Singleton]
-
-
     }
   }
 

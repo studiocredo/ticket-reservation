@@ -35,7 +35,10 @@ class VenueService @Inject()() {
   def get(id: VenueId)(implicit s: Session): Option[Venue] = byId(id).firstOption
   def getEdit(id: VenueId)(implicit s: Session): Option[VenueEdit] = editById(id).firstOption
 
-  def delete(id: VenueId)(implicit s: Session) = byId(id).delete
+  def delete(id: VenueId)(implicit s: Session) = {
+    (for (v <- VenuesQ if v.id === id) yield v.archived).update(true)
+
+  }
 
   private def byId(id: ids.VenueId)=  VenuesQ.where(_.id === id)
   private def editById(id: ids.VenueId) = byId(id).map(_.edit)
