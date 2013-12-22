@@ -17,5 +17,4 @@ object Authorization {
   }
 
   val ADMIN = new RoleAuthorization(Roles.Admin)
-  val MEMBER = new RoleAuthorization(Roles.Member)
 }

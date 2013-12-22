@@ -1,0 +1,20 @@
+@(id: Long, userForm: Form[models.admin.UserFormData])(implicit request: be.studiocredo.auth.SecureRequest[_])
+@import controllers.admin.routes
+@import helper._
+
+@base("Edit user") {
+
+    <h1>Edit user</h1>
+
+
+    @form(action = routes.Users.update(id), 'class -> "form form-horizontal") {
+
+        @usersForm(userForm)
+
+        @twFormActions {
+            <input type="submit" value="Update user" class="btn btn-primary">
+            <a href="@routes.Users.list()" class="btn btn-warning">Cancel</a>
+        }
+    }
+}
+

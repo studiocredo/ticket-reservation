@@ -7,12 +7,13 @@ import models.entities._
 import scala.slick.session.Session
 import models.schema.tables._
 import com.google.inject.Inject
-import be.studiocredo.auth.Password
-import be.studiocredo.auth.Roles
+import be.studiocredo.auth.{Passwords, Password, Roles}
 import models.admin._
+import models.Page
 
 class UserService @Inject()() {
   val UsersQ = Query(Users)
+  val UsersDetailsQ = Query(UserDetails)
   val UserRolesQ = Query(UserRoles)
 
   val UDQ = for {
@@ -23,6 +24,21 @@ class UserService @Inject()() {
   def richUser: ((User, UserDetail)) => RichUser = {
     (ud) => RichUser(ud._1, ud._2)
   }
+
+
+  def page(page: Int = 0, pageSize: Int = 10, orderBy: Int = 1, filter: Option[String] = None)(implicit s: Session): Page[RichUser] = {
+    import models.queries._
+
+    val offset = pageSize * page
+    val total = UDQ.length.run
+    val values = filter.foldLeft {
+      paginate(UDQ, page, pageSize)
+    } {
+      (query, filter) => query.filter(q => iLike(q._1.name, filter)) // should replace with lucene
+    }.run map richUser
+    Page(values, page, pageSize, offset, total)
+  }
+
 
   def find(id: UserId)(implicit s: Session): Option[RichUser] = {
     UDQ.filter(q => q._1.id === id).firstOption.map(richUser)
@@ -46,13 +62,6 @@ class UserService @Inject()() {
       UserDetails.insert(UserDetail(userId, details.email, details.address, details.phone))
       userId
     }
-  }
-
-  def update(id: UserId, user: UserEdit)(implicit s: Session) = {
-    val uq = for {
-      u <- UsersQ.filter(_.id === id)
-    } yield u.name ~ u.username ~ u.salt ~ u.password
-    uq.update((user.name, user.username.toLowerCase, user.password.salt, user.password.hashed))
   }
 
   def changePassword(email: String, username: String, password: Password)(implicit s: Session): Boolean = {
@@ -79,5 +88,31 @@ class UserService @Inject()() {
 
   def findRoles(id: UserId)(implicit s: Session): List[Roles.Role] = {
     UserRolesQ.filter(_.userId === id).list map (_.role)
+  }
+
+
+  def getEdit(id: UserId)(implicit s: Session): Option[UserFormData] = {
+    find(id) map {um => UserFormData(um.name, um.username, um.email, um.address, um.phone)}
+  }
+
+  def insert(data: UserFormData)(implicit s: Session): UserId = {
+    s.withTransaction {
+      insert(UserEdit(data.name, data.username, Passwords.random()), UserDetailEdit(data.email, data.address, data.phone))
+    }
+  }
+
+  def update(id: UserId, data: UserFormData)(implicit s: Session) = {
+    s.withTransaction {
+      val userUpdate = for {
+        u <- UsersQ.filter(_.id === id)
+      } yield u.name ~ u.username
+
+      userUpdate.update((data.name, data.username.toLowerCase))
+      val detailUpdate = for {
+        u <- UsersDetailsQ.filter(_.id === id)
+      } yield u.email ~ u.address ~ u.phone
+
+      detailUpdate.update((data.email, data.address, data.phone))
+    }
   }
 }

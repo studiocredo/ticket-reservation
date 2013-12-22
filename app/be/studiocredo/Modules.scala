@@ -11,7 +11,6 @@ object Modules {
 
       import be.studiocredo._
       bind[EventService].in[Singleton]
-      bind[MemberService].in[Singleton]
       bind[UserService].in[Singleton]
       bind[VenueService].in[Singleton]
       bind[ShowService].in[Singleton]
@@ -21,7 +20,7 @@ object Modules {
       bind[controllers.admin.EventDetails].in[Singleton]
       bind[controllers.admin.Events].in[Singleton]
       bind[controllers.admin.FakeData].in[Singleton]
-      bind[controllers.admin.MemberDetails].in[Singleton]
+      bind[controllers.admin.UserDetails].in[Singleton]
       bind[controllers.admin.Venues].in[Singleton]
 
 

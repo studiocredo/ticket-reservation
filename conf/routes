@@ -29,14 +29,13 @@ POST        /password                               @controllers.auth.PasswordCh
 
 
 # Admin
-GET         /admin/members                          @controllers.admin.Members.list(p:Int ?= 0)
-GET         /admin/members/new                      @controllers.admin.Members.create
-POST        /admin/members                          @controllers.admin.Members.save
-GET         /admin/members/:id/edit                 @controllers.admin.Members.edit(id:Long)
-POST        /admin/members/:id/edit                 @controllers.admin.Members.update(id:Long)
-POST        /admin/members/:id/delete               @controllers.admin.Members.delete(id:Long)
+GET         /admin/users                            @controllers.admin.Users.list(p:Int ?= 0)
+GET         /admin/users/new                        @controllers.admin.Users.create
+POST        /admin/users                            @controllers.admin.Users.save
+GET         /admin/users/:id/edit                   @controllers.admin.Users.edit(id:Long)
+POST        /admin/users/:id/edit                   @controllers.admin.Users.update(id:Long)
 
-GET         /admin/member/:id                       @controllers.admin.MemberDetails.view(id:Long)
+GET         /admin/user/:id                         @controllers.admin.UserDetails.view(id:Long)
 
 
 GET         /admin/venues                           @controllers.admin.Venues.list(p:Int ?= 0)
@@ -59,13 +58,12 @@ POST        /admin/events/:id/delete                @controllers.admin.Events.de
 GET         /admin/event/:id                        @controllers.admin.EventDetails.view(id:Long)
 POST        /admin/event/:id/addshow                @controllers.admin.EventDetails.addShow(id:Long)
 
-# Users
+
 GET         /order                                  @controllers.Orders.start(event:Option[Long], show:Option[Long])
 GET         /event/:id                              @controllers.Events.view(id:Long)
 GET         /show/:id                               @controllers.Events.viewShow(id:Long)
 GET         /show/:id/floorplan                     @controllers.Events.ajaxFloorplan(id:Long)
 
-# Members
 GET         /reservation/:id/new                    @controllers.reservation.Reservations.create(id:Long)
 
 

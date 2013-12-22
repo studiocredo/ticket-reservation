@@ -1,8 +1,8 @@
-@(info: models.admin.UserMember)(implicit request: be.studiocredo.auth.SecureRequest[_])
+@(info: models.admin.RichUser)(implicit request: be.studiocredo.auth.SecureRequest[_])
 @import helper._
 @import controllers.admin.routes
 
-@base("Member: " + info.name) {
+@base("User: " + info.name) {
 
     <div class="page-header">
         <h1>@info.name <small>@info.email</small></h1>

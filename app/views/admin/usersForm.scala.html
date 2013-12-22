@@ -1,0 +1,13 @@
+@(userForm: Form[models.admin.UserFormData])
+
+@import helper._
+@import views.Bootstrap._
+
+<fieldset>
+
+    @inputText(userForm("name"), '_label -> "Name",  'class -> "form-control")
+    @inputText(userForm("username"), '_label -> "Username",  'class -> "form-control")
+    @inputText(userForm("email"), '_label -> "E-mail", 'class -> "form-control")
+    @textarea(userForm("address"), '_label -> "Address", 'class -> "form-control")
+    @inputText(userForm("phone"), '_label -> "phone", 'class -> "form-control")
+</fieldset>

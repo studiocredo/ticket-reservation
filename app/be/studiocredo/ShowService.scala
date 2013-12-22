@@ -27,8 +27,8 @@ class ShowService {
   def get(id: ShowId)(implicit s: Session): Option[Show] =  byId(id).firstOption
   def getEdit(id: ShowId)(implicit s: Session): Option[ShowEdit] = editById(id).firstOption
 
-  def insert(member: ShowEdit)(implicit s: Session): ShowId = Shows.autoInc.insert(member)
-  def update(id: ShowId, member: ShowEdit)(implicit s: Session) = editById(id).update(member)
+  def insert(show: ShowEdit)(implicit s: Session): ShowId = Shows.autoInc.insert(show)
+  def update(id: ShowId, showEdit: ShowEdit)(implicit s: Session) = editById(id).update(showEdit)
 
 
   def delete(id: ShowId)(implicit s: Session) = byId(id).delete

@@ -44,9 +44,6 @@ object entities {
   case class UserDetail(id: UserId, email: Option[String], address: Option[String], phone: Option[String])
   case class UserDetailEdit(        email: Option[String], address: Option[String], phone: Option[String])
 
-  case class Member(id: MemberId, userId: UserId, archived: Boolean) extends Entity[MemberId] with Archiveable
-  case class MemberEdit(          userId: UserId, archived: Boolean)
-
   case class UserRole(id: UserId, role: Roles.Role)
 
   case class Event(id: EventId, name: String, description: String, preReservationStart: Option[DateTime], preReservationEnd: Option[DateTime], reservationStart: Option[DateTime], reservationEnd: Option[DateTime], archived: Boolean) extends Entity[EventId] with Archiveable
@@ -124,7 +121,6 @@ object entities {
 object ids {
   case class UserId(id: Long) extends AnyVal with TypedId
   case class AdminId(id: Long) extends AnyVal with TypedId
-  case class MemberId(id: Long) extends AnyVal with TypedId
   case class EventId(id: Long) extends AnyVal with TypedId
   case class VenueId(id: Long) extends AnyVal with TypedId
   case class ShowId(id: Long) extends AnyVal with TypedId
@@ -134,7 +130,6 @@ object ids {
 
   implicit object UserId extends IdFactory[UserId]
   implicit object AdminId extends IdFactory[AdminId]
-  implicit object MemberId extends IdFactory[MemberId]
   implicit object EventId extends IdFactory[EventId]
   implicit object VenueId extends IdFactory[VenueId]
   implicit object ShowId extends IdFactory[ShowId]

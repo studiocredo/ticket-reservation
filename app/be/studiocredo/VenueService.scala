@@ -28,7 +28,7 @@ class VenueService @Inject()() {
 
   def list()(implicit s: Session) = active.list
 
-  def insert(member: VenueEdit)(implicit s: Session): VenueId = Venues.autoInc.insert(member)
+  def insert(venue: VenueEdit)(implicit s: Session): VenueId = Venues.autoInc.insert(venue)
   def update(id: VenueId, venue: VenueEdit)(implicit s: Session) = editById(id).update(venue)
   def update(id: VenueId, floorPlan: FloorPlan)(implicit s: Session) = byId(id).map(_.floorplan).update(Some(floorPlan))
 

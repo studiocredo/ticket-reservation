@@ -9,8 +9,8 @@ import scala.Some
 import org.joda.time.DateTime
 import com.google.inject.Inject
 import be.studiocredo.auth.{Roles, Passwords}
-import models.admin.MemberFormData
-import models.admin.MemberFormData
+import models.admin.UserFormData
+import models.admin.UserFormData
 import models.entities.ShowEdit
 import models.entities.Row
 import models.entities.EventEdit
@@ -22,8 +22,7 @@ import models.entities.Spacer
 import scala.Some
 import models.entities.Seat
 
-class FakeData @Inject()(memberService: MemberService,
-                         userService: UserService,
+class FakeData @Inject()(userService: UserService,
                          venueService: VenueService,
                          eventService: EventService,
                          showService: ShowService) extends Controller {
@@ -32,9 +31,9 @@ class FakeData @Inject()(memberService: MemberService,
     val userAdmin = userService.insert(UserEdit("Admin", "admin", Passwords.hash("qsdfghjklm")), UserDetailEdit(Some("selckin@selckin.be"), None, None))
     userService.addRole(userAdmin, Roles.Admin)
 
-    val thomas = memberService.insert(MemberFormData("Thomas", "thomas", Some("selckin@selckin.be"), None, None))
-    val sven = memberService.insert(MemberFormData("sven", "sven",Some("sven@example.com"), None, None))
-    val jantje = memberService.insert(MemberFormData("Jantje", "jantje", Some("selckin@selckin.be"), Some("veldstraat 20 gent"), Some("09/2345435453435")))
+    val thomas = userService.insert(UserFormData("Thomas", "thomas", Some("selckin@selckin.be"), None, None))
+    val sven = userService.insert(UserFormData("sven", "sven",Some("sven@example.com"), None, None))
+    val jantje = userService.insert(UserFormData("Jantje", "jantje", Some("selckin@selckin.be"), Some("veldstraat 20 gent"), Some("09/2345435453435")))
 
     val event1 = eventService.insert(EventEdit("xmas special", "", preReservationStart = Some(new DateTime(2013, 12, 9, 0 ,0)), preReservationEnd = Some(new DateTime(2013, 12, 20, 0, 0)), reservationStart = Some(new DateTime(2013, 12, 21, 0 ,0)), reservationEnd = Some(new DateTime(2013, 12, 24, 0 ,0)), archived = false))
     val event2 = eventService.insert(EventEdit("Big show 2013", "", preReservationStart = Some(new DateTime(2013, 12, 9, 0 ,0)), preReservationEnd = Some(new DateTime(2013, 12, 20, 0, 0)), reservationStart = Some(new DateTime(2013, 12, 21, 0 ,0)), reservationEnd = Some(new DateTime(2013, 12, 24, 0 ,0)), archived = false))

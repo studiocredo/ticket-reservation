@@ -6,20 +6,17 @@ object Roles {
     val id: String
   }
 
-  case object Member extends Role {
-    val id = "MEMBER"
-  }
-
   case object Admin extends Role {
     val id = "ADMIN"
   }
 
+  case class UnknownRole(id: String) extends Role
+
 
   def toRole(id: String): Role = {
     id match {
-      case Member.id => Member
       case Admin.id => Admin
-      case _ => throw new IllegalArgumentException(s"$id not a role")
+      case _ => UnknownRole(id)
     }
   }
 

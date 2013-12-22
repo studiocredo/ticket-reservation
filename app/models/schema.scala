@@ -14,7 +14,6 @@ object schema {
 
     val Users = new Users
     val UserDetails = new UserDetails
-    val Members = new Members
     val UserRoles = new UserRoles
 
     val Events = new Events
@@ -71,17 +70,6 @@ object schema {
     def * = id ~ email ~ address ~ phone <>(UserDetail.apply _, UserDetail.unapply _)
 
     def user = foreignKey("user_fk", id, Users)(_.id)
-  }
-
-  class Members extends Table[Member]("member") with Archiveable {
-    def id = column[MemberId]("id", O.PrimaryKey, O.AutoInc)
-    def userId = column[UserId]("user_id")
-
-    def * = id ~ userId ~ archived <>(Member, Member.unapply _)
-    def edit = userId ~ archived <>(MemberEdit, MemberEdit.unapply _)
-    def autoInc = edit returning id
-
-    def user = foreignKey("user_fk", userId, Users)(_.id)
   }
 
   class UserRoles extends Table[UserRole]("roles") {
@@ -179,53 +167,53 @@ object schema {
     def order = foreignKey("order_fk", orderId, Orders)(_.id)
   }
 
-  class TicketSeatOrders extends Table[(TicketOrderId, ShowId, Option[MemberId], Int, Int, Money)]("order-ticket-seat") {
+  class TicketSeatOrders extends Table[(TicketOrderId, ShowId, Option[UserId], Int, Int, Money)]("order-ticket-seat") {
     def ticketOrderId = column[TicketOrderId]("ticket_order_id")
     def showId = column[ShowId]("show_id")
-    def memberId = column[Option[MemberId]]("member_id")
+    def userId = column[Option[UserId]]("user_id")
 
     def row = column[Int]("row")
     def seat = column[Int]("seat")
 
     def price = column[Money]("price")
 
-    def * = ticketOrderId ~ showId ~ memberId ~ row ~ seat ~ price
+    def * = ticketOrderId ~ showId ~ userId ~ row ~ seat ~ price
 
     def pk = primaryKey("order-ticket-seat_pkey", (ticketOrderId, showId))
 
     def ticketOrder = foreignKey("ticket_order_fk", ticketOrderId, TicketOrders)(_.id)
     def show = foreignKey("show_fk", showId, Shows)(_.id)
-    def member = foreignKey("member_fk", memberId, Members)(_.id)
+    def user = foreignKey("user_fk", userId, Users)(_.id)
 
     def unqiueSeats = index("idx_showseat", showId ~ row ~ seat, unique = true)
   }
 
-  class ReservationQuota extends Table[(EventId, MemberId, Int)]("reservation-quota") {
+  class ReservationQuota extends Table[(EventId, UserId, Int)]("reservation-quota") {
     def eventId = column[EventId]("event_id")
-    def memberId = column[MemberId]("member_id")
+    def userId = column[UserId]("user_id")
 
     def quota = column[Int]("quota")
 
-    def * = eventId ~ memberId ~ quota
+    def * = eventId ~ userId ~ quota
 
-    def pk = primaryKey("event-member_pkey", (eventId, memberId))
+    def pk = primaryKey("event-user_pkey", (eventId, userId))
 
     def event = foreignKey("event_fk", eventId, Events)(_.id)
-    def member = foreignKey("member_fk", memberId, Members)(_.id)
+    def user = foreignKey("user_fk", userId, Users)(_.id)
   }
 
-  class ShowPrereservations extends Table[(ShowId, MemberId, Int)]("show-prereservations") {
+  class ShowPrereservations extends Table[(ShowId, UserId, Int)]("show-prereservations") {
     def showId = column[ShowId]("show_id")
-    def memberId = column[MemberId]("member_id")
+    def userId = column[UserId]("user_id")
 
     def quantity = column[Int]("quantity")
 
-    def * = showId ~ memberId ~ quantity
+    def * = showId ~ userId ~ quantity
 
-    def pk = primaryKey("show-member_pkey", (showId, memberId))
+    def pk = primaryKey("show-user_pkey", (showId, userId))
 
     def show = foreignKey("show_fk", showId, Shows)(_.id)
-    def member = foreignKey("member_fk", memberId, Members)(_.id)
+    def user = foreignKey("user_fk", userId, Users)(_.id)
   }
 
   //////////////////////////////////
@@ -254,7 +242,6 @@ object schema {
 
   implicit val userIdType = MappedTypeMapper.base[UserId, Long](_.id, new UserId(_))
   implicit val adminIdType = MappedTypeMapper.base[AdminId, Long](_.id, new AdminId(_))
-  implicit val memberIdType = MappedTypeMapper.base[MemberId, Long](_.id, new MemberId(_))
   implicit val eventIdType = MappedTypeMapper.base[EventId, Long](_.id, new EventId(_))
   implicit val venueIdType = MappedTypeMapper.base[VenueId, Long](_.id, new VenueId(_))
   implicit val showIdType = MappedTypeMapper.base[ShowId, Long](_.id, new ShowId(_))
