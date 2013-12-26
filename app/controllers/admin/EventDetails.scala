@@ -7,7 +7,6 @@ import org.joda.time.format.DateTimeFormat
 import play.api.data.Form
 import play.api.data.Forms._
 import views.helper.Options
-import models.entities.ShowEdit
 import com.google.inject.Inject
 import be.studiocredo.auth.{AuthenticatorService, SecuredDBRequest}
 
@@ -22,7 +21,7 @@ class EventDetails @Inject()(eventService: EventService, showService: ShowServic
     mapping(
       "venue" -> of[VenueId],
       "date" -> jodaDate("yyyy-MM-dd HH:mm")
-    )(NewShow.apply)(NewShow.unapply)
+    )(ShowEdit.apply)(ShowEdit.unapply)
   )
 
   def view(id: EventId) = AuthDBAction { implicit rs =>
@@ -33,19 +32,43 @@ class EventDetails @Inject()(eventService: EventService, showService: ShowServic
     showForm.bindFromRequest.fold(
       formWithErrors => page(id, formWithErrors, BadRequest),
       newShow => {
-        showService.insert(ShowEdit(id, newShow.venueId, newShow.date, archived = false))
+        showService.insert(id, ShowEdit(newShow.venueId, newShow.date))
 
         Redirect(routes.EventDetails.view(id)).flashing("success" -> "Show added")
       }
     )
   }
 
-  def page(id: EventId, form: Form[NewShow] = showForm, status: Status = Ok)(implicit rs: SecuredDBRequest[_]) = {
+  def page(id: EventId, form: Form[ShowEdit] = showForm, status: Status = Ok)(implicit rs: SecuredDBRequest[_]) = {
     eventService.eventDetails(id) match {
       case None => BadRequest(s"Failed to retrieve details for event $id")
       case Some(details) => status(views.html.admin.event(details, views.html.admin.eventAddshow(id, form, Options.apply(venueService.list(), Options.VenueRenderer))))
     }
+  }
 
+  def editShow(id: EventId, showId: ShowId) = AuthDBAction { implicit rs =>
+    showService.get(showId) match {
+      case None => BadRequest(s"Failed to retrieve show $id")
+      case Some(show) => {
+        Ok(views.html.admin.show(id, showId, showForm.fill(ShowEdit(show.venueId, show.date)), Options.apply(venueService.list(), Options.VenueRenderer)))
+      }
+    }
+  }
+
+  def updateShow(id: EventId, showId: ShowId) = AuthDBAction { implicit rs =>
+    showForm.bindFromRequest.fold(
+      formWithErrors => page(id, formWithErrors, BadRequest),
+      show => {
+        showService.update(showId, show)
+
+        Redirect(routes.EventDetails.view(id)).flashing("success" -> "Show updated")
+      }
+    )
+  }
+
+  def deleteShow(id: EventId, showId: ShowId) = AuthDBAction { implicit rs =>
+    showService.delete(showId)
+    Redirect(routes.EventDetails.view(id)).flashing("success" -> "Show deleted")
   }
 
 }

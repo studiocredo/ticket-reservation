@@ -18,9 +18,11 @@ object admin {
   case class UserFormData(name: String, username: String, email: Option[String], address: Option[String], phone: Option[String])
 
 
-  case class EventDetail(event: Event, shows: Map[Venue, List[Show]]) {
+  case class EventDetail(event: Event, shows: List[VenueShows]) {
     def id = event.id
   }
 
-  case class NewShow(venueId: VenueId, date:DateTime)
+  case class ShowEdit(venueId: VenueId, date: DateTime)
+
+  case class VenueShows(venue: Venue, shows: List[Show])
 }

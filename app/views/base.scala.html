@@ -53,6 +53,7 @@
                 </div>
                 <div class="navbar-collapse collapse">
                     <ul class="nav navbar-nav">
+                        <li><a href="@routes.Events.list()">Shows</a></li>
                         <li><a href="@routes.Orders.start(None, None)">Bestel</a></li>
                     </ul>
                     @Auth.restrictAdmin {

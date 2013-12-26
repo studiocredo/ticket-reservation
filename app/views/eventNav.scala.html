@@ -1,12 +1,12 @@
 @(info: models.admin.EventDetail, active: Option[ids.ShowId] = None)
 
-@info.shows.map { case (venue, shows) =>
+@info.shows.map { sv =>
     <div class="panel panel-default">
-        <div class="panel-heading">@venue.name</div>
+        <div class="panel-heading">@sv.venue.name</div>
 
         <div class="list-group">
-            @shows.map { show =>
-                <a href="@routes.Events.viewShow(show.id)" class="list-group-item @views.Utils.active(active, show.id)" >
+            @sv.shows.map { show =>
+                <a href="@routes.Events.viewShow(info.id, show.id)" class="list-group-item @views.Utils.active(active, show.id)" >
                 @HumanDateTime.formatDateTime(show.date)
                 </a>
             }

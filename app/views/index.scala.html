@@ -11,7 +11,7 @@
                 <p>Reserveer hier je tickets voor onze slotshow</p>
 
                 @nextShows.headOption.map { next =>
-                    <p><a class="btn btn-primary btn-lg" href="@routes.Events.view(next.showId)">Upcoming shows &raquo;</a></p>
+                    <p><a class="btn btn-primary btn-lg" href="@routes.Events.list()">Shows &raquo;</a></p>
                 }
             </div>
         </div>
@@ -27,7 +27,7 @@
         <p>@HumanDateTime.formatDateTime(info.date) (binnen @HumanDateTime.formatDuration(info.date))</p>
         <p></p>
 
-        <p><a class="btn btn-primary" href="@routes.Events.viewShow(info.showId)">View&raquo;</a></p>
+        <p><a class="btn btn-primary" href="@routes.Events.viewShow(info.eventId, info.showId)">View&raquo;</a></p>
     </div>
     }
 </div>

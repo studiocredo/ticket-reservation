@@ -6,6 +6,7 @@ import org.joda.time.DateTime
 import be.studiocredo.auth.{Roles, Password}
 import models.admin.RichUser
 import controllers.EnumUtils
+import play.api.mvc.{PathBindable, QueryStringBindable}
 
 object entities {
 
@@ -62,7 +63,6 @@ object entities {
   import SeatType._
 
   case class Show(id: ShowId, eventId: EventId, venueId: VenueId, date: DateTime, archived: Boolean) extends Entity[ShowId] with Archiveable with HasTime
-  case class ShowEdit(        eventId: EventId, venueId: VenueId, date: DateTime, archived: Boolean)
 
   case class ShowOverview(name: String, date: DateTime, showId: ShowId, eventId: EventId)
 
@@ -183,4 +183,21 @@ object ids {
   implicit val creatureWrites = new Writes[TypedId] {
     def writes(c: TypedId): JsValue = JsNumber(c.id)
   }
+
+  object TypedId {
+
+    implicit def pathBinder[T <: TypedId](implicit create: IdFactory[T], longBinder: PathBindable[Long]): PathBindable[T] = new PathBindable[T] {
+      override def bind(key: String, value: String) = longBinder.bind(key, value).right.map(create(_))
+
+      override def unbind(key: String, id: T) = longBinder.unbind(key, id.id)
+    }
+
+    implicit def queryStringBinder[T <: TypedId](implicit create: IdFactory[T], longBinder: QueryStringBindable[Long]): QueryStringBindable[T] = new QueryStringBindable[T] {
+      override def bind(key: String, params: Map[String, Seq[String]]) = longBinder.bind(key, params).map(_.right.map(create(_)))
+
+      override def unbind(key: String, id: T) = longBinder.unbind(key, id.id)
+    }
+
+  }
+
 }

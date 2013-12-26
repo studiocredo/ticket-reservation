@@ -7,10 +7,10 @@
 </div>
 
 @if(!info.shows.isEmpty) {
-    @info.shows.map { case (venue, shows) =>
-    @shows.map { show =>
+    @info.shows.map { vs =>
+    @vs.shows.map { show =>
     <div class="row">
-        <div class="col-xs-6">Voorstelling @HumanDateTime.formatDateTime(show.date)<br/>@venue.name</div>
+        <div class="col-xs-6">Voorstelling @HumanDateTime.formatDateTime(show.date)<br/>@vs.venue.name</div>
         <div class="col-xs-3">@helper.counterInput("counter-"+show.id, 0)</div>
         <div class="col-xs-3"></div>
     </div>

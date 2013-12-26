@@ -121,8 +121,8 @@ object schema {
     def date = column[DateTime]("date")
 
     def * = id ~ eventId ~ venueId ~ date ~ archived <>(Show.apply _, Show.unapply _)
-    def edit = eventId ~ venueId ~ date ~ archived <>(ShowEdit.apply _, ShowEdit.unapply _)
-    def autoInc = edit returning id
+    def edit = venueId ~ date
+    def autoInc = (eventId ~ venueId ~ date) returning id
 
     def event = foreignKey("event_fk", eventId, Events)(_.id)
     def venue = foreignKey("venue_fk", venueId, Venues)(_.id)

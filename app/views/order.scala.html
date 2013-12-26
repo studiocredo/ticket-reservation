@@ -1,6 +1,23 @@
-@(event: models.entities.Event)(implicit request: be.studiocredo.auth.SecureRequest[_])
+@(info: models.admin.EventDetail, highlight: Option[models.ids.ShowId])(implicit request: be.studiocredo.auth.SecureRequest[_])
 
-@base("Studio Credo") {
-    <p>@event.id</p>
-    Order page
+@base("Order: " + info.event.name) {
+    <div class="page-header">
+        <h1>@info.event.name </h1>
+
+        @info.shows.map { case vs =>
+        <div class="panel panel-default">
+            <div class="panel-heading">@vs.venue.name</div>
+
+
+
+            @vs.shows.map { show =>
+                <div class="row">
+                    <div class="col-xs-3"><input type="number" value="0"></div>
+                    <div class="col-xs-6">@HumanDateTime.formatDateTime(show.date)</div>
+                    <div class="col-xs-3">@HumanDateTime.formatDuration(show.date)</div>
+                </div>
+            }
+
+        </div>
+    }
 }

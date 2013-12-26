@@ -39,6 +39,8 @@ object ApplicationBuild extends Build {
     organization := "be.studiocredo"
     , scalaVersion := "2.10.3"
     , scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-language:implicitConversions")
+    , routesImport += "models.ids._"
+    , routesImport += "models.ids.TypedId._"
     , resolvers += Resolver.url("sbt-plugin-releases", new URL("http://repo.scala-sbt.org/scalasbt/sbt-plugin-releases/"))(Resolver.ivyStylePatterns)
   )
 }

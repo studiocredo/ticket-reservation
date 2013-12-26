@@ -15,11 +15,11 @@ class EventService @Inject()(showService: ShowService) {
 
   val active = EventsQ.filter(_.archived === false)
 
-  def page(page: Int = 0, pageSize: Int = 10, orderBy: Int = 1, filter: Option[String] = None)(implicit s: Session): Page[Event] = {
+  def page(page: Int = 0, pageSize: Int = 10, filter: Option[String] = None)(implicit s: Session): Page[Event] = {
     val offset = pageSize * page
     val total = active.length.run
     val values = filter.foldLeft {
-      paginate(active, page, pageSize)
+      paginate(active.sortBy(_.id.desc), page, pageSize)
     } {
       (query, filter) => query.filter(q => iLike(q.name, filter)) // should replace with lucene
     }.run

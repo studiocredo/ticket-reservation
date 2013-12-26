@@ -1,0 +1,33 @@
+@(eventId: ids.EventId, showId: ids.ShowId, showForm: Form[models.admin.ShowEdit], venues: views.helper.Options[entities.Venue])(implicit request: be.studiocredo.auth.SecureRequest[_])
+@import helper._
+@import views.Bootstrap._
+@import controllers.admin.routes
+
+
+@base("Show") {
+
+    <h2>Show edit
+        @form(routes.EventDetails.deleteShow(eventId, showId), 'class -> "pull-right") {
+            <input type="submit" value="Delete" class="btn btn-danger">
+            }
+    </h2>
+
+    <div>
+        @form(action = routes.EventDetails.updateShow(eventId, showId), 'class -> "form form-horizontal") {
+        <fieldset>
+            @inputText(showForm("date"), '_label -> "DateTime", 'class -> "form-control")
+
+            @rselect(
+                showForm("venue"),
+                venues,
+                '_label -> "Venue",
+                '_showConstraints -> false,
+                'class -> "form-control"
+            )
+        </fieldset>
+        @twFormActions {
+            <input type="submit" value="Update" class="btn btn-primary">
+        }
+    }
+    </div>
+}

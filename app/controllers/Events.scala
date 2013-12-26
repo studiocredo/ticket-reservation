@@ -12,6 +12,10 @@ class Events @Inject()(venueService: VenueService, eventService: EventService, s
 
   val defaultAuthorization = Some(Authorization.ANY)
 
+  def list(page: Int) = AuthAwareDBAction { implicit rs =>
+    Ok(views.html.events(eventService.page(page)))
+  }
+
   def view(id: EventId) = AuthAwareDBAction { implicit rs =>
     eventService.eventDetails(id) match {
       case None => BadRequest(s"Event $id not found")
@@ -19,13 +23,11 @@ class Events @Inject()(venueService: VenueService, eventService: EventService, s
     }
   }
 
-  def viewShow(id: ShowId) = AuthAwareDBAction { implicit rs =>
-    (for {
-      show <- showService.get(id)
-      details <- eventService.eventDetails(show.eventId)
-    } yield {
-      Ok(views.html.event(details, Some(show)))
-    }).getOrElse(BadRequest(s"Could not find event/show $id"))
+  def viewShow(eventId: EventId, showId: ShowId) = AuthAwareDBAction { implicit rs =>
+    eventService.eventDetails(eventId) match {
+      case None => BadRequest(s"Event $eventId not found")
+      case Some(details) => Ok(views.html.event(details, details.shows.flatMap(_.shows).find(_.id == showId)))
+    }
   }
 
   import FloorPlanJson._

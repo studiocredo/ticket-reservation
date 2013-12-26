@@ -30,7 +30,7 @@ object HumanDateTime {
       .toFormatter.withLocale(LOCALE)
 
   def formatDuration(date: DateTime): String = formatDuration(DateTime.now(), date)
-  def formatDuration(start: DateTime, end: DateTime): String = formatDuration(new Interval(start, end))
+  def formatDuration(start: DateTime, end: DateTime): String = if (start.isBefore(end)) formatDuration(new Interval(start, end)) else ""
 
   def formatDuration(interval: Interval): String = PERIOD_FORMATTER.print(toDisplayPeriod(interval))
 

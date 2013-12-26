@@ -7,6 +7,9 @@ import models.ids._
 import org.joda.time.DateTime
 import com.github.tototoshi.slick.JodaSupport._
 import be.studiocredo.util.Joda
+import models.admin.{ShowEdit, VenueShows}
+import scala.collection.{immutable, mutable}
+import scala.collection.mutable.Builder
 
 class ShowService {
   import models.queries._
@@ -25,19 +28,20 @@ class ShowService {
 
 
   def get(id: ShowId)(implicit s: Session): Option[Show] =  byId(id).firstOption
-  def getEdit(id: ShowId)(implicit s: Session): Option[ShowEdit] = editById(id).firstOption
-
-  def insert(show: ShowEdit)(implicit s: Session): ShowId = Shows.autoInc.insert(show)
-  def update(id: ShowId, showEdit: ShowEdit)(implicit s: Session) = editById(id).update(showEdit)
-
+  def insert(id: EventId, show: ShowEdit)(implicit s: Session): ShowId = Shows.autoInc.insert((id, show.venueId, show.date))
+  def update(id: ShowId, show: ShowEdit)(implicit s: Session) =  byId(id).map(_.edit).update((show.venueId, show.date))
 
   def delete(id: ShowId)(implicit s: Session) = (for (v <- ShowsQ if v.id === id) yield v.archived).update(true)
 
 
-  def listForEvent(id: EventId)(implicit s: Session): Map[Venue, List[Show]] = {
-    val list = (for (s <- active; v <- s.venue if s.eventId === id) yield (s, v)).list
+  def listForEvent(id: EventId)(implicit s: Session): List[VenueShows] = {
     import Joda._
-    list.groupBy(_._2).mapValues(_.map(_._1).sortBy(_.date))
+    val q = for (
+      s <- active.sortBy(_.date);
+      v <- s.venue if s.eventId === id
+    ) yield (s, v)
+
+    q.list.groupBy(_._2).map(mv => VenueShows(mv._1, mv._2.map(_._1))).toList
   }
 
   def nextShows(limit: Int)(implicit s: Session): List[ShowOverview] = {
@@ -50,5 +54,4 @@ class ShowService {
   }
 
   private def byId(id: ids.ShowId)=  ShowsQ.where(_.id === id)
-  private def editById(id: ids.ShowId) =  byId(id).map(_.edit)
 }

@@ -1,0 +1,15 @@
+@(currentPage: Page[_], link: (Int => play.api.mvc.Call))
+
+<ul class="pager">
+    @currentPage.prev.map { page =>
+    <li>
+        <a href="@link(page)">&larr; Previous</a>
+    </li>
+    }
+    @currentPage.next.map { page =>
+    <li>
+        <a href="@link(page)">Next &rarr;</a>
+    </li>
+    }
+
+</ul>
