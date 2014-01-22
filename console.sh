@@ -1,2 +1,2 @@
 #!/bin/bash
-sbt play console -DapplyEvolutions.default=true
+play -DapplyEvolutions.default=true console
