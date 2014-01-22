@@ -85,7 +85,7 @@ object entities {
 
   sealed trait RowContent
   case class SeatId(name: String)
-  case class Seat(kind: SeatType) extends RowContent
+  case class Seat(id: SeatId, kind: SeatType) extends RowContent
   case class Spacer(width: Int) extends RowContent
   object RowContent {
     val SEAT_TYPE = "seat"
@@ -101,9 +101,9 @@ object entities {
     import play.api.libs.functional.syntax._
 
     implicit val seatTypeFmt = EnumUtils.enumFormat(SeatType)
+    implicit val seatIdFmt = Json.format[SeatId]
     implicit val seatFmt = Json.format[Seat]
     implicit val spacerFmt = Json.format[Spacer]
-
 
     implicit val rowContentFmt: Format[RowContent] = new Format[RowContent] {
       def reads(json: JsValue): JsResult[RowContent] = {

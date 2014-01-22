@@ -40,32 +40,32 @@ class FakeData @Inject()(userService: UserService,
     val ven2 = venueService.insert(VenueEdit("Big room 2", "", archived = false))
     val ven3 = venueService.insert(VenueEdit("Small room", "", archived = false))
 
-    val NORM = Seat(SeatType.Normal)
-    val VIP = Seat(SeatType.Vip)
-    val DISA = Seat(SeatType.Disabled)
+    def norm(name: String): Seat = { Seat(SeatId(name), SeatType.Normal) }
+    def vip(name: String): Seat = { Seat(SeatId(name), SeatType.Vip) }
+    def disa(name: String): Seat = { Seat(SeatId(name), SeatType.Disabled) }
 
     venueService.update(ven1, FloorPlan(List(
-      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA), 0),
-      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA), 0),
-      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA), 0),
-      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA), 0),
-      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA), 0),
-      Row(List(Spacer(1), NORM, NORM, NORM, NORM, NORM, NORM, DISA), 1),
-      Row(List(Spacer(2), NORM, NORM, NORM, NORM, NORM, DISA), 0),
-      Row(List(Spacer(2), VIP, VIP, VIP, VIP, VIP, DISA), 0),
-      Row(List(Spacer(4), VIP, VIP, VIP, VIP), 0)
+      Row(List(norm("A1"), norm("A2"), norm("A3"), norm("A4"), norm("A5"), norm("A6"), norm("A7"), disa("A8")), 0),
+      Row(List(norm("B1"), norm("B2"), norm("B3"), norm("B4"), norm("B5"), norm("B6"), norm("B7"), disa("B8")), 0),
+      Row(List(norm("C1"), norm("C2"), norm("C3"), norm("C4"), norm("C5"), norm("C6"), norm("C7"), disa("C8")), 0),
+      Row(List(norm("D1"), norm("D2"), norm("D3"), norm("D4"), norm("D5"), norm("D6"), norm("D7"), disa("D8")), 0),
+      Row(List(norm("E1"), norm("E2"), norm("E3"), norm("E4"), norm("E5"), norm("E6"), norm("E7"), disa("E8")), 0),
+      Row(List(Spacer(1), norm("F1"), norm("F2"), norm("F3"), norm("F4"), norm("F5"), norm("F6"), disa("F7")), 1),
+      Row(List(Spacer(2), norm("G1"), norm("G2"), norm("G3"), norm("G4"), norm("G5"), disa("G6")), 0),
+      Row(List(Spacer(2), vip("H1"), vip("H2"), vip("H3"), vip("H4"), vip("H5"), disa("H6")), 0),
+      Row(List(Spacer(4), vip("I1"), vip("I2"), vip("I3"), vip("I4")), 0)
     )))
     venueService.update(ven2, FloorPlan(List(
-      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA), 0),
-      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA), 0),
-      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA), 1),
-      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA), 0)
+      Row(List(norm("D1"), norm("D2"), norm("D3"), norm("D4"), norm("D5"), norm("D6"), norm("D7"), disa("D8")), 0),
+      Row(List(norm("C1"), norm("C2"), norm("C3"), norm("C4"), norm("C5"), norm("C6"), norm("C7"), disa("C8")), 0),
+      Row(List(norm("B1"), norm("B2"), norm("B3"), norm("B4"), norm("B5"), norm("B6"), norm("B7"), disa("B8")), 1),
+      Row(List(norm("A1"), norm("A2"), norm("A3"), norm("A4"), norm("A5"), norm("A6"), norm("A7"), disa("A8")), 0)
     )))
     venueService.update(ven3, FloorPlan(List(
-      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA), 0),
-      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA), 0),
-      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA), 0),
-      Row(List(NORM, NORM, NORM, NORM, NORM, NORM, NORM, DISA), 0)
+      Row(List(norm("D1"), norm("D2"), norm("D3"), norm("D4"), norm("D5"), norm("D6"), norm("D7"), disa("D8")), 0),
+      Row(List(norm("C1"), norm("C2"), norm("C3"), norm("C4"), norm("C5"), norm("C6"), norm("C7"), disa("C8")), 0),
+      Row(List(norm("B1"), norm("B2"), norm("B3"), norm("B4"), norm("B5"), norm("B6"), norm("B7"), disa("B8")), 0),
+      Row(List(norm("A1"), norm("A2"), norm("A3"), norm("A4"), norm("A5"), norm("A6"), norm("A7"), disa("A8")), 0)
     )))
 
     showService.insert(event1, ShowEdit(ven1, new DateTime(2013, 12, 5, 17, 0)))
