@@ -27,13 +27,13 @@ vs.update(ven1, FloorPlan(List(
     Row(List(Spacer(2), vip("H1"), vip("H2"), vip("H3"), vip("H4"), vip("H5"), disa("H6")), 0),
     Row(List(Spacer(4), vip("I1"), vip("I2"), vip("I3"), vip("I4")), 0)
 )))
-venueService.update(ven2, FloorPlan(List(
+vs.update(ven2, FloorPlan(List(
   Row(List(norm("D1"), norm("D2"), norm("D3"), norm("D4"), norm("D5"), norm("D6"), norm("D7"), disa("D8")), 0),
   Row(List(norm("C1"), norm("C2"), norm("C3"), norm("C4"), norm("C5"), norm("C6"), norm("C7"), disa("C8")), 0),
   Row(List(norm("B1"), norm("B2"), norm("B3"), norm("B4"), norm("B5"), norm("B6"), norm("B7"), disa("B8")), 1),
   Row(List(norm("A1"), norm("A2"), norm("A3"), norm("A4"), norm("A5"), norm("A6"), norm("A7"), disa("A8")), 0)
 )))
-venueService.update(ven3, FloorPlan(List(
+vs.update(ven3, FloorPlan(List(
   	Row(List(norm("D1"), norm("D2"), norm("D3"), norm("D4"), norm("D5"), norm("D6"), norm("D7"), disa("D8")), 0),
     Row(List(norm("C1"), norm("C2"), norm("C3"), norm("C4"), norm("C5"), norm("C6"), norm("C7"), disa("C8")), 0),
     Row(List(norm("B1"), norm("B2"), norm("B3"), norm("B4"), norm("B5"), norm("B6"), norm("B7"), disa("B8")), 0),
