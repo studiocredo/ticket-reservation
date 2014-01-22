@@ -7,7 +7,7 @@ import models.ids._
 import org.joda.time.DateTime
 import com.github.tototoshi.slick.JodaSupport._
 import be.studiocredo.util.Joda
-import models.admin.{ShowAvailability, ShowEdit, VenueShows}
+import models.admin.{ShowEdit, VenueShows}
 import scala.collection.{mutable, immutable}
 import scala.collection.mutable.Builder
 import com.google.inject.Inject
@@ -51,7 +51,7 @@ class ShowService @Inject()(venueService: VenueService, orderService: OrderServi
     val list = (for (s <- next; e <- s.event) yield (s, e)).sortBy(_._1.date).take(limit).list
 
     list map {
-      case (show, event) => ShowOverview(event.name, show.date, show.id, event.id)
+      case (show, event) => ShowOverview(event.name, show.date, show.id, event.id, capacity(show))
     }
   }
 
@@ -62,8 +62,7 @@ class ShowService @Inject()(venueService: VenueService, orderService: OrderServi
     val floorplan = venue.floorplan.get
     val seatTypeMap = mutable.Map[SeatType, Int]()
     SeatType.values.foreach { st => seatTypeMap(st) = venue.capacityByType(st) }
-    //todo fix this
-    //ticketSeatOrders.foreach { tso => floorplan.rows(tso.seat).content(tso.seat) match { case seat:Seat => seatTypeMap(seat.kind) = seatTypeMap(seat.kind) - 1; case _ => ??? }}
+    ticketSeatOrders.foreach { tso => floorplan.seat(tso.seat) match { case Some(seat) => seatTypeMap(seat.kind) = seatTypeMap(seat.kind) - 1; case None => }}
 
     ShowAvailability(show, seatTypeMap.toMap)
   }

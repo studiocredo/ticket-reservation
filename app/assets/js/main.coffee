@@ -120,7 +120,7 @@ App.directive 'floorplan', () ->
         <div data-ui-sortable="rowSortableOptions" data-ng-model="row.content">
             <div class="content" data-ng-repeat="content in row.content">
                 <div class="spacer spacer-{{content.width}}" data-ng-show="content.ct == 'spacer'"></div>
-                <div class="seat seat-{{content.kind}}" data-ng-show="content.ct == 'seat'"></div>
+                <div class="seat seat-{{content.kind}}" data-ng-show="content.ct == 'seat'">{{content.id.name}}</div>
             </div>
         </div>
     </div>

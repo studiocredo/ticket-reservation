@@ -81,7 +81,13 @@ object entities {
 
   case class Show(id: ShowId, eventId: EventId, venueId: VenueId, date: DateTime, archived: Boolean) extends Archiveable with HasTime
 
-  case class ShowOverview(name: String, date: DateTime, showId: ShowId, eventId: EventId)
+  case class ShowAvailability(show: Show, byType: Map[SeatType, Int] ) {
+    def total: Int = {
+      byType.values.sum
+    }
+  }
+
+  case class ShowOverview(name: String, date: DateTime, showId: ShowId, eventId: EventId, availability: ShowAvailability)
 
   sealed trait RowContent
   case class SeatId(name: String)
@@ -93,7 +99,11 @@ object entities {
   }
 
   case class Row(content: List[RowContent], vspace: Int)
-  case class FloorPlan(rows: List[Row])
+  case class FloorPlan(rows: List[Row]) {
+    def seat(seatId: SeatId): Option[Seat] = {
+      rows.map{_.content}.flatten.collect{case seat:Seat => seat}.find{_.id == seatId}
+    }
+  }
 
   object FloorPlanJson {
 

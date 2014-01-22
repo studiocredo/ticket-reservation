@@ -25,7 +25,7 @@
         <h2>@info.name</h2>
 
         <p>@HumanDateTime.formatDateTime(info.date) (binnen @HumanDateTime.formatDuration(info.date))</p>
-        <p></p>
+        <p>@AvailabilityFormat.format(info)</p>
 
         <p><a class="btn btn-primary" href="@routes.Events.viewShow(info.eventId, info.showId)">View&raquo;</a></p>
     </div>

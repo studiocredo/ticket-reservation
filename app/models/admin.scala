@@ -28,10 +28,4 @@ object admin {
   case class VenueShows(venue: Venue, shows: List[Show])
 
   case class VenueShow(venue: Venue, show: Show)
-
-  case class ShowAvailability(show: Show, byType: Map[SeatType, Int] ) {
-    def total: Int = {
-      byType.values.sum
-    }
-  }
 }

@@ -27,8 +27,8 @@ create unique index "idx_username" on "user" ("username");
 create table "venue" ("id" SERIAL NOT NULL PRIMARY KEY,"name" TEXT NOT NULL,"description" TEXT NOT NULL,"floorplan" TEXT,"archived" BOOLEAN DEFAULT false NOT NULL);
 alter table "dvd" add constraint "event_fk" foreign key("event_id") references "event"("id") on update NO ACTION on delete NO ACTION;
 alter table "order" add constraint "user_fk" foreign key("user_id") references "user"("id") on update NO ACTION on delete NO ACTION;
-alter table "reservation-quota" add constraint "event_fk" foreign key("event_id") references "event"("id") on update NO ACTION on delete NO ACTION;
 alter table "reservation-quota" add constraint "user_fk" foreign key("user_id") references "user"("id") on update NO ACTION on delete NO ACTION;
+alter table "reservation-quota" add constraint "event_fk" foreign key("event_id") references "event"("id") on update NO ACTION on delete NO ACTION;
 alter table "show-prereservations" add constraint "user_fk" foreign key("user_id") references "user"("id") on update NO ACTION on delete NO ACTION;
 alter table "show-prereservations" add constraint "show_fk" foreign key("show_id") references "show"("id") on update NO ACTION on delete NO ACTION;
 alter table "show" add constraint "event_fk" foreign key("event_id") references "event"("id") on update NO ACTION on delete NO ACTION;
@@ -45,8 +45,8 @@ alter table "roles" add constraint "user_fk" foreign key("id") references "user"
 
 alter table "dvd" drop constraint "event_fk";
 alter table "order" drop constraint "user_fk";
-alter table "reservation-quota" drop constraint "event_fk";
 alter table "reservation-quota" drop constraint "user_fk";
+alter table "reservation-quota" drop constraint "event_fk";
 alter table "show-prereservations" drop constraint "user_fk";
 alter table "show-prereservations" drop constraint "show_fk";
 alter table "show" drop constraint "event_fk";
