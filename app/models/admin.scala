@@ -29,19 +29,9 @@ object admin {
 
   case class VenueShow(venue: Venue, show: Show)
 
-  case class VenueCapacity(venue: Venue) {
+  case class ShowAvailability(show: Show, byType: Map[SeatType, Int] ) {
     def total: Int = {
-      venue.floorplan match {
-        case Some(floorplan) => floorplan.rows.map{ _.content.count{ _.isInstanceOf[Seat]} }.sum
-        case None => 0
-      }
-    }
-
-    def byType(seatType: SeatType): Int = {
-      venue.floorplan match {
-        case Some(floorplan) => floorplan.rows.map{ _.content.count{ _ match { case seat:Seat => seat.kind == seatType ; case _ => false} } }.sum
-        case None => 0
-      }
+      byType.values.sum
     }
   }
 }

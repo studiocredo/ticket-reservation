@@ -144,40 +144,39 @@ object schema {
 
   //////////////////////////////////
 
-  class Orders extends Table[(OrderId, UserId, DateTime, String, String)]("order") {
+  class Orders extends Table[Order]("order") {
     def id = column[OrderId]("id", O.PrimaryKey, O.AutoInc)
     def userId = column[UserId]("user_id")
     def date = column[DateTime]("date")
     def billingName = column[String]("billing-name", O.DBType("TEXT"))
     def billingAddress = column[String]("billing-address", O.DBType("TEXT"))
 
-    def * = id ~ userId ~ date ~ billingName ~ billingAddress
+    def * = id ~ userId ~ date ~ billingName ~ billingAddress <>(Order.apply _, Order.unapply _)
 
     def user = foreignKey("user_fk", userId, Users)(_.id)
   }
 
-  class TicketOrders extends Table[(TicketOrderId, OrderId, ShowId)]("order-ticket") {
+  class TicketOrders extends Table[TicketOrder]("order-ticket") {
     def id = column[TicketOrderId]("id", O.PrimaryKey, O.AutoInc)
     def orderId = column[OrderId]("order_id")
     def showId = column[ShowId]("show_id")
     // delivery method
-    def * = id ~ orderId ~ showId
+    def * = id ~ orderId ~ showId <>(TicketOrder.apply _, TicketOrder.unapply _)
 
     def show = foreignKey("show_fk", showId, Shows)(_.id)
     def order = foreignKey("order_fk", orderId, Orders)(_.id)
   }
 
-  class TicketSeatOrders extends Table[(TicketOrderId, ShowId, Option[UserId], Int, Int, Money)]("order-ticket-seat") {
+  class TicketSeatOrders extends Table[TicketSeatOrder]("order-ticket-seat") {
     def ticketOrderId = column[TicketOrderId]("ticket_order_id")
     def showId = column[ShowId]("show_id")
     def userId = column[Option[UserId]]("user_id")
 
-    def row = column[Int]("row")
-    def seat = column[Int]("seat")
+    def seat = column[SeatId]("seat")
 
     def price = column[Money]("price")
 
-    def * = ticketOrderId ~ showId ~ userId ~ row ~ seat ~ price
+    def * = ticketOrderId ~ showId ~ userId ~ seat ~ price <>(TicketSeatOrder.apply _, TicketSeatOrder.unapply _)
 
     def pk = primaryKey("order-ticket-seat_pkey", (ticketOrderId, showId))
 
@@ -185,7 +184,7 @@ object schema {
     def show = foreignKey("show_fk", showId, Shows)(_.id)
     def user = foreignKey("user_fk", userId, Users)(_.id)
 
-    def unqiueSeats = index("idx_showseat", showId ~ row ~ seat, unique = true)
+    def unqiueSeats = index("idx_showseat", showId ~ seat, unique = true)
   }
 
   class ReservationQuota extends Table[(EventId, UserId, Int)]("reservation-quota") {
@@ -200,6 +199,8 @@ object schema {
 
     def event = foreignKey("event_fk", eventId, Events)(_.id)
     def user = foreignKey("user_fk", userId, Users)(_.id)
+
+    def unqiueEventUser = index("idx_eventuser", eventId ~ userId, unique = true)
   }
 
   class ShowPrereservations extends Table[(ShowId, UserId, Int)]("show-prereservations") {
@@ -214,6 +215,8 @@ object schema {
 
     def show = foreignKey("show_fk", showId, Shows)(_.id)
     def user = foreignKey("user_fk", userId, Users)(_.id)
+
+    def uniqueShowUser = index("idx_showuser", showId ~ userId, unique = true)
   }
 
   //////////////////////////////////
@@ -250,6 +253,7 @@ object schema {
   implicit val ticketOrderIdType = MappedTypeMapper.base[TicketOrderId, Long](_.id, new TicketOrderId(_))
 
   implicit val moneyType = MappedTypeMapper.base[Money, BigDecimal](_.amount, Money(_))
+  implicit val seatIdType = MappedTypeMapper.base[SeatId, String](_.name, new SeatId(_))
 
   import FloorPlanJson._
   implicit val floorplanType = MappedTypeMapper.base[FloorPlan, String]({ plan => Json.stringify(Json.toJson(plan))}, { plan => Json.parse(plan).as[FloorPlan]})

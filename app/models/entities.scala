@@ -7,16 +7,18 @@ import be.studiocredo.auth.{Roles, Password}
 import models.admin.RichUser
 import controllers.EnumUtils
 import play.api.mvc.{PathBindable, QueryStringBindable}
+import models.ids.{ShowId, TicketOrderId, OrderId}
+import scala.Option
+import be.studiocredo.util.Money
+import models.admin.RichUser
+import scala.Some
+import be.studiocredo.auth.Password
 
 object entities {
 
   import ids._
 
   object interfaces {
-
-    trait Entity[T <: TypedId] {
-      def id: T
-    }
 
     trait Archiveable {
       def archived: Boolean
@@ -47,10 +49,9 @@ object entities {
 
   case class UserRole(id: UserId, role: Roles.Role)
 
-  case class Event(id: EventId, name: String, description: String, preReservationStart: Option[DateTime], preReservationEnd: Option[DateTime], reservationStart: Option[DateTime], reservationEnd: Option[DateTime], archived: Boolean) extends Entity[EventId] with Archiveable
+  case class Event(id: EventId, name: String, description: String, preReservationStart: Option[DateTime], preReservationEnd: Option[DateTime], reservationStart: Option[DateTime], reservationEnd: Option[DateTime], archived: Boolean) extends Archiveable
   case class EventEdit(         name: String, description: String, preReservationStart: Option[DateTime], preReservationEnd: Option[DateTime], reservationStart: Option[DateTime], reservationEnd: Option[DateTime], archived: Boolean)
 
-  case class Venue(id: VenueId, name: String, description: String, floorplan: Option[FloorPlan], archived: Boolean) extends Entity[VenueId] with Archiveable
   case class VenueEdit(         name: String, description: String, archived: Boolean)
 
   object SeatType extends Enumeration {
@@ -62,12 +63,28 @@ object entities {
 
   import SeatType._
 
-  case class Show(id: ShowId, eventId: EventId, venueId: VenueId, date: DateTime, archived: Boolean) extends Entity[ShowId] with Archiveable with HasTime
+  case class Venue(id: VenueId, name: String, description: String, floorplan: Option[FloorPlan], archived: Boolean) extends Archiveable {
+      def totalCapacity: Int = {
+        this.floorplan match {
+          case Some(floorplan) => floorplan.rows.map{ _.content.count{ _.isInstanceOf[Seat]} }.sum
+          case None => 0
+        }
+      }
+
+      def capacityByType(seatType: SeatType): Int = {
+        this.floorplan match {
+          case Some(floorplan) => floorplan.rows.map{ _.content.count{ _ match { case seat:Seat => seat.kind == seatType ; case _ => false} } }.sum
+          case None => 0
+        }
+      }
+    }
+
+  case class Show(id: ShowId, eventId: EventId, venueId: VenueId, date: DateTime, archived: Boolean) extends Archiveable with HasTime
 
   case class ShowOverview(name: String, date: DateTime, showId: ShowId, eventId: EventId)
 
-
   sealed trait RowContent
+  case class SeatId(name: String)
   case class Seat(kind: SeatType) extends RowContent
   case class Spacer(width: Int) extends RowContent
   object RowContent {
@@ -116,6 +133,10 @@ object entities {
     implicit val rowFmt = Json.format[Row]
     implicit val floorPlanFmt = Json.format[FloorPlan]
   }
+
+  case class Order(id: OrderId, userId: UserId, date: DateTime, billingName: String, billingAddress: String)
+  case class TicketOrder(id: TicketOrderId, orderId: OrderId, showId: ShowId)
+  case class TicketSeatOrder(ticketOrderId: TicketOrderId, showId: ShowId, userId: Option[UserId], seat: SeatId, price: Money)
 }
 
 object ids {

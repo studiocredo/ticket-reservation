@@ -14,12 +14,10 @@ import models.entities._
 import play.api.db.slick._
 
 val vs = new VenueService()
+val os = new OrderService()
+val ss = new ShowService(vs, os)
+val es = new EventService(ss)
+val us = new UserService()
+val prs = new PreReservationService()
 
-val venue = DB.withSession { implicit session: scala.slick.session.Session =>
-  vs.get(VenueId(1))
-}
-
-VenueCapacity(venue.get).total
-VenueCapacity(venue.get).byType(SeatType.Normal)
-VenueCapacity(venue.get).byType(SeatType.Vip)
-VenueCapacity(venue.get).byType(SeatType.Disabled)
+implicit val session = DB.createSession()

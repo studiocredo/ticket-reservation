@@ -42,5 +42,6 @@ object ApplicationBuild extends Build {
     , routesImport += "models.ids._"
     , routesImport += "models.ids.TypedId._"
     , resolvers += Resolver.url("sbt-plugin-releases", new URL("http://repo.scala-sbt.org/scalasbt/sbt-plugin-releases/"))(Resolver.ivyStylePatterns)
+    , initialCommands in console := scala.io.Source.fromFile("./scripts/play-console.scala").mkString
   )
 }

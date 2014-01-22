@@ -10,13 +10,15 @@ create table "event" ("id" SERIAL NOT NULL PRIMARY KEY,"name" TEXT NOT NULL,"des
 create table "order" ("id" SERIAL NOT NULL PRIMARY KEY,"user_id" BIGINT NOT NULL,"date" TIMESTAMP NOT NULL,"billing-name" TEXT NOT NULL,"billing-address" TEXT NOT NULL);
 create table "reservation-quota" ("event_id" BIGINT NOT NULL,"user_id" BIGINT NOT NULL,"quota" INTEGER NOT NULL);
 alter table "reservation-quota" add constraint "event-user_pkey" primary key("event_id","user_id");
+create unique index "idx_eventuser" on "reservation-quota" ("event_id","user_id");
 create table "show-prereservations" ("show_id" BIGINT NOT NULL,"user_id" BIGINT NOT NULL,"quantity" INTEGER NOT NULL);
 alter table "show-prereservations" add constraint "show-user_pkey" primary key("show_id","user_id");
+create unique index "idx_showuser" on "show-prereservations" ("show_id","user_id");
 create table "show" ("id" SERIAL NOT NULL PRIMARY KEY,"event_id" BIGINT NOT NULL,"venue_id" BIGINT NOT NULL,"date" TIMESTAMP NOT NULL,"archived" BOOLEAN DEFAULT false NOT NULL);
 create table "order-ticket" ("id" SERIAL NOT NULL PRIMARY KEY,"order_id" BIGINT NOT NULL,"show_id" BIGINT NOT NULL);
-create table "order-ticket-seat" ("ticket_order_id" BIGINT NOT NULL,"show_id" BIGINT NOT NULL,"user_id" BIGINT,"row" INTEGER NOT NULL,"seat" INTEGER NOT NULL,"price" DECIMAL(21,2) NOT NULL);
+create table "order-ticket-seat" ("ticket_order_id" BIGINT NOT NULL,"show_id" BIGINT NOT NULL,"user_id" BIGINT,"seat" VARCHAR(254) NOT NULL,"price" DECIMAL(21,2) NOT NULL);
 alter table "order-ticket-seat" add constraint "order-ticket-seat_pkey" primary key("ticket_order_id","show_id");
-create unique index "idx_showseat" on "order-ticket-seat" ("show_id","row","seat");
+create unique index "idx_showseat" on "order-ticket-seat" ("show_id","seat");
 create table "user_detail" ("id" BIGINT NOT NULL PRIMARY KEY,"email" TEXT,"address" TEXT,"phone" TEXT);
 create table "roles" ("id" BIGINT NOT NULL,"role" TEXT NOT NULL);
 create unique index "idx_userrole" on "roles" ("id","role");

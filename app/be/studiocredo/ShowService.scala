@@ -7,11 +7,13 @@ import models.ids._
 import org.joda.time.DateTime
 import com.github.tototoshi.slick.JodaSupport._
 import be.studiocredo.util.Joda
-import models.admin.{ShowEdit, VenueShows}
-import scala.collection.{immutable, mutable}
+import models.admin.{ShowAvailability, ShowEdit, VenueShows}
+import scala.collection.{mutable, immutable}
 import scala.collection.mutable.Builder
+import com.google.inject.Inject
+import models.entities.SeatType.SeatType
 
-class ShowService {
+class ShowService @Inject()(venueService: VenueService, orderService: OrderService) {
   import models.queries._
   import models.schema.tables._
 
@@ -51,6 +53,19 @@ class ShowService {
     list map {
       case (show, event) => ShowOverview(event.name, show.date, show.id, event.id)
     }
+  }
+
+  //TODO need transaction?
+  def capacity(show: Show)(implicit s: Session): ShowAvailability = {
+    val venue = venueService.get(show.venueId).get
+    val ticketSeatOrders = orderService.byShowId(show.id)
+    val floorplan = venue.floorplan.get
+    val seatTypeMap = mutable.Map[SeatType, Int]()
+    SeatType.values.foreach { st => seatTypeMap(st) = venue.capacityByType(st) }
+    //todo fix this
+    //ticketSeatOrders.foreach { tso => floorplan.rows(tso.seat).content(tso.seat) match { case seat:Seat => seatTypeMap(seat.kind) = seatTypeMap(seat.kind) - 1; case _ => ??? }}
+
+    ShowAvailability(show, seatTypeMap.toMap)
   }
 
   private def byId(id: ids.ShowId)=  ShowsQ.where(_.id === id)

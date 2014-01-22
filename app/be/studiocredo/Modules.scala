@@ -14,7 +14,8 @@ object Modules {
       bind[UserService].in[Singleton]
       bind[VenueService].in[Singleton]
       bind[ShowService].in[Singleton]
-
+      bind[OrderService].in[Singleton]
+      bind[PreReservationService].in[Singleton]
 
       bind[controllers.Application].in[Singleton]
       bind[controllers.admin.EventDetails].in[Singleton]
