@@ -30,6 +30,7 @@ class VenueService @Inject()() {
 
   def insert(venue: VenueEdit)(implicit s: Session): VenueId = Venues.autoInc.insert(venue)
   def update(id: VenueId, venue: VenueEdit)(implicit s: Session) = editById(id).update(venue)
+  //TODO validate if the floorplan contains unique ids
   def update(id: VenueId, floorPlan: FloorPlan)(implicit s: Session) = byId(id).map(_.floorplan).update(Some(floorPlan))
 
   def get(id: VenueId)(implicit s: Session): Option[Venue] = byId(id).firstOption

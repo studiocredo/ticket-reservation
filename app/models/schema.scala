@@ -153,6 +153,11 @@ object schema {
 
     def * = id ~ userId ~ date ~ billingName ~ billingAddress <>(Order.apply _, Order.unapply _)
 
+    def edit = userId ~ date ~ billingName ~ billingAddress <>(OrderEdit.apply _, OrderEdit.unapply _)
+    def autoInc = edit returning id
+
+    def billingEdit = billingName ~ billingAddress
+    
     def user = foreignKey("user_fk", userId, Users)(_.id)
   }
 
@@ -162,6 +167,8 @@ object schema {
     def showId = column[ShowId]("show_id")
     // delivery method
     def * = id ~ orderId ~ showId <>(TicketOrder.apply _, TicketOrder.unapply _)
+
+    def autoInc = orderId ~ showId returning id
 
     def show = foreignKey("show_fk", showId, Shows)(_.id)
     def order = foreignKey("order_fk", orderId, Orders)(_.id)
@@ -178,7 +185,7 @@ object schema {
 
     def * = ticketOrderId ~ showId ~ userId ~ seat ~ price <>(TicketSeatOrder.apply _, TicketSeatOrder.unapply _)
 
-    def pk = primaryKey("order-ticket-seat_pkey", (ticketOrderId, showId))
+    //def pk = primaryKey("order-ticket-seat_pkey", (ticketOrderId, showId))
 
     def ticketOrder = foreignKey("ticket_order_fk", ticketOrderId, TicketOrders)(_.id)
     def show = foreignKey("show_fk", showId, Shows)(_.id)
@@ -187,14 +194,14 @@ object schema {
     def unqiueSeats = index("idx_showseat", showId ~ seat, unique = true)
   }
 
-  class ReservationQuota extends Table[(EventId, UserId, Int)]("reservation-quota") {
+  class ReservationQuota extends Table[ReservationQuotum]("reservation-quota") {
     def eventId = column[EventId]("event_id")
     def userId = column[UserId]("user_id")
 
     def quota = column[Int]("quota")
 
-    def * = eventId ~ userId ~ quota
-
+    def * = eventId ~ userId ~ quota <>(ReservationQuotum.apply _, ReservationQuotum.unapply _)
+    
     def pk = primaryKey("event-user_pkey", (eventId, userId))
 
     def event = foreignKey("event_fk", eventId, Events)(_.id)
@@ -203,13 +210,13 @@ object schema {
     def unqiueEventUser = index("idx_eventuser", eventId ~ userId, unique = true)
   }
 
-  class ShowPrereservations extends Table[(ShowId, UserId, Int)]("show-prereservations") {
+  class ShowPrereservations extends Table[ShowPrereservation]("show-prereservations") {
     def showId = column[ShowId]("show_id")
     def userId = column[UserId]("user_id")
 
     def quantity = column[Int]("quantity")
 
-    def * = showId ~ userId ~ quantity
+    def * = showId ~ userId ~ quantity <>(ShowPrereservation.apply _, ShowPrereservation.unapply _)
 
     def pk = primaryKey("show-user_pkey", (showId, userId))
 

@@ -13,7 +13,7 @@ import scala.collection.mutable.Builder
 import com.google.inject.Inject
 import models.entities.SeatType.SeatType
 
-class ShowService @Inject()(venueService: VenueService, orderService: OrderService) {
+class ShowService @Inject()(venueService: VenueService, orderService: OrderService, preResevationService: PreReservationService) {
   import models.queries._
   import models.schema.tables._
 
@@ -57,12 +57,16 @@ class ShowService @Inject()(venueService: VenueService, orderService: OrderServi
 
   //TODO need transaction?
   def capacity(show: Show)(implicit s: Session): ShowAvailability = {
+
     val venue = venueService.get(show.venueId).get
     val ticketSeatOrders = orderService.byShowId(show.id)
     val floorplan = venue.floorplan.get
+    val preReservations = preResevationService.preReservationsByShow(show.id)
+
     val seatTypeMap = mutable.Map[SeatType, Int]()
     SeatType.values.foreach { st => seatTypeMap(st) = venue.capacityByType(st) }
-    ticketSeatOrders.foreach { tso => floorplan.seat(tso.seat) match { case Some(seat) => seatTypeMap(seat.kind) = seatTypeMap(seat.kind) - 1; case None => }}
+
+    ticketSeatOrders.foreach { tso => floorplan.seat(tso.seat) match { case Some(seat) => seatTypeMap(seat.kind) -= 1; case None => }}
 
     ShowAvailability(show, seatTypeMap.toMap)
   }

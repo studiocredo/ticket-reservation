@@ -7,11 +7,10 @@ import be.studiocredo.auth.{Roles, Password}
 import models.admin.RichUser
 import controllers.EnumUtils
 import play.api.mvc.{PathBindable, QueryStringBindable}
-import models.ids.{ShowId, TicketOrderId, OrderId}
-import scala.Option
+import models.ids.{UserId, ShowId, TicketOrderId, OrderId}
+import scala.{Int, Option, Some}
 import be.studiocredo.util.Money
 import models.admin.RichUser
-import scala.Some
 import be.studiocredo.auth.Password
 
 object entities {
@@ -52,7 +51,6 @@ object entities {
   case class Event(id: EventId, name: String, description: String, preReservationStart: Option[DateTime], preReservationEnd: Option[DateTime], reservationStart: Option[DateTime], reservationEnd: Option[DateTime], archived: Boolean) extends Archiveable
   case class EventEdit(         name: String, description: String, preReservationStart: Option[DateTime], preReservationEnd: Option[DateTime], reservationStart: Option[DateTime], reservationEnd: Option[DateTime], archived: Boolean)
 
-  case class VenueEdit(         name: String, description: String, archived: Boolean)
 
   object SeatType extends Enumeration {
     type SeatType = Value
@@ -60,7 +58,6 @@ object entities {
     val Vip = Value("vip")
     val Disabled = Value("disabled")
   }
-
   import SeatType._
 
   case class Venue(id: VenueId, name: String, description: String, floorplan: Option[FloorPlan], archived: Boolean) extends Archiveable {
@@ -78,6 +75,7 @@ object entities {
         }
       }
     }
+  case class VenueEdit(         name: String, description: String, archived: Boolean)
 
   case class Show(id: ShowId, eventId: EventId, venueId: VenueId, date: DateTime, archived: Boolean) extends Archiveable with HasTime
 
@@ -145,8 +143,15 @@ object entities {
   }
 
   case class Order(id: OrderId, userId: UserId, date: DateTime, billingName: String, billingAddress: String)
+  case class OrderEdit(         userId: UserId, date: DateTime, billingName: String, billingAddress: String)
+
   case class TicketOrder(id: TicketOrderId, orderId: OrderId, showId: ShowId)
+
   case class TicketSeatOrder(ticketOrderId: TicketOrderId, showId: ShowId, userId: Option[UserId], seat: SeatId, price: Money)
+
+  case class ReservationQuotum(eventId: EventId, userId: UserId, quota: Int)
+
+  case class ShowPrereservation(showId: ShowId, userId: UserId, quantity: Int)
 }
 
 object ids {
@@ -211,7 +216,7 @@ object ids {
 
   import play.api.libs.json._
 
-  implicit val creatureWrites = new Writes[TypedId] {
+  implicit val typeIdWrites = new Writes[TypedId] {
     def writes(c: TypedId): JsValue = JsNumber(c.id)
   }
 

@@ -9,6 +9,7 @@ import play.api.Play.current
 
 import be.studiocredo._
 import be.studiocredo.auth._
+import be.studiocredo.util._
 import models.ids._
 import models.admin._
 import models.entities._
@@ -17,9 +18,9 @@ import org.joda.time.DateTime
 
 val vs = new VenueService()
 val os = new OrderService()
-val ss = new ShowService(vs, os)
+val prs = new PreReservationService(os)
+val ss = new ShowService(vs, os, prs)
 val es = new EventService(ss)
 val us = new UserService()
-val prs = new PreReservationService()
 
 implicit val session = DB.createSession()
