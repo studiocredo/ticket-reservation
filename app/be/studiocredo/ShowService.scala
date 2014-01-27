@@ -61,7 +61,6 @@ class ShowService @Inject()(venueService: VenueService, orderService: OrderServi
     val venue = venueService.get(show.venueId).get
     val ticketSeatOrders = orderService.byShowId(show.id)
     val floorplan = venue.floorplan.get
-    val preReservations = preResevationService.preReservationsByShow(show.id)
 
     val seatTypeMap = mutable.Map[SeatType, Int]()
     SeatType.values.foreach { st => seatTypeMap(st) = venue.capacityByType(st) }

@@ -9,13 +9,14 @@ object ApplicationBuild extends Build {
 
   val appDependencies = Seq(
     "org.webjars" %% "webjars-play" % "2.2.0",
-    "org.webjars" % "bootstrap" % "3.0.1",
+    "org.webjars" % "bootstrap" % "3.0.3",
     "org.webjars" % "jquery" % "2.0.3-1",
     "org.webjars" % "jquery-ui" % "1.10.3",
     "org.webjars" % "jquery-ui-themes" % "1.10.3",
     "org.webjars" % "html5shiv" % "3.6.2",
     "org.webjars" % "select2" % "3.4.4",
     "org.webjars" % "angularjs" % "1.2.1",
+    "org.webjars" % "angular-ui-bootstrap" % "0.10.0",
     "org.webjars" % "requirejs" % "2.1.8",
 
     "org.postgresql" % "postgresql" % "9.2-1003-jdbc4",

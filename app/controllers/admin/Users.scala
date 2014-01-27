@@ -1,6 +1,6 @@
 package controllers.admin
 
-import be.studiocredo.UserService
+import be.studiocredo.{NotificationSupport, NotificationService, UserService}
 import play.api.data.Form
 import play.api.data.Forms._
 import models.ids._
@@ -9,7 +9,7 @@ import be.studiocredo.auth.AuthenticatorService
 
 import models.admin._
 
-class Users @Inject()(userService: UserService, val authService: AuthenticatorService) extends AdminController {
+class Users @Inject()(userService: UserService, val authService: AuthenticatorService, val notificationService: NotificationService) extends AdminController with NotificationSupport {
   val ListPage = Redirect(routes.Users.list())
 
   val userForm = Form(
@@ -24,15 +24,15 @@ class Users @Inject()(userService: UserService, val authService: AuthenticatorSe
 
   def list(page: Int) = AuthDBAction { implicit rs =>
     val list = userService.page(page)
-    Ok(views.html.admin.users(list))
+    Ok(views.html.admin.users(list, notifications2))
   }
 
-  def create() = AuthAction { implicit request =>
-    Ok(views.html.admin.usersCreateForm(userForm))
+  def create() = AuthDBAction { implicit request =>
+    Ok(views.html.admin.usersCreateForm(userForm, notifications2))
   }
   def save() = AuthDBAction { implicit rs =>
     userForm.bindFromRequest.fold(
-      formWithErrors => BadRequest(views.html.admin.usersCreateForm(formWithErrors)),
+      formWithErrors => BadRequest(views.html.admin.usersCreateForm(formWithErrors, notifications2)),
       user => {
         userService.insert(user)
 
@@ -44,12 +44,12 @@ class Users @Inject()(userService: UserService, val authService: AuthenticatorSe
   def edit(id: UserId) = AuthDBAction { implicit rs =>
     userService.getEdit(id) match {
       case None => ListPage
-      case Some(user) => Ok(views.html.admin.usersEditForm(id, userForm.fillAndValidate(user)))
+      case Some(user) => Ok(views.html.admin.usersEditForm(id, userForm.fillAndValidate(user), notifications2))
     }
   }
   def update(id: UserId) = AuthDBAction { implicit rs =>
     userForm.bindFromRequest.fold(
-      formWithErrors => BadRequest(views.html.admin.usersEditForm(id, formWithErrors)),
+      formWithErrors => BadRequest(views.html.admin.usersEditForm(id, formWithErrors, notifications2)),
       user => {
         userService.update(id, user)
 

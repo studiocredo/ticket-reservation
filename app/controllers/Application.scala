@@ -2,16 +2,16 @@ package controllers
 
 import play.api._
 import play.api.mvc._
-import be.studiocredo.ShowService
+import be.studiocredo.{NotificationSupport, NotificationService, ShowService}
 
 import com.google.inject.Inject
-import be.studiocredo.auth.{Secure, Authorization, AuthenticatorService}
+import be.studiocredo.auth.{Secure, AuthenticatorService}
 
-class Application @Inject()(showService: ShowService, val authService: AuthenticatorService) extends Controller with Secure {
+class Application @Inject()(showService: ShowService, val authService: AuthenticatorService, val notificationService: NotificationService) extends Controller with Secure with NotificationSupport {
   val defaultAuthorization = None
 
   def index = AuthAwareDBAction { implicit request =>
-    Ok(views.html.index(showService.nextShows(3)))
+    Ok(views.html.index(showService.nextShows(3), notifications))
   }
 
 

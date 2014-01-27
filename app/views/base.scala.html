@@ -1,4 +1,4 @@
-@(title: String, scripts: Html = Html(""), styles: Html = Html(""))(content: Html)(implicit request: be.studiocredo.auth.SecureRequest[_])
+@(title: String, scripts: Html = Html(""), styles: Html = Html(""))(notifications: Html)(content: Html)(implicit request: be.studiocredo.auth.SecureRequest[_])
 @import controllers.admin
 @import controllers.auth
 @import views.helper.Auth
@@ -29,6 +29,7 @@
         <script type='text/javascript' src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery-ui.min.js"))'></script>
         <script type='text/javascript' src='@routes.WebJarAssets.at(WebJarAssets.locate("js/bootstrap.min.js"))'></script>
         <script type='text/javascript' src='@routes.WebJarAssets.at(WebJarAssets.locate("angular.js"))'></script>
+        <script type='text/javascript' src='@routes.WebJarAssets.at(WebJarAssets.locate("ui-bootstrap-tpls.min.js"))'></script>
         <script type='text/javascript' src='@routes.WebJarAssets.at(WebJarAssets.locate("select2.js"))'></script>
         <script type="text/javascript" src="@routes.Application.javascriptRoutes"></script>
         <script type='text/javascript' src='@routes.Assets.at("js/jquery.bootstrap-growl.js")'></script>
@@ -60,7 +61,7 @@
                         <ul class="nav navbar-nav">
                             <li class="dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">Admin <b class="caret"></b></a>
-                                <ul class="dropdown-menu">
+                                <ul class="dropdown-menu pull-right">
                                     <li><a href="@admin.routes.Users.list()">Users</a></li>
                                     <li class="divider"></li>
                                     <li><a href="@admin.routes.Venues.list()">Venues</a></li>
@@ -82,6 +83,7 @@
                                 </ul>
                             </li>
                         </ul>
+                        @notifications
                     } else {
                         <ul class="nav navbar-nav navbar-right">
                             <li><a href="@auth.routes.LoginPage.login()">Inloggen</a></li>

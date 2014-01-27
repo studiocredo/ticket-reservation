@@ -19,14 +19,14 @@ package controllers.auth
 import play.api.mvc._
 import be.studiocredo.auth._
 import play.api.Logger
-import be.studiocredo.UserService
+import be.studiocredo.{NotificationSupport, NotificationService, UserService}
 import play.api.data.Form
 import play.api.data.Forms._
 import scala.Some
 import play.api.mvc.SimpleResult
 import com.google.inject.Inject
 
-class LoginPage @Inject()(val authService: AuthenticatorService, userService: UserService) extends Controller with Secure {
+class LoginPage @Inject()(val authService: AuthenticatorService, userService: UserService, val notificationService: NotificationService) extends Controller with Secure with NotificationSupport {
   val defaultAuthorization = None
 
   def toUrl(implicit request: RequestHeader) = session.get(OriginalUrlKey).getOrElse("/")
@@ -38,11 +38,11 @@ class LoginPage @Inject()(val authService: AuthenticatorService, userService: Us
     )(Credentials.apply)(Credentials.unapply)
   )
 
-  def login = AuthAwareAction { implicit request =>
+  def login = AuthAwareDBAction { implicit request =>
     if (request.currentUser.isDefined) {
       Redirect("/")
     } else {
-      withReferrerAsOriginalUrl(Ok(views.html.auth.login(loginForm, None)))
+      withReferrerAsOriginalUrl(Ok(views.html.auth.login(loginForm, None, notifications)))
     }
   }
 
@@ -50,19 +50,19 @@ class LoginPage @Inject()(val authService: AuthenticatorService, userService: Us
     authService.signOut(Redirect(controllers.auth.routes.LoginPage.login()))
   }
 
-  def handleLogin() = AuthAwareAction { implicit request =>
+  def handleLogin() = AuthAwareDBAction { implicit request =>
     loginForm.bindFromRequest().fold(
-      errors => Ok(views.html.auth.login(errors, None)),
+      errors => Ok(views.html.auth.login(errors, None, notifications)),
       credentials => {
         authService.signIn(credentials, Redirect(toUrl).withSession(session - OriginalUrlKey), error => handleLoginError(error, credentials))
       }
     )
   }
 
-  def handleLoginError(error: SignInError, credentials: Credentials)(implicit request: SecureRequest[_]): SimpleResult = {
+  def handleLoginError(error: SignInError, credentials: Credentials)(implicit request: SecureAwareDBRequest[_]): SimpleResult = {
     error match {
       case InvalidCredentials => {
-        BadRequest(views.html.auth.login(loginForm.fill(credentials.userOnly), Some("Invalid credentials")))
+        BadRequest(views.html.auth.login(loginForm.fill(credentials.userOnly), Some("Invalid credentials"), notifications))
       }
       case TryAgain(msg) => {
         Redirect(controllers.auth.routes.LoginPage.login()).flashing("error" -> "An error occurred while logging you in. Please try again.")

@@ -1,7 +1,9 @@
 "use strict"
-App = angular.module("credo", ["ngDragDrop", "ui.sortable", "ng"])
+App = angular.module("credo", ["floorplan"])
 
-App.controller "FloorPlanEditCtrl", ($scope, $http) ->
+Floorplan = angular.module("floorplan", ["ngDragDrop", "ui.sortable", "ng"])
+
+Floorplan.controller "FloorPlanEditCtrl", ($scope, $http) ->
     # -------
     removeContent = (row, index) ->
         row.content.splice index, 1
@@ -107,12 +109,12 @@ App.controller "FloorPlanEditCtrl", ($scope, $http) ->
         cursor: "move"
         revert: true
 
-App.controller "FloorPlanCtrl", ($scope, $http) ->
+Floorplan.controller "FloorPlanCtrl", ($scope, $http) ->
     $http.get(jsRoutes.controllers.Events.ajaxFloorplan($scope.venue).url).success (plan) ->
         $scope.plan = plan
         $scope.rows = plan.rows
 
-App.directive 'floorplan', () ->
+Floorplan.directive 'floorplan', () ->
     restrict: 'EA'
     template: """
 <div class="fp fp-fancy">
@@ -129,4 +131,3 @@ App.directive 'floorplan', () ->
     scope:
         venue: '='
     controller: 'FloorPlanCtrl'
-

@@ -1,6 +1,6 @@
-@(info: models.admin.EventDetail)(implicit request: be.studiocredo.auth.SecureRequest[_])
+@(info: models.admin.EventDetail, notifications: Html)(implicit request: be.studiocredo.auth.SecureRequest[_])
 
-@base("Reservation for " + info.event.name, helper.counterScripts()) {
+@base("Reservation for " + info.event.name, helper.counterScripts())(notifications) {
 
 <div class="page-header">
     <h1>Reservation for @info.event.name </h1>

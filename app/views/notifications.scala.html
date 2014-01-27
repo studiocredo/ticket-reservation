@@ -1,0 +1,20 @@
+@(notifications: List[models.entities.Notification])
+
+@if(!notifications.isEmpty) {
+<ul class="nav navbar-nav navbar-right">
+    <li class="dropdown">
+            <a class="navbar-right navbar-link" data-toggle="dropdown" href="#">
+                <span class="glyphicon glyphicon-inbox"></span>
+                <span class="badge badge-important">@notifications.size</span>
+                <b class="caret"></b>
+            </a>
+        <ul class="dropdown-menu">
+            <li>
+                @notifications.map { notification =>
+                <a href="#">@notification.message</a>
+                }
+            </li>
+        </ul>
+    </li>
+</ul>
+}

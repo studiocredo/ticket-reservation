@@ -4,7 +4,7 @@ package controllers.auth
 import play.api.mvc._
 import com.google.inject.Inject
 import be.studiocredo.auth._
-import be.studiocredo.UserService
+import be.studiocredo.{NotificationSupport, NotificationService, UserService}
 import play.api.data.Form
 import play.api.data.Forms._
 import be.studiocredo.auth.Passwords._
@@ -12,7 +12,7 @@ import scala.Some
 
 case class ChangeInfo(current: String, newPassword: PasswordSet)
 
-class PasswordChange @Inject()(userService: UserService, val authService: AuthenticatorService) extends Controller with Secure {
+class PasswordChange @Inject()(userService: UserService, val authService: AuthenticatorService, val notificationService: NotificationService) extends Controller with Secure with NotificationSupport {
   val defaultAuthorization: Option[Authorization] = None
 
   val changePasswordForm = Form(
@@ -25,13 +25,13 @@ class PasswordChange @Inject()(userService: UserService, val authService: Authen
     )(ChangeInfo.apply)(ChangeInfo.unapply)
   )
 
-  def page = AuthAction { implicit rq =>
-    Ok(views.html.auth.pwChange(changePasswordForm))
+  def page = AuthDBAction { implicit rq =>
+    Ok(views.html.auth.pwChange(changePasswordForm, notifications2))
   }
 
   def handlePasswordChange = AuthDBAction { implicit rq =>
     changePasswordForm.bindFromRequest.fold(errors => {
-      BadRequest(views.html.auth.pwChange(errors))
+      BadRequest(views.html.auth.pwChange(errors, notifications2))
     }, {
       info => {
         if (userService.changePassword(rq.user.id, Passwords.hash(info.newPassword.newPassword))) {
@@ -42,7 +42,7 @@ class PasswordChange @Inject()(userService: UserService, val authService: Authen
           }
           Redirect(routes.LoginPage.login()).flashing("success" -> "Password has been changed")
         } else {
-          BadRequest(views.html.auth.pwChange(changePasswordForm.fill(info).withGlobalError("Failed to change password (internal error)")))
+          BadRequest(views.html.auth.pwChange(changePasswordForm.fill(info).withGlobalError("Failed to change password (internal error)"), notifications2))
         }
       }
     })

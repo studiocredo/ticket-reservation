@@ -2,13 +2,11 @@ package be.studiocredo
 
 import play.api.db.slick.Config.driver.simple._
 import models.ids
-import models.entities._
 import com.google.inject.Inject
 import models.entities.ShowPrereservation
 import models.entities.ReservationQuotum
 
 class PreReservationService @Inject()(orderService: OrderService) {
-  import models.queries._
   import models.schema.tables._
 
   val SPRQ = Query(ShowPrereservations)

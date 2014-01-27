@@ -1,6 +1,6 @@
-@(info: models.admin.EventDetail, show: Option[models.entities.Show])(implicit request: be.studiocredo.auth.SecureRequest[_])
+@(info: models.admin.EventDetail, show: Option[models.entities.Show], notifications: Html)(implicit request: be.studiocredo.auth.SecureRequest[_])
 
-@base("Event: " + info.event.name) {
+@base("Event: " + info.event.name)(notifications) {
 
     <div class="row ">
         <div class="col-xs-12 col-sm-9">

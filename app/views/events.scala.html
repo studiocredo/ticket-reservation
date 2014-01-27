@@ -1,6 +1,6 @@
-@(currentPage: Page[entities.Event])(implicit request: be.studiocredo.auth.SecureRequest[_])
+@(currentPage: Page[entities.Event], notifications: Html)(implicit request: be.studiocredo.auth.SecureRequest[_])
 
-@base("Events") {
+@base("Events")(notifications) {
 
     @if(!currentPage.isEmpty) {
         <table class="table table-hover table-striped">

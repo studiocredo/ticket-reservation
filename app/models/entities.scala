@@ -152,6 +152,8 @@ object entities {
   case class ReservationQuotum(eventId: EventId, userId: UserId, quota: Int)
 
   case class ShowPrereservation(showId: ShowId, userId: UserId, quantity: Int)
+
+  case class Notification(message: String)
 }
 
 object ids {

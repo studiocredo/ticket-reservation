@@ -4,11 +4,11 @@ import play.api.data.Form
 import play.api.data.Forms._
 import models.ids._
 import models.entities._
-import be.studiocredo.EventService
+import be.studiocredo.{NotificationService, NotificationSupport, EventService}
 import com.google.inject.Inject
 import be.studiocredo.auth.AuthenticatorService
 
-class Events @Inject()(eventService: EventService, val authService: AuthenticatorService) extends AdminController {
+class Events @Inject()(eventService: EventService, val authService: AuthenticatorService, val notificationService: NotificationService) extends AdminController with NotificationSupport {
 
   val ListPage = Redirect(routes.Events.list())
 
@@ -26,16 +26,16 @@ class Events @Inject()(eventService: EventService, val authService: Authenticato
 
   def list(page: Int) = AuthDBAction { implicit rs =>
     val list = eventService.page(page)
-    Ok(views.html.admin.events(list))
+    Ok(views.html.admin.events(list, notifications2))
   }
 
 
-  def create() = AuthAction { implicit request =>
-    Ok(views.html.admin.eventsCreateForm(eventForm))
+  def create() = AuthDBAction { implicit request =>
+    Ok(views.html.admin.eventsCreateForm(eventForm, notifications2))
   }
   def save() = AuthDBAction { implicit rs =>
     eventForm.bindFromRequest.fold(
-      formWithErrors => BadRequest(views.html.admin.eventsCreateForm(formWithErrors)),
+      formWithErrors => BadRequest(views.html.admin.eventsCreateForm(formWithErrors, notifications2)),
       event => {
         eventService.insert(event)
 
@@ -47,12 +47,12 @@ class Events @Inject()(eventService: EventService, val authService: Authenticato
   def edit(id: EventId) = AuthDBAction { implicit rs =>
     eventService.getEdit(id) match {
       case None => ListPage
-      case Some(event) => Ok(views.html.admin.eventsEditForm(id, eventForm.fillAndValidate(event)))
+      case Some(event) => Ok(views.html.admin.eventsEditForm(id, eventForm.fillAndValidate(event), notifications2))
     }
   }
   def update(id: EventId) = AuthDBAction { implicit rs =>
     eventForm.bindFromRequest.fold(
-      formWithErrors => BadRequest(views.html.admin.eventsEditForm(id, formWithErrors)),
+      formWithErrors => BadRequest(views.html.admin.eventsEditForm(id, formWithErrors, notifications2)),
       event => {
         eventService.update(id, event)
 

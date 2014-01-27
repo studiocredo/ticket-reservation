@@ -1,8 +1,8 @@
-@(id: Long, venueForm: Form[entities.VenueEdit])(implicit request: be.studiocredo.auth.SecureRequest[_])
+@(id: Long, venueForm: Form[entities.VenueEdit], notifications: Html)(implicit request: be.studiocredo.auth.SecureRequest[_])
 @import controllers.admin.routes
 @import helper._
 
-@base("Edit venue") {
+@base("Edit venue")(notifications) {
 
     <h1>Edit a venue
         @form(routes.Venues.delete(id), 'class -> "pull-right") {

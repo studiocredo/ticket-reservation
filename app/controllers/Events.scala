@@ -1,32 +1,33 @@
 package controllers
 
 import com.google.inject.Inject
-import be.studiocredo.{VenueService, ShowService, EventService}
+import be.studiocredo._
 import be.studiocredo.auth.{Authorization, Secure, AuthenticatorService}
 import play.api.mvc.Controller
 import models.ids.{VenueId, ShowId, EventId}
 import models.entities.FloorPlanJson
 import play.api.libs.json.Json
+import scala.Some
 
-class Events @Inject()(venueService: VenueService, eventService: EventService, showService: ShowService, val authService: AuthenticatorService) extends Controller with Secure {
+class Events @Inject()(venueService: VenueService, eventService: EventService, showService: ShowService, val authService: AuthenticatorService, val notificationService: NotificationService) extends Controller with Secure with NotificationSupport {
 
   val defaultAuthorization = Some(Authorization.ANY)
 
   def list(page: Int) = AuthAwareDBAction { implicit rs =>
-    Ok(views.html.events(eventService.page(page)))
+    Ok(views.html.events(eventService.page(page), notifications))
   }
 
   def view(id: EventId) = AuthAwareDBAction { implicit rs =>
     eventService.eventDetails(id) match {
       case None => BadRequest(s"Event $id not found")
-      case Some(details) => Ok(views.html.event(details, None))
+      case Some(details) => Ok(views.html.event(details, None, notifications))
     }
   }
 
   def viewShow(eventId: EventId, showId: ShowId) = AuthAwareDBAction { implicit rs =>
     eventService.eventDetails(eventId) match {
       case None => BadRequest(s"Event $eventId not found")
-      case Some(details) => Ok(views.html.event(details, details.shows.flatMap(_.shows).find(_.id == showId)))
+      case Some(details) => Ok(views.html.event(details, details.shows.flatMap(_.shows).find(_.id == showId), notifications))
     }
   }
 
