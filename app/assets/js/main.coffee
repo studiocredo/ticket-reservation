@@ -119,10 +119,10 @@ Floorplan.directive 'floorplan', () ->
     template: """
 <div class="fp fp-fancy">
     <div class="row seat-row vspacer-{{row.vspace}}" data-ng-repeat="row in rows">
-        <div data-ui-sortable="rowSortableOptions" data-ng-model="row.content">
+        <div data-ng-model="row.content">
             <div class="content" data-ng-repeat="content in row.content">
                 <div class="spacer spacer-{{content.width}}" data-ng-show="content.ct == 'spacer'"></div>
-                <div class="seat seat-{{content.kind}}" data-ng-show="content.ct == 'seat'">{{content.id.name}}</div>
+                <div class="clickable seat seat-{{content.kind}}" ng-click="count = count + 1" ng-init="count=0" data-ng-show="content.ct == 'seat'">{{count}}{{content.id.name}}</div>
             </div>
         </div>
     </div>
