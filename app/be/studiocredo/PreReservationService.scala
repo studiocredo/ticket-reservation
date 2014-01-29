@@ -45,6 +45,8 @@ class PreReservationService @Inject()(orderService: OrderService) {
 
 
   //TODO: validate should be >= 0
+  //TODO: only for events that are not archived and not passed
+  //TODO: only when pre-reservation period is active
   def unusedQuotaByUser(id: UserId)(implicit s: Session): Int = {
     val query = for {
         (spr, show) <- ShowPrereservations leftJoin Shows on (_.showId === _.id)
@@ -68,6 +70,8 @@ class PreReservationService @Inject()(orderService: OrderService) {
   }
 
   //TODO: validate should be >= 0
+  //TODO: only for events that are not archived and not passed
+  //TODO: only when reservatin period is active
   def pendingPrereservationsByUser(id: UserId)(implicit s: Session): Int = {
     val preres = preReservationsByUser(id)
     val orders = orderService.byUserId(id)
