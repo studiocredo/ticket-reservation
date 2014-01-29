@@ -29,6 +29,8 @@ class EventService @Inject()(showService: ShowService) {
   def insert(event: EventEdit)(implicit s: Session): EventId = Events.autoInc.insert(event)
   def update(id: EventId, event: EventEdit)(implicit s: Session) = editById(id).update(event)
 
+  def list()(implicit s: Session) = active.list
+
   def get(id: EventId)(implicit s: Session): Option[Event] = byId(id).firstOption
   def getEdit(id: EventId)(implicit s: Session): Option[EventEdit] = editById(id).firstOption
 
