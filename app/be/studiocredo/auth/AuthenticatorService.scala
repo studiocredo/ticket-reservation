@@ -120,7 +120,7 @@ class AuthenticatorService @Inject()(store: AuthTokenStore, identityService: Ide
   }
 
   def createEmailToken(email: String): EmailToken = {
-    val id = UUID.randomUUID().toString
+    val id = IdGenerator.generate
     val now = DateTime.now()
     val expirationDate = now.plus(absoluteTimeout)
     val token = EmailToken(id, email, None, now, now, expirationDate)
