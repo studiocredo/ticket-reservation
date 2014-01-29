@@ -33,14 +33,14 @@ object entities {
   import interfaces._
   import Roles._
 
-  case class Identity(user: RichUser, roles: List[Role]) {
+  case class Identity(user: RichUser, roles: List[Role], otherUsers: List[User]) {
     def id = user.id
     def name = user.name
     def username = user.username
     def email = user.email
   }
 
-  case class User(id: UserId, name: String, username: String, password: Password)
+  case class User(id: UserId, name: String, username: String, password: Password, loginGroupId: Option[UserId])
   case class UserEdit(        name: String, username: String, password: Password)
 
   case class UserDetail(id: UserId, email: Option[String], address: Option[String], phone: Option[String])
@@ -154,6 +154,7 @@ object entities {
   case class ShowPrereservation(showId: ShowId, userId: UserId, quantity: Int)
 
   case class Notification(message: String)
+  case class UserContext(notifications: List[Notification], otherUsers: List[User])
 }
 
 object ids {

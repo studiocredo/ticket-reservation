@@ -7,11 +7,11 @@ import play.api.data.Forms._
 import models.ids._
 import scala.Some
 import models.entities._
-import be.studiocredo.{NotificationSupport, NotificationService, VenueService}
+import be.studiocredo.{UserService, UserContextSupport, NotificationService, VenueService}
 import com.google.inject.Inject
 import be.studiocredo.auth.AuthenticatorService
 
-class Venues @Inject()(venueService: VenueService, val authService: AuthenticatorService, val notificationService: NotificationService) extends AdminController with NotificationSupport {
+class Venues @Inject()(venueService: VenueService, val authService: AuthenticatorService, val notificationService: NotificationService, val userService: UserService) extends AdminController with UserContextSupport {
 
   val ListPage = Redirect(routes.Venues.list())
 
@@ -25,16 +25,16 @@ class Venues @Inject()(venueService: VenueService, val authService: Authenticato
 
   def list(page: Int) = AuthDBAction { implicit rs =>
     val list = venueService.page(page)
-    Ok(views.html.admin.venues(list, notifications))
+    Ok(views.html.admin.venues(list, userContext))
   }
 
 
   def create() = AuthDBAction { implicit request =>
-    Ok(views.html.admin.venuesCreateForm(venueForm, notifications))
+    Ok(views.html.admin.venuesCreateForm(venueForm, userContext))
   }
   def save() = AuthDBAction { implicit rs =>
     venueForm.bindFromRequest.fold(
-      formWithErrors => BadRequest(views.html.admin.venuesCreateForm(formWithErrors, notifications)),
+      formWithErrors => BadRequest(views.html.admin.venuesCreateForm(formWithErrors, userContext)),
       venue => {
         venueService.insert(venue)
 
@@ -46,12 +46,12 @@ class Venues @Inject()(venueService: VenueService, val authService: Authenticato
   def edit(id: VenueId) = AuthDBAction { implicit rs =>
     venueService.getEdit(id) match {
       case None => ListPage
-      case Some(venue) => Ok(views.html.admin.venuesEditForm(id, venueForm.fillAndValidate(venue), notifications))
+      case Some(venue) => Ok(views.html.admin.venuesEditForm(id, venueForm.fillAndValidate(venue), userContext))
     }
   }
   def update(id: VenueId) = AuthDBAction { implicit rs =>
     venueForm.bindFromRequest.fold(
-      formWithErrors => BadRequest(views.html.admin.venuesEditForm(id, formWithErrors, notifications)),
+      formWithErrors => BadRequest(views.html.admin.venuesEditForm(id, formWithErrors, userContext)),
       venue => {
         venueService.update(id, venue)
 

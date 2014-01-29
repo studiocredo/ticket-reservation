@@ -1,8 +1,8 @@
-@(startForm: Form[String], notifications: Html)(implicit request: be.studiocredo.auth.SecureRequest[_])
+@(startForm: Form[String], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_])
 @import helper._
 @import views.Bootstrap._
 
-@base("Sign up")(notifications) {
+@base("Sign up")(userContext) {
     <div class="page-header">
         <h1>Sign up</h1>
     </div>

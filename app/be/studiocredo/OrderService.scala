@@ -14,12 +14,16 @@ class OrderService {
   val TOQ = Query(TicketOrders)
   val TSOQ = Query(TicketSeatOrders)
 
-  def byShowId(id: ids.ShowId)(implicit s: Session): List[TicketSeatOrder] = {
+  def byShowId(id: ShowId)(implicit s: Session): List[TicketSeatOrder] = {
     TSOQ.where(_.showId === id).list
   }
 
-  def byUserId(id: ids.UserId)(implicit s: Session): List[TicketSeatOrder] = {
+  def byUserId(id: UserId)(implicit s: Session): List[TicketSeatOrder] = {
     TSOQ.where(_.userId === id).list
+  }
+
+  def byUserIds(ids: List[UserId])(implicit s: Session): List[TicketSeatOrder] = {
+    TSOQ.where(_.userId inSet ids).list
   }
 
   def insert(order: OrderEdit)(implicit s: Session): OrderId = Orders.autoInc.insert(order)

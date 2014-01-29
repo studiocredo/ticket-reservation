@@ -2,21 +2,21 @@ package controllers.admin
 
 import play.api.db.slick.Config.driver.simple._
 import com.google.inject.Inject
-import be.studiocredo.{NotificationService, NotificationSupport, VenueService}
+import be.studiocredo.{UserService, NotificationService, UserContextSupport, VenueService}
 import be.studiocredo.auth.AuthenticatorService
 import models.ids.VenueId
 import play.api.libs.json.{JsError, Json}
 import models.entities._
 import play.api.mvc.Result
 
-class Floorplans @Inject()(venueService: VenueService, val authService: AuthenticatorService, val notificationService: NotificationService) extends AdminController with NotificationSupport {
+class Floorplans @Inject()(venueService: VenueService, val authService: AuthenticatorService, val notificationService: NotificationService, val userService: UserService) extends AdminController with UserContextSupport {
 
   import FloorPlanJson._
   val defaultPlan = FloorPlan((1 to 10).map (row => Row((1 to 20).map ( seat => Seat(SeatId(s"$row-$seat"), SeatType.Normal)).toList, 0)).toList)
 
   def view(id: VenueId) = AuthDBAction { implicit rs =>
     forVenue(id) { venue =>
-      Ok(views.html.admin.venueFloorPlan(venue, notifications))
+      Ok(views.html.admin.venueFloorPlan(venue, userContext))
     }
   }
 

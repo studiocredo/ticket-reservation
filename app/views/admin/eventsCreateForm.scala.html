@@ -1,8 +1,8 @@
-@(eventForm: Form[entities.EventEdit], notifications: Html)(implicit request: be.studiocredo.auth.SecureRequest[_])
+@(eventForm: Form[entities.EventEdit], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_])
 @import controllers.admin.routes
 @import helper._
 
-@base("Add event")(notifications) {
+@base("Add event")(userContext) {
 
     <h1>Add new event</h1>
 

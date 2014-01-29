@@ -1,9 +1,9 @@
-@(loginForm: Form[be.studiocredo.auth.Credentials], errorMsg: Option[String] = None, notifications: Html)(implicit request: be.studiocredo.auth.SecureRequest[_])
+@(loginForm: Form[be.studiocredo.auth.Credentials], errorMsg: Option[String] = None, userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_])
 
 @import helper._
 @import views.Bootstrap._
 
-@base("Login")(notifications) {
+@base("Login")(userContext) {
     <div class="page-header">
         <h1>Login</h1>
     </div>

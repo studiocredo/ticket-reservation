@@ -20,4 +20,19 @@ class NotificationService @Inject()(prs: PreReservationService, os: OrderService
       }
     ).flatten
   }
+
+  def get(ids: List[UserId])(implicit s: DBSession): List[Notification] = {
+    List(
+      prs.pendingPrereservationsByUsers(ids) match {
+        case 1 => Some(Notification("Je heb nog 1 reservatie vast te leggen"))
+        case p: Int if p > 1 => Some(Notification(s"Je hebt nog $p reservaties vast te leggen"))
+        case _ => None
+      },
+      prs.unusedQuotaByUsers(ids) match {
+        case 1 => Some(Notification("Je hebt nog recht op 1 pre-reservatie"))
+        case q: Int if q > 0 => Some(Notification(s"Je hebt nog recht op $q pre-preservaties"))
+        case _ => None
+      }
+    ).flatten
+  }
 }

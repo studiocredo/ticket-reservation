@@ -1,6 +1,6 @@
-@(currentPage: Page[entities.Venue], notifications: Html)(implicit request: be.studiocredo.auth.SecureRequest[_])
+@(currentPage: Page[entities.Venue], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_])
 @import controllers.admin.routes
-@base("Venues")(notifications) {
+@base("Venues")(userContext) {
 
     <div>
     <a class="btn btn-primary" id="add" href="@routes.Venues.create()">Add new</a>

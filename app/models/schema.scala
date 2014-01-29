@@ -47,10 +47,11 @@ object schema {
     def username = column[String]("username", O.DBType("TEXT"))
     def password = column[String]("password", O.DBType("TEXT"))
     def salt = column[String]("salt", O.DBType("TEXT"))
+    def loginGroupId = column[Option[UserId]]("login-group_id")
 
-    def * = id ~ name ~ username ~ password  ~ salt <>(
-      { (id, name, username, password, salt) => User(id, name, username, Password(password, salt))},
-      {(user: User) => Some((user.id, user.name, user.username, user.password.hashed, user.password.salt))}
+    def * = id ~ name ~ username ~ password  ~ salt ~ loginGroupId <>(
+      { (id, name, username, password, salt, loginGroupId) => User(id, name, username, Password(password, salt), loginGroupId)},
+      {(user: User) => Some((user.id, user.name, user.username, user.password.hashed, user.password.salt, user.loginGroupId))}
       )
 
     def autoInc = name ~ username ~ password ~ salt <>(
@@ -59,6 +60,7 @@ object schema {
       ) returning id
 
     def uniqueUserName = index("idx_username", username, unique = true)
+    def loginGroupFk = foreignKey("login-group_fk", loginGroupId, Users)(_.id)
   }
 
   class UserDetails extends Table[UserDetail]("user_detail") {
@@ -82,7 +84,6 @@ object schema {
 
     def unique = index("idx_userrole", userId ~ role, unique = true)
   }
-
 
   //////////////////////////////////
 

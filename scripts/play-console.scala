@@ -22,5 +22,6 @@ val prs = new PreReservationService(os)
 val ss = new ShowService(vs, os, prs)
 val es = new EventService(ss)
 val us = new UserService()
+val is = new IdentityService(us)
 
 implicit val session = DB.createSession()

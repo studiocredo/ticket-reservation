@@ -4,7 +4,7 @@ package controllers.auth
 import play.api.mvc._
 import com.google.inject.Inject
 import be.studiocredo.auth._
-import be.studiocredo.{NotificationSupport, NotificationService, UserService}
+import be.studiocredo.{UserContextSupport, NotificationService, UserService}
 import play.api.data.Form
 import play.api.data.Forms._
 import be.studiocredo.auth.Passwords._
@@ -12,7 +12,7 @@ import scala.Some
 
 case class ChangeInfo(current: String, newPassword: PasswordSet)
 
-class PasswordChange @Inject()(userService: UserService, val authService: AuthenticatorService, val notificationService: NotificationService) extends Controller with Secure with NotificationSupport {
+class PasswordChange @Inject()(val userService: UserService, val authService: AuthenticatorService, val notificationService: NotificationService) extends Controller with Secure with UserContextSupport {
   val defaultAuthorization: Option[Authorization] = None
 
   val changePasswordForm = Form(
@@ -26,12 +26,12 @@ class PasswordChange @Inject()(userService: UserService, val authService: Authen
   )
 
   def page = AuthDBAction { implicit rq =>
-    Ok(views.html.auth.pwChange(changePasswordForm, notifications))
+    Ok(views.html.auth.pwChange(changePasswordForm, userContext))
   }
 
   def handlePasswordChange = AuthDBAction { implicit rq =>
     changePasswordForm.bindFromRequest.fold(errors => {
-      BadRequest(views.html.auth.pwChange(errors, notifications))
+      BadRequest(views.html.auth.pwChange(errors, userContext))
     }, {
       info => {
         if (userService.changePassword(rq.user.id, Passwords.hash(info.newPassword.newPassword))) {
@@ -42,7 +42,7 @@ class PasswordChange @Inject()(userService: UserService, val authService: Authen
           }
           Redirect(routes.LoginPage.login()).flashing("success" -> "Password has been changed")
         } else {
-          BadRequest(views.html.auth.pwChange(changePasswordForm.fill(info).withGlobalError("Failed to change password (internal error)"), notifications))
+          BadRequest(views.html.auth.pwChange(changePasswordForm.fill(info).withGlobalError("Failed to change password (internal error)"), userContext))
         }
       }
     })

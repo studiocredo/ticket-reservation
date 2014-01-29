@@ -1,6 +1,6 @@
-@(nextShows: List[entities.ShowOverview], notifications: Html)(implicit request: be.studiocredo.auth.SecureRequest[_])
+@(nextShows: List[entities.ShowOverview], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_])
 
-@base("Studio Credo")(notifications) {
+@base("Studio Credo")(userContext) {
 
 <div class="jumbotron front-page-banner">
     <div class="inner-1">

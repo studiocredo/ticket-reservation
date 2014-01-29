@@ -1,4 +1,5 @@
-@(notifications: List[models.entities.Notification])
+@(userContext: Option[models.entities.UserContext])
+@defining(userContext match { case Some(userContext) => userContext.notifications; case None => List() }) { notifications =>
 
 @if(!notifications.isEmpty) {
 <ul class="nav navbar-nav navbar-right">
@@ -17,4 +18,6 @@
         </ul>
     </li>
 </ul>
+}
+
 }

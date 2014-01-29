@@ -9,13 +9,13 @@ import org.joda.time.format.{DateTimeFormatterBuilder, DateTimeFormat}
 import java.util.Locale
 
 class Reservations @Inject()(eventService: EventService,
-                             val authService: AuthenticatorService, val notificationService: NotificationService) extends AdminController with NotificationSupport {
+                             val authService: AuthenticatorService, val notificationService: NotificationService, val userService: UserService) extends AdminController with UserContextSupport {
 
   def create(id: EventId) = AuthAwareDBAction {
     implicit rs =>
       eventService.eventDetails(id) match {
         case None => BadRequest(s"Failed to retrieve details for event $id")
-        case Some(details) => Ok(views.html.reservations.create(details, notifications))
+        case Some(details) => Ok(views.html.reservations.create(details, userContext))
       }
   }
 }

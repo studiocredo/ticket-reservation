@@ -6,7 +6,7 @@ import be.studiocredo.auth._
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.data.validation.Constraints._
-import be.studiocredo.{NotificationSupport, NotificationService, UserService}
+import be.studiocredo.{UserContextSupport, NotificationService, UserService}
 import scala.Some
 import play.api.mvc.SimpleResult
 import play.api.data.validation.{Constraint, Valid, Invalid}
@@ -16,7 +16,7 @@ import be.studiocredo.util.DBSupport
 case class PasswordSet(newPassword: String, confirmation: String)
 case class RegistrationInfo(name:String, username: String, password: PasswordSet)
 
-class SignUp @Inject()(userService: UserService, val authService: AuthenticatorService, val notificationService: NotificationService) extends Controller with SecureUtils with Secure with AuthUtils with NotificationSupport {
+class SignUp @Inject()(val userService: UserService, val authService: AuthenticatorService, val notificationService: NotificationService) extends Controller with SecureUtils with Secure with AuthUtils with UserContextSupport {
   val defaultAuthorization = None
 
   val startForm = Form(
@@ -25,22 +25,22 @@ class SignUp @Inject()(userService: UserService, val authService: AuthenticatorS
 
 
   def startSignUp = AuthAwareDBAction { implicit request =>
-    withReferrerAsOriginalUrl(Ok(views.html.auth.signUpStart(startForm, notifications)))
+    withReferrerAsOriginalUrl(Ok(views.html.auth.signUpStart(startForm, userContext)))
   }
 
   def signUpAwaitEmail = AuthAwareDBAction { implicit request =>
-    Ok(views.html.auth.signUpEmail(notifications))
+    Ok(views.html.auth.signUpEmail(userContext))
   }
 
   def handleStartSignUp = AuthAwareDBAction { implicit request =>
     startForm.bindFromRequest.fold({
-      errors => BadRequest(views.html.auth.signUpStart(errors, notifications))
+      errors => BadRequest(views.html.auth.signUpStart(errors, userContext))
     }, {
       email =>
         if (userService.findByEmail(email).isEmpty) {
           doSignUp(email)
         } else {
-          Ok(views.html.auth.signUpExistingAccounts(startForm.fill(email), email, notifications))
+          Ok(views.html.auth.signUpExistingAccounts(startForm.fill(email), email, userContext))
         }
     })
   }
@@ -89,14 +89,14 @@ class SignUp @Inject()(userService: UserService, val authService: AuthenticatorS
 
   def signUp(token: String) = AuthAwareDBAction { implicit req =>
     executeForToken(token, routes.SignUp.startSignUp(), token => {
-      Ok(views.html.auth.signUpForm(registerForm, token.id, notifications))
+      Ok(views.html.auth.signUpForm(registerForm, token.id, userContext))
     })
   }
 
   def handleSignUp(token: String) = AuthAwareDBAction { implicit req => {
     executeForToken(token, routes.SignUp.startSignUp(), token => {
       registerForm.bindFromRequest.fold(errors => {
-        BadRequest(views.html.auth.signUpForm(errors, token.id, notifications))
+        BadRequest(views.html.auth.signUpForm(errors, token.id, userContext))
       }, {
         info => {
           val userId = userService.insert(

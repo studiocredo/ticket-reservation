@@ -19,14 +19,14 @@ package controllers.auth
 import play.api.mvc._
 import be.studiocredo.auth._
 import play.api.Logger
-import be.studiocredo.{NotificationSupport, NotificationService, UserService}
+import be.studiocredo.{UserContextSupport, NotificationService, UserService}
 import play.api.data.Form
 import play.api.data.Forms._
 import scala.Some
 import play.api.mvc.SimpleResult
 import com.google.inject.Inject
 
-class LoginPage @Inject()(val authService: AuthenticatorService, userService: UserService, val notificationService: NotificationService) extends Controller with Secure with NotificationSupport {
+class LoginPage @Inject()(val authService: AuthenticatorService, val userService: UserService, val notificationService: NotificationService) extends Controller with Secure with UserContextSupport {
   val defaultAuthorization = None
 
   def toUrl(implicit request: RequestHeader) = session.get(OriginalUrlKey).getOrElse("/")
@@ -42,7 +42,7 @@ class LoginPage @Inject()(val authService: AuthenticatorService, userService: Us
     if (request.currentUser.isDefined) {
       Redirect("/")
     } else {
-      withReferrerAsOriginalUrl(Ok(views.html.auth.login(loginForm, None, notifications)))
+      withReferrerAsOriginalUrl(Ok(views.html.auth.login(loginForm, None, userContext)))
     }
   }
 
@@ -52,7 +52,7 @@ class LoginPage @Inject()(val authService: AuthenticatorService, userService: Us
 
   def handleLogin() = AuthAwareDBAction { implicit request =>
     loginForm.bindFromRequest().fold(
-      errors => Ok(views.html.auth.login(errors, None, notifications)),
+      errors => Ok(views.html.auth.login(errors, None, userContext)),
       credentials => {
         authService.signIn(credentials, Redirect(toUrl).withSession(session - OriginalUrlKey), error => handleLoginError(error, credentials))
       }
@@ -62,7 +62,7 @@ class LoginPage @Inject()(val authService: AuthenticatorService, userService: Us
   def handleLoginError(error: SignInError, credentials: Credentials)(implicit request: SecureAwareDBRequest[_]): SimpleResult = {
     error match {
       case InvalidCredentials => {
-        BadRequest(views.html.auth.login(loginForm.fill(credentials.userOnly), Some("Invalid credentials"), notifications))
+        BadRequest(views.html.auth.login(loginForm.fill(credentials.userOnly), Some("Invalid credentials"), userContext))
       }
       case TryAgain(msg) => {
         Redirect(controllers.auth.routes.LoginPage.login()).flashing("error" -> "An error occurred while logging you in. Please try again.")

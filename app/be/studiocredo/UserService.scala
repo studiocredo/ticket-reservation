@@ -101,6 +101,41 @@ class UserService @Inject()() {
     }
   }
 
+  //restrictions:
+  //when there is no group yet => just add
+  //when a group already exists => first remove group
+  //avoid multilevel hierarchies
+  //no circular references
+  //all members of group should have same parent/master
+  def createLoginGroup(ids: List[UserId])(implicit s: Session) = {
+    ids.headOption match {
+      case Some(loginGroup) => s.withTransaction {
+        ids foreach (id => addToLoginGroup(id, loginGroup))
+      }
+      case None => ()
+    }
+  }
+
+  def addToLoginGroup(userId: UserId, loginGroupId: UserId)(implicit s: Session) = {
+    UsersQ.filter(_.id === userId).map(_.loginGroupId).update(Some(loginGroupId))
+  }
+
+  //when no group yet => ok
+  //when group and not master => ok
+  //when group and master =>
+  //  if not last member => remove and elect other member as parent
+  //  if last member => remove
+  def removeLoginGroup(userId: UserId)(implicit s: Session) = {
+    UsersQ.filter(_.id === userId).map(_.loginGroupId).update(None)
+  }
+
+  def findOtherUsers(user: User)(implicit s: Session): List[User] = {
+    user.loginGroupId match {
+      case Some(loginGroupId) => UsersQ.filter(q => q.loginGroupId === loginGroupId).where(_.id =!= user.id).list
+      case None => List()
+    }
+  }
+
   def update(id: UserId, data: UserFormData)(implicit s: Session) = {
     s.withTransaction {
       val userUpdate = for {

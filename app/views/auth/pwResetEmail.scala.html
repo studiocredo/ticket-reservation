@@ -1,8 +1,8 @@
-@(notifications: Html)(implicit request: be.studiocredo.auth.SecureRequest[_])
+@(userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_])
 @import helper._
 @import views.Bootstrap._
 
-@base("Reset Password")(notifications) {
+@base("Reset Password")(userContext) {
     <div class="page-header">
         <h1>Reset password</h1>
     </div>
