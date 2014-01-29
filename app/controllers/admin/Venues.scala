@@ -25,16 +25,16 @@ class Venues @Inject()(venueService: VenueService, val authService: Authenticato
 
   def list(page: Int) = AuthDBAction { implicit rs =>
     val list = venueService.page(page)
-    Ok(views.html.admin.venues(list, notifications2))
+    Ok(views.html.admin.venues(list, notifications))
   }
 
 
   def create() = AuthDBAction { implicit request =>
-    Ok(views.html.admin.venuesCreateForm(venueForm, notifications2))
+    Ok(views.html.admin.venuesCreateForm(venueForm, notifications))
   }
   def save() = AuthDBAction { implicit rs =>
     venueForm.bindFromRequest.fold(
-      formWithErrors => BadRequest(views.html.admin.venuesCreateForm(formWithErrors, notifications2)),
+      formWithErrors => BadRequest(views.html.admin.venuesCreateForm(formWithErrors, notifications)),
       venue => {
         venueService.insert(venue)
 
@@ -46,12 +46,12 @@ class Venues @Inject()(venueService: VenueService, val authService: Authenticato
   def edit(id: VenueId) = AuthDBAction { implicit rs =>
     venueService.getEdit(id) match {
       case None => ListPage
-      case Some(venue) => Ok(views.html.admin.venuesEditForm(id, venueForm.fillAndValidate(venue), notifications2))
+      case Some(venue) => Ok(views.html.admin.venuesEditForm(id, venueForm.fillAndValidate(venue), notifications))
     }
   }
   def update(id: VenueId) = AuthDBAction { implicit rs =>
     venueForm.bindFromRequest.fold(
-      formWithErrors => BadRequest(views.html.admin.venuesEditForm(id, formWithErrors, notifications2)),
+      formWithErrors => BadRequest(views.html.admin.venuesEditForm(id, formWithErrors, notifications)),
       venue => {
         venueService.update(id, venue)
 

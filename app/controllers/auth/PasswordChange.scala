@@ -26,12 +26,12 @@ class PasswordChange @Inject()(userService: UserService, val authService: Authen
   )
 
   def page = AuthDBAction { implicit rq =>
-    Ok(views.html.auth.pwChange(changePasswordForm, notifications2))
+    Ok(views.html.auth.pwChange(changePasswordForm, notifications))
   }
 
   def handlePasswordChange = AuthDBAction { implicit rq =>
     changePasswordForm.bindFromRequest.fold(errors => {
-      BadRequest(views.html.auth.pwChange(errors, notifications2))
+      BadRequest(views.html.auth.pwChange(errors, notifications))
     }, {
       info => {
         if (userService.changePassword(rq.user.id, Passwords.hash(info.newPassword.newPassword))) {
@@ -42,7 +42,7 @@ class PasswordChange @Inject()(userService: UserService, val authService: Authen
           }
           Redirect(routes.LoginPage.login()).flashing("success" -> "Password has been changed")
         } else {
-          BadRequest(views.html.auth.pwChange(changePasswordForm.fill(info).withGlobalError("Failed to change password (internal error)"), notifications2))
+          BadRequest(views.html.auth.pwChange(changePasswordForm.fill(info).withGlobalError("Failed to change password (internal error)"), notifications))
         }
       }
     })

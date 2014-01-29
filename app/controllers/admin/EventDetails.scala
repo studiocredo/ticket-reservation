@@ -42,7 +42,7 @@ class EventDetails @Inject()(eventService: EventService, showService: ShowServic
   def page(id: EventId, form: Form[ShowEdit] = showForm, status: Status = Ok)(implicit rs: SecuredDBRequest[_]) = {
     eventService.eventDetails(id) match {
       case None => BadRequest(s"Failed to retrieve details for event $id")
-      case Some(details) => status(views.html.admin.event(details, views.html.admin.eventAddshow(id, form, Options.apply(venueService.list(), Options.VenueRenderer)), notifications2))
+      case Some(details) => status(views.html.admin.event(details, views.html.admin.eventAddshow(id, form, Options.apply(venueService.list(), Options.VenueRenderer)), notifications))
     }
   }
 
@@ -50,7 +50,7 @@ class EventDetails @Inject()(eventService: EventService, showService: ShowServic
     showService.get(showId) match {
       case None => BadRequest(s"Failed to retrieve show $id")
       case Some(show) => {
-        Ok(views.html.admin.show(id, showId, showForm.fill(ShowEdit(show.venueId, show.date)), Options.apply(venueService.list(), Options.VenueRenderer), notifications2))
+        Ok(views.html.admin.show(id, showId, showForm.fill(ShowEdit(show.venueId, show.date)), Options.apply(venueService.list(), Options.VenueRenderer), notifications))
       }
     }
   }

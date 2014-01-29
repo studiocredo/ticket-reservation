@@ -21,7 +21,7 @@ class Orders @Inject()(eventService: EventService, val authService: Authenticato
   def startEvent(eventId: EventId, showId: Option[ShowId])(implicit rs: SecuredDBRequest[_]): Result = {
     eventService.eventDetails(eventId) match {
       case None => BadRequest(s"Event $eventId not found")
-      case Some(event) => Ok(views.html.order(event, showId, notifications2))
+      case Some(event) => Ok(views.html.order(event, showId, notifications))
     }
   }
 }

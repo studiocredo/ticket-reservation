@@ -16,7 +16,7 @@ class Floorplans @Inject()(venueService: VenueService, val authService: Authenti
 
   def view(id: VenueId) = AuthDBAction { implicit rs =>
     forVenue(id) { venue =>
-      Ok(views.html.admin.venueFloorPlan(venue, notifications2))
+      Ok(views.html.admin.venueFloorPlan(venue, notifications))
     }
   }
 

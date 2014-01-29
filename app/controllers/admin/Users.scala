@@ -24,15 +24,15 @@ class Users @Inject()(userService: UserService, val authService: AuthenticatorSe
 
   def list(page: Int) = AuthDBAction { implicit rs =>
     val list = userService.page(page)
-    Ok(views.html.admin.users(list, notifications2))
+    Ok(views.html.admin.users(list, notifications))
   }
 
   def create() = AuthDBAction { implicit request =>
-    Ok(views.html.admin.usersCreateForm(userForm, notifications2))
+    Ok(views.html.admin.usersCreateForm(userForm, notifications))
   }
   def save() = AuthDBAction { implicit rs =>
     userForm.bindFromRequest.fold(
-      formWithErrors => BadRequest(views.html.admin.usersCreateForm(formWithErrors, notifications2)),
+      formWithErrors => BadRequest(views.html.admin.usersCreateForm(formWithErrors, notifications)),
       user => {
         userService.insert(user)
 
@@ -44,12 +44,12 @@ class Users @Inject()(userService: UserService, val authService: AuthenticatorSe
   def edit(id: UserId) = AuthDBAction { implicit rs =>
     userService.getEdit(id) match {
       case None => ListPage
-      case Some(user) => Ok(views.html.admin.usersEditForm(id, userForm.fillAndValidate(user), notifications2))
+      case Some(user) => Ok(views.html.admin.usersEditForm(id, userForm.fillAndValidate(user), notifications))
     }
   }
   def update(id: UserId) = AuthDBAction { implicit rs =>
     userForm.bindFromRequest.fold(
-      formWithErrors => BadRequest(views.html.admin.usersEditForm(id, formWithErrors, notifications2)),
+      formWithErrors => BadRequest(views.html.admin.usersEditForm(id, formWithErrors, notifications)),
       user => {
         userService.update(id, user)
 

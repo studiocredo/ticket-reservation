@@ -26,16 +26,16 @@ class Events @Inject()(eventService: EventService, val authService: Authenticato
 
   def list(page: Int) = AuthDBAction { implicit rs =>
     val list = eventService.page(page)
-    Ok(views.html.admin.events(list, notifications2))
+    Ok(views.html.admin.events(list, notifications))
   }
 
 
   def create() = AuthDBAction { implicit request =>
-    Ok(views.html.admin.eventsCreateForm(eventForm, notifications2))
+    Ok(views.html.admin.eventsCreateForm(eventForm, notifications))
   }
   def save() = AuthDBAction { implicit rs =>
     eventForm.bindFromRequest.fold(
-      formWithErrors => BadRequest(views.html.admin.eventsCreateForm(formWithErrors, notifications2)),
+      formWithErrors => BadRequest(views.html.admin.eventsCreateForm(formWithErrors, notifications)),
       event => {
         eventService.insert(event)
 
@@ -47,12 +47,12 @@ class Events @Inject()(eventService: EventService, val authService: Authenticato
   def edit(id: EventId) = AuthDBAction { implicit rs =>
     eventService.getEdit(id) match {
       case None => ListPage
-      case Some(event) => Ok(views.html.admin.eventsEditForm(id, eventForm.fillAndValidate(event), notifications2))
+      case Some(event) => Ok(views.html.admin.eventsEditForm(id, eventForm.fillAndValidate(event), notifications))
     }
   }
   def update(id: EventId) = AuthDBAction { implicit rs =>
     eventForm.bindFromRequest.fold(
-      formWithErrors => BadRequest(views.html.admin.eventsEditForm(id, formWithErrors, notifications2)),
+      formWithErrors => BadRequest(views.html.admin.eventsEditForm(id, formWithErrors, notifications)),
       event => {
         eventService.update(id, event)
 
