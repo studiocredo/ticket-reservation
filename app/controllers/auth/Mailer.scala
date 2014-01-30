@@ -16,17 +16,17 @@ object Mailer {
   def sendSignUpEmail(to: String, token: EmailToken)(implicit request: RequestHeader)  {
     val txtAndHtml  = (None, Some(views.html.auth.mails.signUpEmail(token.id)))
 
-    sendEmail("Sign up instructions", to, txtAndHtml)
+    sendEmail("[Studio Credo Ticket Reservatie] Instructies voor registratie", to, txtAndHtml)
   }
 
   def sendPasswordResetEmail(to: String, users: List[RichUser], token: EmailToken)(implicit request: RequestHeader) {
     val txtAndHtml = (None, Some(views.html.auth.mails.passwordReset(users, token.id)))
-    sendEmail("Password reset instructions", to, txtAndHtml)
+    sendEmail("[Studio Credo Ticket Reservatie] Instructies om je wachtwoord te wijzigen", to, txtAndHtml)
   }
 
   def sendPasswordChangedNotification(to: String, user: RichUser)(implicit request: RequestHeader) = {
     val txtAndHtml = (None, Some(views.html.auth.mails.passwordChangedNotice(user)))
-    sendEmail("Password change confirmation", to, txtAndHtml)
+    sendEmail("[Studio Credo Ticket Reservatie] Wachtwoord gewijzigd", to, txtAndHtml)
   }
 
 

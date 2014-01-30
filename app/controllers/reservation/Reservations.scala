@@ -14,7 +14,7 @@ class Reservations @Inject()(eventService: EventService,
   def create(id: EventId) = AuthAwareDBAction {
     implicit rs =>
       eventService.eventDetails(id) match {
-        case None => BadRequest(s"Failed to retrieve details for event $id")
+        case None => BadRequest(s"Evenement $id niet gevonden")
         case Some(details) => Ok(views.html.reservations.create(details, userContext))
       }
   }

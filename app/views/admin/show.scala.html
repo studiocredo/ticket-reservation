@@ -4,29 +4,29 @@
 @import controllers.admin.routes
 
 
-@base("Show")(userContext) {
+@base("Administratie: Voorstelling bewerking")(userContext) {
 
-    <h2>Show edit
+    <h2>Voorstelling bewerken
         @form(routes.EventDetails.deleteShow(eventId, showId), 'class -> "pull-right") {
-            <input type="submit" value="Delete" class="btn btn-danger">
+            <input type="submit" value="Verwijderen" class="btn btn-danger">
             }
     </h2>
 
     <div>
         @form(action = routes.EventDetails.updateShow(eventId, showId), 'class -> "form form-horizontal") {
         <fieldset>
-            @inputText(showForm("date"), '_label -> "DateTime", 'class -> "form-control")
+            @inputText(showForm("date"), '_label -> "Tijdstip", 'class -> "form-control")
 
             @rselect(
                 showForm("venue"),
                 venues,
-                '_label -> "Venue",
+                '_label -> "Locatie",
                 '_showConstraints -> false,
                 'class -> "form-control"
             )
         </fieldset>
         @twFormActions {
-            <input type="submit" value="Update" class="btn btn-primary">
+            <input type="submit" value="Aanpassen" class="btn btn-primary">
         }
     }
     </div>

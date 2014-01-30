@@ -2,12 +2,16 @@
 @import helper._
 @import views.Bootstrap._
 
-@base("Reset Password")(userContext) {
+@base("Wachtwoord opnieuw instellen")(userContext) {
     <div class="page-header">
-        <h1>Reset Password</h1>
+        <h1>Wachtwoord opnieuw instellen</h1>
     </div>
 
     @form(action = controllers.auth.routes.PasswordReset.handleStartResetPassword(), 'class -> "form form-horizontal") {
+        @twFormActions {
+            <p>Gelieve je e-mail adres in te vullen. Er zal een bericht worden gestuurd naar dit adres om het proces te voltooien.</p>
+        }
+
         @globalFormErrors(startForm)
 
         <fieldset>
@@ -19,8 +23,8 @@
         </fieldset>
 
         @twFormActions {
-            <button type="submit" class="btn btn-primary">Reset Password</button>
-            <a class="btn" href="@controllers.auth.routes.LoginPage.login()">Cancel</a>
+            <button type="submit" class="btn btn-primary">Opnieuw instellen</button>
+            <a class="btn btn-warning" href="@controllers.auth.routes.LoginPage.login()">Annuleren</a>
         }
     }
 }

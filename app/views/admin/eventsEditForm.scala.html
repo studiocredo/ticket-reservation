@@ -2,11 +2,11 @@
 @import controllers.admin.routes
 @import helper._
 
-@base("Edit event")(userContext) {
+@base("Administratie: Evenement bewerken")(userContext) {
 
-    <h1>Edit a event
+    <h1>Evenement bewerken
         @form(routes.Events.delete(id), 'class -> "pull-right") {
-            <input type="submit" value="Delete this event" class="btn btn-danger">
+            <input type="submit" value="Verwijderen" class="btn btn-danger">
             }
     </h1>
 
@@ -16,8 +16,8 @@
         @eventsForm(eventForm)
 
         @twFormActions {
-            <input type="submit" value="Update event" class="btn btn-primary">
-            <a href="@routes.Events.list()" class="btn btn-warning">Cancel</a>
+            <input type="submit" value="Aanpassen" class="btn btn-primary">
+            <a href="@routes.Events.list()" class="btn btn-warning">Annuleren</a>
         }
     }
 }

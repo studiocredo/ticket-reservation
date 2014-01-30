@@ -1,10 +1,10 @@
 @(userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_])
 @base("Not Authorized")(userContext) {
     <div class="page-header">
-        <h1>Not Authorized</h1>
+        <h1>Geen toegang.</h1>
     </div>
 
     <div class="alert alert-danger">
-        You are not authorized to access that
+        Je hebt geen toegang tot deze pagina.
     </div>
 }

@@ -88,7 +88,7 @@ trait Secure extends Controller with SecureUtils with DBImplicits {
       ajaxCallNotAuthenticated(request)
     } else {
       Redirect(controllers.auth.routes.LoginPage.login())
-        .flashing("error" -> "You are not allowed to access that page.")
+        .flashing("error" -> "Je hebt geen toegang tot deze pagina")
         .withSession(request.session + (OriginalUrlKey -> request.uri)
       )
     }
@@ -96,7 +96,7 @@ trait Secure extends Controller with SecureUtils with DBImplicits {
   }
 
   private def ajaxCallNotAuthenticated[A](implicit request: Request[A]): SimpleResult = {
-    Unauthorized(Json.toJson(Map("error" -> "Credentials required"))).as(JSON)
+    Unauthorized(Json.toJson(Map("error" -> "Gelieve aan te melden"))).as(JSON)
   }
 
 

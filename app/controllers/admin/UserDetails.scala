@@ -13,7 +13,7 @@ class UserDetails @Inject()(val userService: UserService, val authService: Authe
 
   def view(id: UserId) = AuthDBAction { implicit rs =>
     userService.find(id) match {
-      case None => BadRequest(s"Failed to retrieve details for user $id")
+      case None => BadRequest(s"Gebruiker $id niet gevonden")
       case Some(details) => Ok(views.html.admin.user(details, userContext))
     }
   }

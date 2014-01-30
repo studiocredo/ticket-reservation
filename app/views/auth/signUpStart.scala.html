@@ -2,12 +2,16 @@
 @import helper._
 @import views.Bootstrap._
 
-@base("Sign up")(userContext) {
+@base("Registreren")(userContext) {
     <div class="page-header">
-        <h1>Sign up</h1>
+        <h1>Registreren als nieuwe gebruiker</h1>
     </div>
 
     @form(action = controllers.auth.routes.SignUp.handleStartSignUp(), 'class -> "form form-horizontal") {
+        @twFormActions {
+            <p>Gelieve je e-mail adres in te vullen. Er zal een bericht worden gestuurd naar dit adres om het proces te voltooien.</p>
+        }
+
         @globalFormErrors(startForm)
         <fieldset>
             @helper.inputText(
@@ -18,8 +22,8 @@
         </fieldset>
 
         @twFormActions {
-            <button type="submit" class="btn btn-primary">Create account</button>
-            <a class="btn" href="@controllers.auth.routes.LoginPage.login()">Cancel</a>
+            <button type="submit" class="btn btn-primary">Registreren</button>
+            <a class="btn btn-warning" href="@controllers.auth.routes.LoginPage.login()">Annuleren</a>
         }
     }
 }

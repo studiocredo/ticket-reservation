@@ -2,9 +2,9 @@
 @import helper._
 @import views.Bootstrap._
 
-@base("Sign up")(userContext) {
+@base("Registreren")(userContext) {
     <div class="page-header">
-        <h1>Sign up</h1>
+        <h1>Registreren als nieuwe gebruiker</h1>
     </div>
 
 
@@ -13,33 +13,36 @@
         <fieldset>
             @helper.inputText(
                 signUpForm("name"),
-                '_label -> "Name",
+                '_label -> "Naam",
                 'class -> "form-control"
             )
 
             @helper.inputText(
                 signUpForm("username"),
-                '_label -> "Username",
-                'class -> "form-control"
+                '_label -> "Gebruikersnaam",
+                'class -> "form-control",
+                'autocomplete -> "off"
             )
 
             @helper.inputPassword(
                 signUpForm("password.password"),
-                '_label -> "Password",
-                'class -> "form-control"
+                '_label -> "Wachtwoord",
+                'class -> "form-control",
+                'autocomplete -> "off"
             )
 
             @helper.inputPassword(
                 signUpForm("password.confirmation"),
-                '_label -> "Password confirmation",
+                '_label -> "Wachtwoord herhalen",
                 '_error -> signUpForm.error("password"),
-                'class -> "form-control"
+                'class -> "form-control",
+                'autocomplete -> "off"
             )
         </fieldset>
 
         @twFormActions {
-            <button type="submit" class="btn btn-primary">Create Account</button>
-            <a class="btn" href="@controllers.auth.routes.LoginPage.login()">Cancel</a>
+            <button type="submit" class="btn btn-primary">Registreren</button>
+            <a class="btn btn-warning" href="@controllers.auth.routes.LoginPage.login()">Annuleren</a>
         }
     }
 }

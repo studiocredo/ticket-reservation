@@ -3,23 +3,23 @@
 <ul class="pager">
     @currentPage.prev.map { page =>
     <li>
-        <a href="@link(page)">&larr; Previous</a>
+        <a href="@link(page)">&larr; Vorige</a>
     </li>
     }.getOrElse {
         <li class="disabled">
-            <a>&larr; Previous</a>
+            <a>&larr; Vorige</a>
         </li>
     }
     @currentPage.next.map { page =>
     <li>
-        <a href="@link(page)">Next &rarr;</a>
+        <a href="@link(page)">Volgende &rarr;</a>
     </li>
     }.getOrElse {
         <li class="disabled">
-            <a>Next &rarr;</a>
+            <a>Volgende &rarr;</a>
         </li>
     }
     <li class="pull-right">
-        Displaying @(currentPage.offset + 1) to @(currentPage.offset + currentPage.size) of @currentPage.total
+        Resultaat @(currentPage.offset + 1) tot @(Math.min(currentPage.offset + currentPage.size, currentPage.total)) (totaal @currentPage.total)
     </li>
 </ul>

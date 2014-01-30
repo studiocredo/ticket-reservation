@@ -2,9 +2,9 @@
 @import helper._
 @import views.Bootstrap._
 
-@base("Reset password")(userContext) {
+@base("Wachtwoord opnieuw instellen")(userContext) {
     <div class="page-header">
-        <h1>Reset password</h1>
+        <h1>Wachtwoord opnieuw instellen</h1>
     </div>
 
     @form(action = controllers.auth.routes.PasswordReset.handleResetPassword(token, user), 'class -> "form form-horizontal") {
@@ -12,20 +12,22 @@
         <fieldset>
             @helper.inputPassword(
                 resetForm("password"),
-                '_label -> "Password",
-                'class -> "form-control"
+                '_label -> "Wachtwoord",
+                'class -> "form-control",
+                'autocomplete -> "off"
             )
 
             @helper.inputPassword(
                 resetForm("confirmation"),
-                '_label -> "Password confirmation",
+                '_label -> "Wachtwoord herhalen",
                 '_error -> resetForm.error("password"),
-                'class -> "form-control"
+                'class -> "form-control",
+                'autocomplete -> "off"
             )
         </fieldset>
 
         @twFormActions {
-            <button type="submit" class="btn btn-primary">Reset Password</button>
+            <button type="submit" class="btn btn-primary">Opnieuw instellen</button>
         }
     }
 }

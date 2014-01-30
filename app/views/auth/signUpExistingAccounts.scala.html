@@ -2,18 +2,18 @@
 @import helper._
 @import views.Bootstrap._
 
-@base("Sign up")(userContext) {
+@base("Registreren")(userContext) {
     <div class="page-header">
-        <h1>Sign up</h1>
+        <h1>Registreren als nieuwe gebruiker</h1>
     </div>
 
 
     <div class="alert alert-warning">
 
-        <p>There are already one or more accounts using the email '@email'.</p>
-        <p>If you forgot your credentials you can recover them <a href="@controllers.auth.routes.PasswordReset.startResetPassword()">
-            here</a></p>
-        <p>If you wish to create a new account anyway <a href="@controllers.auth.routes.SignUp.forceHandleStartSignUp(email)">
-            click here</a></p>
+        <p>Er bestaan reeds één of meerdere gebruikers met e-mail adres '@email'. Wat wil je doen?</p>
+        <ul>
+            <li>Ik ben mijn wachtwoord vergeten en wil het <a href="@controllers.auth.routes.PasswordReset.startResetPassword()">opnieuw instellen</a></li>
+            <li>Ik wil <em>toch</em> <a href="@controllers.auth.routes.SignUp.forceHandleStartSignUp(email)">een nieuwe gebruiker aanmaken</a> met hetzelfde e-mail adres.</li>
+        </ul>
     </div>
 }

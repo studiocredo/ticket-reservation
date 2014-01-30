@@ -36,7 +36,7 @@ class Users @Inject()(val userService: UserService, val authService: Authenticat
       user => {
         userService.insert(user)
 
-        ListPage.flashing("success" -> "User has been created")
+        ListPage.flashing("success" -> "Gebruiker aangemaakt")
       }
     )
   }
@@ -53,7 +53,7 @@ class Users @Inject()(val userService: UserService, val authService: Authenticat
       user => {
         userService.update(id, user)
 
-        ListPage.flashing("success" -> "User has been updated")
+        ListPage.flashing("success" -> "Gebruiker aangepast")
       }
     )
   }

@@ -39,7 +39,7 @@ class Events @Inject()(eventService: EventService, val authService: Authenticato
       event => {
         eventService.insert(event)
 
-        ListPage.flashing("success" -> "Event '%s' has been created".format(event.name))
+        ListPage.flashing("success" -> "Evenement '%s' aangemaakt".format(event.name))
       }
     )
   }
@@ -56,13 +56,13 @@ class Events @Inject()(eventService: EventService, val authService: Authenticato
       event => {
         eventService.update(id, event)
 
-        ListPage.flashing("success" -> "Event '%s' has been updated".format(event.name))
+        ListPage.flashing("success" -> "Evenement '%s' aangepast".format(event.name))
       }
     )
   }
   def delete(id: EventId) = AuthDBAction { implicit rs =>
     eventService.delete(id)
 
-    ListPage.flashing("success" -> "Event has been deleted")
+    ListPage.flashing("success" -> "Evenement verwijderd")
   }
 }

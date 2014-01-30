@@ -21,17 +21,17 @@ class PasswordChange @Inject()(val userService: UserService, val authService: Au
       "password" -> mapping(
         "password" -> nonEmptyText.verifying(validPassword),
         "confirmation" -> nonEmptyText
-      )(PasswordSet.apply)(PasswordSet.unapply).verifying("Passwords do not match", passwords => passwords.newPassword == passwords.confirmation)
+      )(PasswordSet.apply)(PasswordSet.unapply).verifying("De wachtwoorden zijn verschillend", passwords => passwords.newPassword == passwords.confirmation)
     )(ChangeInfo.apply)(ChangeInfo.unapply)
   )
 
   def page = AuthDBAction { implicit rq =>
-    Ok(views.html.auth.pwChange(changePasswordForm, userContext))
+    Ok(views.html.auth.pwChange(rq.user.user, changePasswordForm, userContext))
   }
 
   def handlePasswordChange = AuthDBAction { implicit rq =>
     changePasswordForm.bindFromRequest.fold(errors => {
-      BadRequest(views.html.auth.pwChange(errors, userContext))
+      BadRequest(views.html.auth.pwChange(rq.user.user, errors, userContext))
     }, {
       info => {
         if (userService.changePassword(rq.user.id, Passwords.hash(info.newPassword.newPassword))) {
@@ -40,9 +40,9 @@ class PasswordChange @Inject()(val userService: UserService, val authService: Au
               Mailer.sendPasswordChangedNotification(email, user)
             }
           }
-          Redirect(routes.LoginPage.login()).flashing("success" -> "Password has been changed")
+          Redirect(routes.LoginPage.login()).flashing("success" -> "Wachtwoord gewijzigd")
         } else {
-          BadRequest(views.html.auth.pwChange(changePasswordForm.fill(info).withGlobalError("Failed to change password (internal error)"), userContext))
+          BadRequest(views.html.auth.pwChange(rq.user.user, changePasswordForm.fill(info).withGlobalError("Er is een interne fout opgetreden. Het wachtwoord werd niet gewijzigd."), userContext))
         }
       }
     })

@@ -1,10 +1,10 @@
 @(currentPage: Page[entities.Event], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_])
 @import controllers.admin.routes
 
-@base("Events")(userContext) {
+@base("Administratie: Evenementen")(userContext) {
 
     <div>
-    <a class="btn btn-primary" id="add" href="@routes.Events.create()">Add new</a>
+    <a class="btn btn-primary" id="add" href="@routes.Events.create()">Evenement toevoegen</a>
     </div>
 
     @if(!currentPage.isEmpty) {
@@ -12,8 +12,9 @@
             <thead>
                 <tr>
                     <th>Id</th>
-                    <th>Name</th>
-                    <th>description</th>
+                    <th>Naam</th>
+                    <th>Beschrijving</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -22,7 +23,7 @@
                     <td>@event.id</td>
                     <td><a href="@routes.EventDetails.view(event.id)">@event.name</a></td>
                     <td>@event.description</td>
-                    <td><a class="btn btn-default btn-xs" href="@{routes.Events.edit(event.id)}">Edit</a></td>
+                    <td><a class="btn btn-default btn-xs" href="@{routes.Events.edit(event.id)}">Bewerken</a></td>
                 </tr>
             }
             </tbody>
@@ -31,7 +32,7 @@
         @helper.paging(currentPage, (page:Int) => routes.Events.list(page))
     } else {
         <div class="well">
-            <em>No events found</em>
+            <em>Geen evenementen gevonden.</em>
         </div>
 
     }

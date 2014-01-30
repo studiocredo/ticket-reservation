@@ -148,7 +148,7 @@ object Passwords {
   val validPassword: Constraint[String] = Constraint({
     plainText =>
       if (plainText.length < 8)
-        Invalid("Password must be at least 8 chars long")
+        Invalid("Wachtwoord moet minstens 8 karakters bevatten")
       else
         Valid
   })

@@ -34,21 +34,21 @@ class EventDetails @Inject()(eventService: EventService, showService: ShowServic
       newShow => {
         showService.insert(id, ShowEdit(newShow.venueId, newShow.date))
 
-        Redirect(routes.EventDetails.view(id)).flashing("success" -> "Show added")
+        Redirect(routes.EventDetails.view(id)).flashing("success" -> "Voorstelling toegevoegd")
       }
     )
   }
 
   def page(id: EventId, form: Form[ShowEdit] = showForm, status: Status = Ok)(implicit rs: SecuredDBRequest[_]) = {
     eventService.eventDetails(id) match {
-      case None => BadRequest(s"Failed to retrieve details for event $id")
+      case None => BadRequest(s"Evenement $id niet gevonden")
       case Some(details) => status(views.html.admin.event(details, views.html.admin.eventAddshow(id, form, Options.apply(venueService.list(), Options.VenueRenderer)), userContext))
     }
   }
 
   def editShow(id: EventId, showId: ShowId) = AuthDBAction { implicit rs =>
     showService.get(showId) match {
-      case None => BadRequest(s"Failed to retrieve show $id")
+      case None => BadRequest(s"Voorstelling $id niet gevonden")
       case Some(show) => {
         Ok(views.html.admin.show(id, showId, showForm.fill(ShowEdit(show.venueId, show.date)), Options.apply(venueService.list(), Options.VenueRenderer), userContext))
       }
@@ -61,14 +61,14 @@ class EventDetails @Inject()(eventService: EventService, showService: ShowServic
       show => {
         showService.update(showId, show)
 
-        Redirect(routes.EventDetails.view(id)).flashing("success" -> "Show updated")
+        Redirect(routes.EventDetails.view(id)).flashing("success" -> "Voorstelling aangepast")
       }
     )
   }
 
   def deleteShow(id: EventId, showId: ShowId) = AuthDBAction { implicit rs =>
     showService.delete(showId)
-    Redirect(routes.EventDetails.view(id)).flashing("success" -> "Show deleted")
+    Redirect(routes.EventDetails.view(id)).flashing("success" -> "Voorstelling verwijderd")
   }
 
 }

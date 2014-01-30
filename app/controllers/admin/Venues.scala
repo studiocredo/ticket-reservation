@@ -38,7 +38,7 @@ class Venues @Inject()(venueService: VenueService, val authService: Authenticato
       venue => {
         venueService.insert(venue)
 
-        ListPage.flashing("success" -> "Venue '%s' has been created".format(venue.name))
+        ListPage.flashing("success" -> "Locatie '%s' aangemaakt".format(venue.name))
       }
     )
   }
@@ -55,13 +55,13 @@ class Venues @Inject()(venueService: VenueService, val authService: Authenticato
       venue => {
         venueService.update(id, venue)
 
-        ListPage.flashing("success" -> "Venue '%s' has been updated".format(venue.name))
+        ListPage.flashing("success" -> "Locatie '%s' aangepast".format(venue.name))
       }
     )
   }
   def delete(id: VenueId) = AuthDBAction { implicit rs =>
     venueService.delete(id)
 
-    ListPage.flashing("success" -> "Venue has been deleted")
+    ListPage.flashing("success" -> "Locatie verwijderd")
   }
 }

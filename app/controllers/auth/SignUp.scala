@@ -45,6 +45,7 @@ class SignUp @Inject()(val userService: UserService, val authService: Authentica
     })
   }
 
+  //TODO: this doesn't seem to work -> AuthUtils.executeForToken fails
   def forceHandleStartSignUp(email: String) = AuthAwareAction { implicit request =>
     doSignUp(email)
   }
@@ -66,7 +67,7 @@ class SignUp @Inject()(val userService: UserService, val authService: Authentica
       DBSupport.DB.withSession {
         implicit session =>
           if (userService.findByUserName(username).isDefined)
-            Invalid("Username already taken")
+            Invalid("Deze gebruikersnaam is reeds in gebruik")
           else
             Valid
       }
@@ -81,7 +82,7 @@ class SignUp @Inject()(val userService: UserService, val authService: Authentica
         mapping(
           "password" -> nonEmptyText.verifying(validPassword),
           "confirmation" -> nonEmptyText
-        )(PasswordSet.apply)(PasswordSet.unapply).verifying("Passwords do not match", passwords => passwords.newPassword == passwords.confirmation)
+        )(PasswordSet.apply)(PasswordSet.unapply).verifying("De wachtwoorden zijn verschillend", passwords => passwords.newPassword == passwords.confirmation)
     )
       ((name, username, password) => RegistrationInfo(name, username, password))
       (info => Some((info.name, info.username, info.password)))
@@ -103,7 +104,7 @@ class SignUp @Inject()(val userService: UserService, val authService: Authentica
             UserEdit(info.name, info.username, Passwords.hash(info.password.newPassword)),
             UserDetailEdit(Some(token.email), None, None)
           )
-          Redirect(routes.LoginPage.login()).flashing("success" -> "Thank you for signing up. You can log in now")
+          Redirect(routes.LoginPage.login()).flashing("success" -> "Bedankt voor je registratie. Je kan jezelf nu aanmelden.")
         }
       })
     })

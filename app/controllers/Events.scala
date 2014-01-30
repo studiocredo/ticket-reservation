@@ -19,14 +19,14 @@ class Events @Inject()(venueService: VenueService, eventService: EventService, s
 
   def view(id: EventId) = AuthAwareDBAction { implicit rs =>
     eventService.eventDetails(id) match {
-      case None => BadRequest(s"Event $id not found")
+      case None => BadRequest(s"Evenement $id niet gevonden")
       case Some(details) => Ok(views.html.event(details, None, userContext))
     }
   }
 
   def viewShow(eventId: EventId, showId: ShowId) = AuthAwareDBAction { implicit rs =>
     eventService.eventDetails(eventId) match {
-      case None => BadRequest(s"Event $eventId not found")
+      case None => BadRequest(s"Evenement $eventId niet gevonden")
       case Some(details) => Ok(views.html.event(details, details.shows.flatMap(_.shows).find(_.id == showId), userContext))
     }
   }
@@ -39,7 +39,7 @@ class Events @Inject()(venueService: VenueService, eventService: EventService, s
       fp <- venue.floorplan
     } yield Ok(Json.toJson(fp))
 
-    plan.getOrElse(BadRequest(s"Could not find floorplan for $id"))
+    plan.getOrElse(BadRequest(s"Zaalplan voor locatie $id niet gevonden"))
   }
 
 }

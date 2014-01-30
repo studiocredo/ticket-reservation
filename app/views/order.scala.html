@@ -1,14 +1,12 @@
 @(info: models.admin.EventDetail, highlight: Option[models.ids.ShowId], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_])
 
-@base("Order: " + info.event.name)(userContext) {
+@base("Bestelling voor " + info.event.name)(userContext) {
     <div class="page-header">
         <h1>@info.event.name </h1>
 
         @info.shows.map { case vs =>
         <div class="panel panel-default">
             <div class="panel-heading">@vs.venue.name</div>
-
-
 
             @vs.shows.map { show =>
                 <div class="row">

@@ -2,17 +2,17 @@
 @import controllers.admin.routes
 @import helper._
 
-@base("Add venue")(userContext) {
+@base("Administratie: Locatie toevoegen")(userContext) {
 
-    <h1>Add new venue</h1>
+    <h1>Locatie toevoegen</h1>
 
     @form(action = routes.Venues.save(), 'class -> "form form-horizontal") {
 
         @venuesForm(venueForm)
 
         @twFormActions {
-            <input type="submit" value="Add venue" class="btn btn-primary">
-            <a href="@routes.Venues.list()" class="btn btn-warning">Cancel</a>
+            <input type="submit" value="Toevoegen" class="btn btn-primary">
+            <a href="@routes.Venues.list()" class="btn btn-warning">Annuleren</a>
         }
 
     }

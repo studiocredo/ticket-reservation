@@ -2,17 +2,17 @@
 @import controllers.admin.routes
 @import helper._
 
-@base("Add event")(userContext) {
+@base("Administratie: Evenement toevoegen")(userContext) {
 
-    <h1>Add new event</h1>
+    <h1>Evenement toevoegen</h1>
 
     @form(action = routes.Events.save(), 'class -> "form form-horizontal") {
 
         @eventsForm(eventForm)
 
         @twFormActions {
-            <input type="submit" value="Add event" class="btn btn-primary">
-            <a href="@routes.Events.list()" class="btn btn-warning">Cancel</a>
+            <input type="submit" value="Toevoegen" class="btn btn-primary">
+            <a href="@routes.Events.list()" class="btn btn-warning">Annuleren</a>
         }
 
     }

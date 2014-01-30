@@ -1,10 +1,10 @@
-@(passwordChangeForm: Form[controllers.auth.ChangeInfo], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_])
+@(user: models.admin.RichUser, passwordChangeForm: Form[controllers.auth.ChangeInfo], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_])
 @import helper._
 @import views.Bootstrap._
 
-@base("Change Password")(userContext) {
+@base("Wachtwoord aanpassen")(userContext) {
     <div class="page-header">
-        <h1>Change Password</h1>
+        <h1>Wachtwoord aanpassen</h1>
     </div>
 
     @request.flash.get("error").map { msg =>
@@ -19,33 +19,50 @@
         </div>
 
         @twFormActions {
-            <a class="btn" href="@routes.Application.index()">Your password was changed successfully</a>
+            <a class="btn" href="@routes.Application.index()">Je wachtwoord werd aangepast.</a>
         }
     } else {
         @form(action = controllers.auth.routes.PasswordChange.handlePasswordChange(), 'class -> "form form-horizontal") {
             @globalFormErrors(passwordChangeForm)
             <fieldset>
+                <div id="name_field" class="form-group  ">
+                    <label class="col-lg-2  control-label" for="name">Naam</label>
+                    <div class="col-lg-10 read-only-field">
+                        <p id="name">@user.name</p>
+                    </div>
+                </div>
+
+                <div id="user-name_field" class="form-group  ">
+                    <label class="col-lg-2  control-label" for="user-name">Gebruikersnaam</label>
+                    <div class="col-lg-10 read-only-field">
+                        <p id="user-name">@user.username</p>
+                    </div>
+                </div>
+
                 @helper.inputPassword(
                     passwordChangeForm("current"),
-                    '_label -> "Current Password",
-                    'class -> "form-control"
+                    '_label -> "Huidig wachtwoord",
+                    'class -> "form-control",
+                    'autocomplete -> "off"
                 )
 
                 @helper.inputPassword(
                     passwordChangeForm("password.password"),
-                    '_label -> "New Password",
-                    'class -> "form-control"
+                    '_label -> "Nieuw wachtwoord",
+                    'class -> "form-control",
+                    'autocomplete -> "off"
                 )
 
                 @helper.inputPassword(
                     passwordChangeForm("password.confirmation"),
-                    '_label -> "New Password Confirmation",
+                    '_label -> "Nieuw wachtwoord herhalen",
                     '_error -> passwordChangeForm.error("password"),
-                    'class -> "form-control"
+                    'class -> "form-control",
+                    'autocomplete -> "off"
                 )
             </fieldset>
             @twFormActions {
-                <button type="submit" class="btn btn-primary">Change</button>
+                <button type="submit" class="btn btn-primary">Aanpassen</button>
             }
         }
     }

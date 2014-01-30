@@ -50,22 +50,22 @@
                         <span class="icon-bar"></span>
                         <span class="icon-bar"></span>
                     </button>
-                    <a class="navbar-brand" href="@routes.Application.index()">Credo</a>
+                    <a class="navbar-brand" href="@routes.Application.index()">Home</a>
                 </div>
                 <div class="navbar-collapse collapse">
                     <ul class="nav navbar-nav">
-                        <li><a href="@routes.Events.list()">Shows</a></li>
-                        <li><a href="@routes.Orders.start(None, None)">Bestel</a></li>
+                        <li><a href="@routes.Events.list()">Evenementen</a></li>
+                        <li><a href="@routes.Orders.start(None, None)">Bestellen</a></li>
                     </ul>
                     @Auth.restrictAdmin {
                         <ul class="nav navbar-nav">
                             <li class="dropdown">
-                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Admin <b class="caret"></b></a>
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Administratie <b class="caret"></b></a>
                                 <ul class="dropdown-menu pull-right">
-                                    <li><a href="@admin.routes.Users.list()">Users</a></li>
+                                    <li><a href="@admin.routes.Users.list()">Gebruikers</a></li>
                                     <li class="divider"></li>
-                                    <li><a href="@admin.routes.Venues.list()">Venues</a></li>
-                                    <li><a href="@admin.routes.Events.list()">Events</a></li>
+                                    <li><a href="@admin.routes.Venues.list()">Locaties</a></li>
+                                    <li><a href="@admin.routes.Events.list()">Evenementen</a></li>
                                 </ul>
                             </li>
                         </ul>
@@ -80,16 +80,15 @@
                                     @loginGroup(userContext)
                                     <li><a href="@auth.routes.PasswordChange.page()">Wachtwoord aanpassen</a></li>
                                     <li class="divider"></li>
-                                    <li><a href="@auth.routes.LoginPage.logout()">Uitloggen</a></li>
+                                    <li><a href="@auth.routes.LoginPage.logout()">Afmelden</a></li>
                                 </ul>
                             </li>
                         </ul>
                         @notifications(userContext)
                     } else {
                         <ul class="nav navbar-nav navbar-right">
-                            <li><a href="@auth.routes.LoginPage.login()">Inloggen</a></li>
-
-                            <li><a href="@auth.routes.SignUp.startSignUp()">Registreer</a></li>
+                            <li><a href="@auth.routes.SignUp.startSignUp()">Registreren</a></li>
+                            <li><a href="@auth.routes.LoginPage.login()">Aanmelden</a></li>
                         </ul>
                     }
                 </div>
@@ -100,7 +99,7 @@
         </div>
         <hr>
         <footer>
-            <p>&copy;&nbsp;<img src='@routes.Assets.at("images/logo_gray_small.png")'/>&nbsp;Studio Credo 2013</p>
+            <p>&copy;&nbsp;<img src='@routes.Assets.at("images/logo_gray_small.png")'/>&nbsp;Studio Credo 2014</p>
         </footer>
         <script type="text/javascript">
             @request.flash.get("success").map { message =>

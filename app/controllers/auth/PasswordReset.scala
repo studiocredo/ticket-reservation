@@ -15,7 +15,7 @@ class PasswordReset @Inject()(val userService: UserService, val authService: Aut
   val defaultAuthorization = None
 
   val startForm = Form(
-    "email" -> email.verifying("No account found with this email address", email => {
+    "email" -> email.verifying("Er bestaat geen gebruiker met email adres", email => {
       DB.withSession { implicit session =>
         !userService.findByEmail(email).isEmpty
       }
@@ -47,7 +47,7 @@ class PasswordReset @Inject()(val userService: UserService, val authService: Aut
     mapping(
       "password" -> nonEmptyText.verifying(validPassword),
       "confirmation" -> nonEmptyText
-    )(PasswordSet.apply)(PasswordSet.unapply).verifying("Passwords do not match", passwords => passwords.newPassword == passwords.confirmation)
+    )(PasswordSet.apply)(PasswordSet.unapply).verifying("De wachtwoorden zijn verschillend", passwords => passwords.newPassword == passwords.confirmation)
   )
 
   def resetPassword(token: String, user: String) = AuthAwareDBAction { implicit request =>
@@ -65,9 +65,9 @@ class PasswordReset @Inject()(val userService: UserService, val authService: Aut
           if (userService.changePassword(token.email, username, Passwords.hash(info.newPassword))) {
             userService.find(token.email, username) map (user => Mailer.sendPasswordChangedNotification(token.email, user))
 
-            Redirect(routes.LoginPage.login()).flashing("success" -> "Password has been changed")
+            Redirect(routes.LoginPage.login()).flashing("success" -> "Wachtwoord gewijzigd")
           } else {
-            BadRequest(views.html.auth.pwResetForm(changePasswordForm.fill(info).withGlobalError("Failed to reset password (internal error)"), token.id, username, userContext))
+            BadRequest(views.html.auth.pwResetForm(changePasswordForm.fill(info).withGlobalError("Er is een interne fout opgetreden. Het wachtwoord werd niet gewijzigd."), token.id, username, userContext))
           }
         }
       })

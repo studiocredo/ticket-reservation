@@ -1,8 +1,10 @@
 @(token: String)(implicit request: RequestHeader)
 <html>
 <body>
-<p>Hello,</p>
+<p>Beste,</p>
 
-<p>Please follow this <a href="@controllers.auth.routes.SignUp.signUp(token).absoluteURL()">link</a> to complete your registration. </p>
+<p>Wij ontvingen een aanvraag voor registratie bij <a href="@controllers.routes.Application.index.absoluteURL()">Studio Credo Ticket Reservatie</a>.</p>
+<p>Gelieve <a href="@controllers.auth.routes.SignUp.signUp(token).absoluteURL()">je registratie af te ronden</a> via onze website door je gebruikersnaam en wachtwoord te kiezen.</p>
+@emailFooter()
 </body>
 </html>

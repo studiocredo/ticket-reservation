@@ -1,6 +1,6 @@
 @(venue: entities.Venue, userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_])
 @import controllers.admin.routes
-@base("Venue floorplan " + venue.name)(userContext) {
+@base("Administratie: Zaalplan " + venue.name)(userContext) {
 
     <div data-ng-controller="FloorPlanEditCtrl" data-ng-init="init(@venue.id)">
         <h4>@venue.name</h4>
@@ -11,11 +11,11 @@
                 <div class="col-md-10">
                     <div class="row seat-row vspacer-{{row.vspace}}" data-ng-repeat="row in rows" data-ng-class="{selected: selectedRow == row }">
                         <div class="col-xs-2">
-                            <a href="" data-ng-click="editRow(row)"><span class="glyphicon glyphicon-edit"></span></a>
-                            <a href="" data-ng-click="copyRow($index)"><span class="glyphicon glyphicon-tags"></span></a>
-                            <a href="" data-ng-click="moveRowUp($index)"><span class="glyphicon glyphicon-arrow-up"></span></a>
-                            <a href="" data-ng-click="moveRowDown($index)"><span class="glyphicon glyphicon-arrow-down"></span></a>
-                            <a href="" data-ng-click="removeRow($index)"><span class="glyphicon glyphicon-remove"></span></a>
+                            <a href="" data-ng-click="editRow(row)" title="Rij bewerken"><span class="glyphicon glyphicon-edit"></span></a>
+                            <a href="" data-ng-click="copyRow($index)" title="Rij kopiëren"><span class="glyphicon glyphicon-tags"></span></a>
+                            <a href="" data-ng-click="moveRowUp($index)" title="Rij naar boven verplaatsen"><span class="glyphicon glyphicon-arrow-up"></span></a>
+                            <a href="" data-ng-click="moveRowDown($index)" title="Rij naar onder verplaatsen"><span class="glyphicon glyphicon-arrow-down"></span></a>
+                            <a href="" data-ng-click="removeRow($index)" title="Rij verwijderen"><span class="glyphicon glyphicon-remove"></span></a>
                         </div>
                         <div class="col-xs-10">
                             <div data-ui-sortable="rowSortableOptions" data-ng-model="row.content">
@@ -29,7 +29,7 @@
 
                     <div class="row seat-row">
                         <div class="col-xs-2">
-                            <a href="" data-ng-click="addRow()" tooltip="Add row"><span class="glyphicon glyphicon-plus"></span></a>
+                            <a href="" data-ng-click="addRow()" title="Rij toevoegen"><span class="glyphicon glyphicon-plus"></span></a>
                         </div>
                         <div class="col-xs-10">
 
@@ -38,34 +38,34 @@
                 </div>
                 <div class="col-md-2">
                     <div class="row-controls" ng-show="selectedRow">
-                        Selected Row:
+                        Geselecteerde rij:
                         <div>
                             <p>
-                                <button class="btn btn-xs btn-default" data-ng-click="addSeat(selectedRow)">Add seat</button>
+                                <button class="btn btn-xs btn-default" data-ng-click="addSeat(selectedRow)">Stoel toevoegen</button>
                             </p>
                             <p>
                                 <input type="number" min="0" max="8" data-ng-model="spacerSize">
-                                <button class="btn btn-xs btn-default" data-ng-click="addSpacer(selectedRow, spacerSize)">Add horizontal spacer</button>
+                                <button class="btn btn-xs btn-default" data-ng-click="addSpacer(selectedRow, spacerSize)">Horizontale ruimte toevoegen</button>
                             </p>
                             <p>
                                 <input type="number" min="0" max="8" data-ng-model="verticalSpacerSize">
-                                <button class="btn btn-xs btn-default" data-ng-click="addVerticalSpacer(selectedRow, verticalSpacerSize)">Add vertical spacer</button>
+                                <button class="btn btn-xs btn-default" data-ng-click="addVerticalSpacer(selectedRow, verticalSpacerSize)">Verticale ruimte toevoegen</button>
                             </p>
                         </div>
                     </div>
                     <div class="seat-palette">
-                        Paint:
-                        <div data-ng-click="paintNormal()"><div class="seat seat-normal"></div> Normal</div>
+                        Legende:
+                        <div data-ng-click="paintNormal()"><div class="seat seat-normal"></div> Standaard</div>
                         <div data-ng-click="paintVip()"><div class="seat seat-vip"></div> VIP</div>
-                        <div data-ng-click="paintDisabled()"><div class="seat seat-disabled"></div> Disabled</div>
+                        <div data-ng-click="paintDisabled()"><div class="seat seat-disabled"></div> Toegankelijk</div>
                         <p></p>
-                        <div data-ng-click="paintDelete()"><div class="seat delete-paint"></div> Delete</div>
+                        <div data-ng-click="paintDelete()"><div class="seat delete-paint"></div> Verwijderen</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <button class="btn btn-success" data-ng-click="save()">Save</button>
+        <button class="btn btn-success" data-ng-click="save()">Bewaren</button>
 
         <div ng-repeat="msg in messages">
             <div class="alert alert-{{msg.type}}">

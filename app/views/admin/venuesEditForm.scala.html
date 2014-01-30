@@ -2,11 +2,11 @@
 @import controllers.admin.routes
 @import helper._
 
-@base("Edit venue")(userContext) {
+@base("Administratie: Locatie bewerken")(userContext) {
 
-    <h1>Edit a venue
+    <h1>Locatie bewerken
         @form(routes.Venues.delete(id), 'class -> "pull-right") {
-            <input type="submit" value="Delete this venue" class="btn btn-danger">
+            <input type="submit" value="Verwijderen" class="btn btn-danger">
             }
     </h1>
 
@@ -16,8 +16,8 @@
         @venuesForm(venueForm)
 
         @twFormActions {
-            <input type="submit" value="Update venue" class="btn btn-primary">
-            <a href="@routes.Venues.list()" class="btn btn-warning">Cancel</a>
+            <input type="submit" value="Aanpassen" class="btn btn-primary">
+            <a href="@routes.Venues.list()" class="btn btn-warning">Annuleren</a>
         }
     }
 }

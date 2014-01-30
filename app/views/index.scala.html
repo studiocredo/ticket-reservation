@@ -1,6 +1,6 @@
 @(nextShows: List[entities.ShowOverview], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_])
 
-@base("Studio Credo")(userContext) {
+@base("Studio Credo Ticket Reservatie")(userContext) {
 
 <div class="jumbotron front-page-banner">
     <div class="inner-1">
@@ -8,10 +8,10 @@
             <div class="inner-3">
                 <h1>Studio Credo</h1>
 
-                <p>Reserveer hier je tickets voor onze slotshow</p>
+                <p>Studio voor creatieve dansopleiding</p>
 
                 @nextShows.headOption.map { next =>
-                    <p><a class="btn btn-primary btn-lg" href="@routes.Events.list()">Shows &raquo;</a></p>
+                    <p><a class="btn btn-primary btn-lg" href="@routes.Events.list()">Evenementen &raquo;</a></p>
                 }
             </div>
         </div>
@@ -24,10 +24,10 @@
     <div class="col-lg-4">
         <h2>@info.name</h2>
 
-        <p>@HumanDateTime.formatDateTime(info.date) (binnen @HumanDateTime.formatDuration(info.date))</p>
+        <p>@HumanDateTime.formatDateTime(info.date)</p>
         <p>@AvailabilityFormat.format(info)</p>
 
-        <p><a class="btn btn-primary" href="@routes.Events.viewShow(info.eventId, info.showId)">View&raquo;</a></p>
+        <p><a class="btn btn-primary" href="@routes.Events.viewShow(info.eventId, info.showId)">Overzicht &raquo;</a></p>
     </div>
     }
 </div>

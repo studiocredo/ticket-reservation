@@ -1,6 +1,6 @@
 @(info: models.admin.EventDetail, show: Option[models.entities.Show], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_])
 
-@base("Event: " + info.event.name)(userContext) {
+@base(info.event.name)(userContext) {
 
     <div class="row ">
         <div class="col-xs-12 col-sm-9">
@@ -9,14 +9,14 @@
             </div>
         </div>
         <div class="col-xs-6 col-sm-3" >
-            <a href="@routes.Orders.start(Some(info.id), show.map(_.id))" class="btn btn-success btn-block btn-lg" style="margin-top: 46px;">Bestel</a>
+            <a href="@routes.Orders.start(Some(info.id), show.map(_.id))" class="btn btn-success btn-block btn-lg" style="margin-top: 46px;">Kaarten bestellen</a>
         </div>
     </div>
 
     <div class="row row-offcanvas row-offcanvas-right">
         <div class="col-xs-12 col-sm-9">
             <p class="pull-right visible-xs">
-                <button type="button" class="btn btn-primary btn-xs" data-toggle="offcanvas">Toggle nav</button>
+                <button type="button" class="btn btn-primary btn-xs" data-toggle="offcanvas">Navigatie aan/uit</button>
             </p>
             <div class="row">
                 @show.map(eventShow(_))

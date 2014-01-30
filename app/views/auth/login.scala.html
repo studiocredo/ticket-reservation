@@ -3,9 +3,9 @@
 @import helper._
 @import views.Bootstrap._
 
-@base("Login")(userContext) {
+@base("Aanmelden")(userContext) {
     <div class="page-header">
-        <h1>Login</h1>
+        <h1>Aanmelden</h1>
     </div>
 
     @errorMsg.map { msg =>
@@ -31,25 +31,25 @@
         <fieldset>
             @helper.inputText(
                 loginForm("username"),
-                '_label -> "Username",
-                'placeholder -> "Username",
+                '_label -> "Gebruikersnaam",
+                'placeholder -> "Gebruikersnaam",
                 'class -> "form-control"
             )
 
             @helper.inputPassword(
                 loginForm("password"),
-                '_label -> "Password",
-                'placeholder -> "Password",
+                '_label -> "Wachtwoord",
+                'placeholder -> "Wachtwoord",
                 'class -> "form-control"
             )
         </fieldset>
         <div class="form-group">
             <div class="col-sm-offset-2 col-sm-10">
-                <button type="submit" class="btn btn-primary">Login</button>
+                <button type="submit" class="btn btn-primary">Aanmelden</button>
             </div>
 
-            <p><a href="@controllers.auth.routes.PasswordReset.startResetPassword()">Did you forget your password?</a></p>
-            <p>If you don''t have an account yet you can sign up <a href="@controllers.auth.routes.SignUp.startSignUp()">here</a></p>
+            <p><a href="@controllers.auth.routes.PasswordReset.startResetPassword()">Wachtwoord vergeten?</a></p>
+            <p>Wie nog geen gebruikersnaam en wachtwoord heeft, dient zich eerst te <a href="@controllers.auth.routes.SignUp.startSignUp()">registreren</a>.</p>
         </div>
     }
 }

@@ -8,7 +8,7 @@ trait AuthUtils extends Controller {
 
   protected def executeForToken(token: String, error: Call, f: EmailToken => SimpleResult)(implicit request: SecureRequest[_]): SimpleResult = {
     authService.checkEmailToken(token).fold(
-      Redirect(error).flashing("error" -> "The link you followed no longer valid")
+      Redirect(error).flashing("error" -> "Deze link is niet langer geldig")
     )(
       f
     )

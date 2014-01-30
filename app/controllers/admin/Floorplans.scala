@@ -31,14 +31,14 @@ class Floorplans @Inject()(venueService: VenueService, val authService: Authenti
         Ok("")
       }
     }.recoverTotal {
-      e => BadRequest("Detected error:" + JsError.toFlatJson(e))
+      e => BadRequest("Er heeft zich een fout voorgedaan:" + JsError.toFlatJson(e))
     }
   }
 
   def forVenue(id: VenueId)(found: Venue => Result)(implicit s: Session): Result = {
     venueService.get(id) match {
       case Some(venue) => found(venue)
-      case None => BadRequest(s"Venue $id not found")
+      case None => BadRequest(s"Locatie $id niet gevonden")
     }
   }
 }

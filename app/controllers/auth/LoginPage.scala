@@ -62,13 +62,13 @@ class LoginPage @Inject()(val authService: AuthenticatorService, val userService
   def handleLoginError(error: SignInError, credentials: Credentials)(implicit request: SecureAwareDBRequest[_]): SimpleResult = {
     error match {
       case InvalidCredentials => {
-        BadRequest(views.html.auth.login(loginForm.fill(credentials.userOnly), Some("Invalid credentials"), userContext))
+        BadRequest(views.html.auth.login(loginForm.fill(credentials.userOnly), Some("Logingegevens incorrect"), userContext))
       }
       case TryAgain(msg) => {
-        Redirect(controllers.auth.routes.LoginPage.login()).flashing("error" -> "An error occurred while logging you in. Please try again.")
+        Redirect(controllers.auth.routes.LoginPage.login()).flashing("error" -> "Er is een probleem opgetreden tijdens het aanmelden. Gelieve opnieuw te proberen.")
       }
       case _ => {
-        Redirect(controllers.auth.routes.LoginPage.login()).flashing("error" -> "An error occurred while logging you in. Please try again.")
+        Redirect(controllers.auth.routes.LoginPage.login()).flashing("error" -> "Er is een probleem opgetreden tijdens het aanmelden.")
       }
     }
   }

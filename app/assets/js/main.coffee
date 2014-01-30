@@ -26,13 +26,13 @@ Floorplan.controller "FloorPlanEditCtrl", ($scope, $http) ->
         call.success (data) ->
             $scope.messages.push
                 type: "success"
-                msg: "Saved."
+                msg: "Bewaard"
 
 
         call.error (data) ->
             $scope.messages.push
                 type: "danger"
-                msg: "Failed to save"
+                msg: "Bewaren mislukt"
 
 
     $scope.paint = SEAT_NORMAL
