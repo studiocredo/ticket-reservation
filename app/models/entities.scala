@@ -3,11 +3,9 @@ package models
 import scala.Predef._
 import scala.slick.lifted.MappedTypeMapper
 import org.joda.time.DateTime
-import be.studiocredo.auth.{Roles, Password}
-import models.admin.RichUser
+import be.studiocredo.auth.Roles
 import controllers.EnumUtils
 import play.api.mvc.{PathBindable, QueryStringBindable}
-import models.ids.{UserId, ShowId, TicketOrderId, OrderId}
 import scala.{Int, Option, Some}
 import be.studiocredo.util.Money
 import models.admin.RichUser
@@ -106,7 +104,6 @@ object entities {
   object FloorPlanJson {
 
     import play.api.libs.json._
-    import play.api.libs.functional.syntax._
 
     implicit val seatTypeFmt = EnumUtils.enumFormat(SeatType)
     implicit val seatIdFmt = Json.format[SeatId]
@@ -151,9 +148,27 @@ object entities {
 
   case class ReservationQuotum(eventId: EventId, userId: UserId, quota: Int)
 
+  case class UnusedQuotaDisplay(eventMap: Map[EventId, Int]) {
+    def total: Int = {
+      eventMap.values.sum
+    }
+  }
+
   case class ShowPrereservation(showId: ShowId, userId: UserId, quantity: Int)
 
-  case class Notification(message: String)
+  case class PendingPrereservationDisplay(showMap: Map[ShowId, Int]) {
+    def total: Int = {
+      showMap.values.sum
+    }
+  }
+
+  object NotificationType extends Enumeration {
+    type NotificationType = Value
+    val PendingPrereservation, UnusedQuota, Default = Value
+  }
+  import NotificationType._
+  case class Notification(title: String, entries: List[NotificationEntry])
+  case class NotificationEntry(message: String, notificationType: NotificationType, disabled: Boolean = false)
   case class UserContext(notifications: List[Notification], otherUsers: List[User])
 }
 

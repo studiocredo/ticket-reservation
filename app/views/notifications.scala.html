@@ -1,4 +1,5 @@
 @(userContext: Option[models.entities.UserContext])
+@import models.entities.NotificationType
 @defining(userContext match { case Some(userContext) => userContext.notifications; case None => List() }) { notifications =>
 
 @if(!notifications.isEmpty) {
@@ -9,12 +10,22 @@
                 <span class="badge badge-important">@notifications.size</span>
                 <b class="caret"></b>
             </a>
-        <ul class="dropdown-menu">
-            <li>
-                @notifications.map { notification =>
-                <a href="#">@notification.message</a>
-                }
-            </li>
+        <ul class="dropdown-menu ">
+            @notifications.map { notification =>
+            <li class="dropdown-header">@notification.title</li>
+            @notification.entries.map { notificationEntry =>
+            @defining(notificationEntry.notificationType) { notificationType =>
+            @defining(if (notificationEntry.disabled) "disabled" else "") { cssClass =>
+            @notificationType match {
+                case NotificationType.UnusedQuota => {  <li class="@cssClass"><a href="#">@notificationEntry.message</a></li> }
+                case NotificationType.PendingPrereservation => {  <li class="@cssClass"><a href="#">@notificationEntry.message</a></li> }
+                case _ => {  <li class="@cssClass"><a href="#">@notificationEntry.message</a></li> }
+            }
+            }
+            }
+            }
+            <li class="divider"></li>
+            }
         </ul>
     </li>
 </ul>

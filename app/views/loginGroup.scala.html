@@ -1,15 +1,13 @@
 @(userContext: Option[models.entities.UserContext])
 @import controllers.auth
 @defining(userContext match { case Some(userContext) => userContext.otherUsers; case None => List() }) { otherUsers =>
-
-<li class="divider"></li>
-<li class="dropdown-header">Gebruikersgroep</li>
+@if(!otherUsers.isEmpty) {
+<li class="dropdown-header">Gekoppelde gebruikers</li>
 @otherUsers.map { otherUser =>
     <li class="disabled">
         <a href="#">@otherUser.name</a>
-        <a href="@auth.routes.LoginPage.login()"><span class="glyphicon glyphicon-remove"></span></a>
     </li>
+    <li class="divider"></li>
 }
-<li><a href="@auth.routes.LoginPage.logout()">Andere gebruiker toevoegen</a></li>
-
+}
 }

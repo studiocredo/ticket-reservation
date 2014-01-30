@@ -3,8 +3,10 @@ package be.studiocredo
 import play.api.db.slick.Config.driver.simple._
 import models.ids._
 import com.google.inject.Inject
+import models.entities._
 import models.entities.ShowPrereservation
 import models.entities.ReservationQuotum
+import scala.collection.mutable
 
 class PreReservationService @Inject()(orderService: OrderService) {
   import models.schema.tables._
@@ -47,41 +49,37 @@ class PreReservationService @Inject()(orderService: OrderService) {
   //TODO: validate should be >= 0
   //TODO: only for events that are not archived and not passed
   //TODO: only when pre-reservation period is active
-  def unusedQuotaByUser(id: UserId)(implicit s: Session): Int = {
-    val query = for {
-        (spr, show) <- ShowPrereservations leftJoin Shows on (_.showId === _.id)
-        if spr.userId === id
-      } yield (show.eventId, spr.quantity)
-    val preres = query.list
-
-    val quota = quotaByUser(id)
-    quota.map{ rq: ReservationQuotum => rq.quota - preres.collect{case (eventId, quantity) if eventId == rq.eventId => quantity}.sum }.sum
+  def unusedQuotaByUser(id: UserId)(implicit s: Session): UnusedQuotaDisplay = {
+    unusedQuotaByUsers(List(id))
   }
 
-  def unusedQuotaByUsers(ids: List[UserId])(implicit s: Session): Int = {
+  def unusedQuotaByUsers(ids: List[UserId])(implicit s: Session): UnusedQuotaDisplay = {
     val query = for {
       (spr, show) <- ShowPrereservations leftJoin Shows on (_.showId === _.id)
       if spr.userId inSet ids
     } yield (show.eventId, spr.quantity)
-    val preres = query.list
+    val eventMap = mutable.Map[EventId, Int]().withDefaultValue(0)
 
-    val quota = quotaByUsers(ids)
-    quota.map{ rq: ReservationQuotum => rq.quota - preres.collect{case (eventId, quantity) if eventId == rq.eventId => quantity}.sum }.sum
+    quotaByUsers(ids).foreach { q : ReservationQuotum => eventMap(q.eventId) += q.quota }
+    query.list.foreach { t => eventMap(t._1) -= t._2}
+
+    UnusedQuotaDisplay(eventMap.toMap)
   }
 
   //TODO: validate should be >= 0
   //TODO: only for events that are not archived and not passed
   //TODO: only when reservatin period is active
-  def pendingPrereservationsByUser(id: UserId)(implicit s: Session): Int = {
-    val preres = preReservationsByUser(id)
-    val orders = orderService.byUserId(id)
-    preres.map{ pr: ShowPrereservation => pr.quantity - orders.collect{case order if order.showId == pr.showId => 1}.sum }.sum
+  def pendingPrereservationsByUser(id: UserId)(implicit s: Session): PendingPrereservationDisplay = {
+    pendingPrereservationsByUsers(List(id))
   }
 
-  def pendingPrereservationsByUsers(ids: List[UserId])(implicit s: Session): Int = {
-    val preres = preReservationsByUsers(ids)
-    val orders = orderService.byUserIds(ids)
-    preres.map{ pr: ShowPrereservation => pr.quantity - orders.collect{case order if order.showId == pr.showId => 1}.sum }.sum
+  def pendingPrereservationsByUsers(ids: List[UserId])(implicit s: Session): PendingPrereservationDisplay = {
+    val showMap = mutable.Map[ShowId, Int]().withDefaultValue(0)
+
+    preReservationsByUsers(ids).foreach { pr: ShowPrereservation => showMap(pr.showId) += pr.quantity }
+    orderService.byUserIds(ids).foreach { o: TicketSeatOrder => showMap(o.showId) -= 1 }
+
+    PendingPrereservationDisplay(showMap.toMap)
   }
 
   //TODO: validate prereservation should not exceed quotum
