@@ -1,5 +1,21 @@
 @(userContext: Option[models.entities.UserContext])
 @import models.entities.NotificationType
+
+@notificationListElement(notification: models.entities.Notification) = {
+    <li class="dropdown-header">@notification.title</li>
+    @notification.entries.map { notificationEntry =>
+    @defining(notificationEntry.notificationType) { notificationType =>
+    @defining(if (notificationEntry.disabled) "disabled" else "") { cssClass =>
+    @notificationType match {
+        case NotificationType.UnusedQuota => {  <li class="@cssClass"><a href="#">@notificationEntry.message</a></li> }
+        case NotificationType.PendingPrereservation => {  <li class="@cssClass"><a href="#">@notificationEntry.message</a></li> }
+        case _ => {  <li class="@cssClass"><a href="#">@notificationEntry.message</a></li> }
+    }
+    }
+    }
+    }
+}
+
 @defining(userContext match { case Some(userContext) => userContext.notifications; case None => List() }) { notifications =>
 
 @if(!notifications.isEmpty) {
@@ -11,20 +27,16 @@
                 <b class="caret"></b>
             </a>
         <ul class="dropdown-menu ">
-            @notifications.map { notification =>
-            <li class="dropdown-header">@notification.title</li>
-            @notification.entries.map { notificationEntry =>
-            @defining(notificationEntry.notificationType) { notificationType =>
-            @defining(if (notificationEntry.disabled) "disabled" else "") { cssClass =>
-            @notificationType match {
-                case NotificationType.UnusedQuota => {  <li class="@cssClass"><a href="#">@notificationEntry.message</a></li> }
-                case NotificationType.PendingPrereservation => {  <li class="@cssClass"><a href="#">@notificationEntry.message</a></li> }
-                case _ => {  <li class="@cssClass"><a href="#">@notificationEntry.message</a></li> }
+            @defining(notifications match { case head :: tail => (head, tail) }) { tuple =>
+            @defining(tuple._1) { head =>
+            @defining(tuple._2) { tail =>
+                @notificationListElement(head)
+                @tail.map { notification =>
+                    <li class="divider"></li>
+                    @notificationListElement(notification)
+                }
             }
             }
-            }
-            }
-            <li class="divider"></li>
             }
         </ul>
     </li>
