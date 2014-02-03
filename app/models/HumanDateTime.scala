@@ -7,9 +7,9 @@ import java.util.Locale
 object HumanDateTime {
   val LOCALE = Locale.forLanguageTag("nl")
 
-  val FORMATTER_DATE_TIME = DateTimeFormat.forPattern("EEEE d MMM yyyy 'om' HH:mm").withLocale(LOCALE)
+  val FORMATTER_DATE_TIME = DateTimeFormat.forPattern("EEEE d MMMM yyyy 'om' HH:mm").withLocale(LOCALE)
 
-  val FORMATTER_DATE = DateTimeFormat.forPattern("EEEE d MMM yyyy").withLocale(LOCALE)
+  val FORMATTER_DATE = DateTimeFormat.forPattern("EEEE d MMMM yyyy").withLocale(LOCALE)
 
   def formatDateTime(date: DateTime): String = FORMATTER_DATE_TIME.print(date)
 
