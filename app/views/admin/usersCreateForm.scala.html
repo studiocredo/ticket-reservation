@@ -1,4 +1,4 @@
-@(userForm: Form[models.admin.UserFormData], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_])
+@(userForm: Form[models.admin.UserFormData], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
 @import controllers.admin.routes
 @import helper._
 

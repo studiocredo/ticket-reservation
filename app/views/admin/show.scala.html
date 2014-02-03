@@ -1,4 +1,4 @@
-@(eventId: ids.EventId, showId: ids.ShowId, showForm: Form[models.admin.ShowEdit], venues: views.helper.Options[entities.Venue], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_])
+@(eventId: ids.EventId, showId: ids.ShowId, showForm: Form[models.admin.ShowEdit], venues: views.helper.Options[entities.Venue], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
 @import helper._
 @import views.Bootstrap._
 @import controllers.admin.routes

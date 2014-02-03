@@ -30,7 +30,7 @@ object Global extends GlobalSettings {
   }
 
 
-  val filters = List(AccessLog)
+  val filters = List(AccessLog, ForceLocalization)
   override def doFilter(a: EssentialAction): EssentialAction = {
     Filters(super.doFilter(a), filters: _*)
   }
