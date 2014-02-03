@@ -25,19 +25,9 @@
         @form(action = controllers.auth.routes.PasswordChange.handlePasswordChange(), 'class -> "form form-horizontal") {
             @globalFormErrors(passwordChangeForm)
             <fieldset>
-                <div id="name_field" class="form-group  ">
-                    <label class="col-lg-2  control-label" for="name">Naam</label>
-                    <div class="col-lg-10 read-only-field">
-                        <p id="name">@user.name</p>
-                    </div>
-                </div>
+                @formControlStatic("Naam") { @user.name }
 
-                <div id="user-name_field" class="form-group  ">
-                    <label class="col-lg-2  control-label" for="user-name">Gebruikersnaam</label>
-                    <div class="col-lg-10 read-only-field">
-                        <p id="user-name">@user.username</p>
-                    </div>
-                </div>
+                @formControlStatic("Gebruikersnaam") { @user.username }
 
                 @helper.inputPassword(
                     passwordChangeForm("current"),
