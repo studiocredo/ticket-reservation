@@ -100,7 +100,7 @@ trait Secure extends Controller with SecureUtils with DBImplicits {
   }
 
 
-  class AuthDBActionBuilder(ajaxCall: Boolean = false, authorize: Option[Authorization] = None) extends ActionBuilder[({ type R[A] = SecuredDBRequest[A] })#R]() {
+  class AuthDBActionBuilder(ajaxCall: Boolean = false, authorize: Option[Authorization] = defaultAuthorization) extends ActionBuilder[({ type R[A] = SecuredDBRequest[A] })#R]() {
     protected def invokeBlock[A](request: Request[A], block: (SecuredDBRequest[A]) => Future[SimpleResult]): Future[SimpleResult] = {
       implicit val req = request
       DB.withSession { session: DBSession =>
