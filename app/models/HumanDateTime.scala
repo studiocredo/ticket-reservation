@@ -8,13 +8,18 @@ object HumanDateTime {
   val LOCALE = Locale.forLanguageTag("nl")
 
   val FORMATTER_DATE_TIME = DateTimeFormat.forPattern("EEEE d MMMM yyyy 'om' HH:mm").withLocale(LOCALE)
+  val FORMATTER_DATE_TIME_COMPACT = DateTimeFormat.forPattern("dd/MM/yyyy HH:mm").withLocale(LOCALE)
 
   val FORMATTER_DATE = DateTimeFormat.forPattern("EEEE d MMMM yyyy").withLocale(LOCALE)
+  val FORMATTER_DATE_COMPACT = DateTimeFormat.forPattern("dd/MM/yyyy").withLocale(LOCALE)
 
   def formatDateTime(date: DateTime): String = FORMATTER_DATE_TIME.print(date)
 
   def formatDate(date: DateTime): String = FORMATTER_DATE.print(date)
 
+  def formatDateTimeCompact(date: DateTime): String = FORMATTER_DATE_TIME_COMPACT.print(date)
+
+  def formatDateCompact(date: DateTime): String = FORMATTER_DATE_COMPACT.print(date)
 
   val ONE_DAY = Duration.standardDays(1)
   val PERIOD_TYPE_HOUR_MINUTE = PeriodType.forFields(Array(DurationFieldType.hours(), DurationFieldType.minutes(), DurationFieldType.seconds()))

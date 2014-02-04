@@ -46,17 +46,17 @@ class ShowService @Inject()(venueService: VenueService, orderService: OrderServi
     q.list.groupBy(_._2).map(mv => VenueShows(mv._1, mv._2.map(_._1))).toList
   }
 
-  def nextShows(limit: Int)(implicit s: Session): List[ShowOverview] = {
+  def nextShows(limit: Int)(implicit s: Session): List[ShowAvailability] = {
     val next = active.filter(_.date >= DateTime.now())
     val list = (for (s <- next; e <- s.event) yield (s, e)).sortBy(_._1.date).take(limit).list
 
     list map {
-      case (show, event) => ShowOverview(event.name, show.date, show.id, event.id, capacity(show))
+      case (show, event) => capacity(EventShow(show.id, event.id, event.name, show.venueId, show.date, show.archived))
     }
   }
 
   //TODO need transaction?
-  def capacity(show: Show)(implicit s: Session): ShowAvailability = {
+  def capacity(show: EventShow)(implicit s: Session): ShowAvailability = {
 
     val venue = venueService.get(show.venueId).get
     val ticketSeatOrders = orderService.byShowId(show.id)

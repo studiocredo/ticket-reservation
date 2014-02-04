@@ -4,8 +4,6 @@ import play.api.db.slick.Config.driver.simple._
 import models.ids._
 import com.google.inject.Inject
 import models.entities._
-import models.entities.ShowPrereservation
-import models.entities.ReservationQuotum
 import scala.collection.mutable
 
 class PreReservationService @Inject()(orderService: OrderService) {
@@ -14,35 +12,28 @@ class PreReservationService @Inject()(orderService: OrderService) {
   val SPRQ = Query(ShowPrereservations)
   val RQQ = Query(ReservationQuota)
 
-
-  def preReservationsByShow(id: ShowId)(implicit s: Session): List[ShowPrereservation] = {
-    SPRQ.where(_.showId === id).list
+  def preReservationsByUser(id: UserId)(implicit s: Session): List[ShowPrereservationDetail] = {
+    preReservationsByUsers(List(id))
   }
 
-  def preReservationsByUser(id: UserId)(implicit s: Session): List[ShowPrereservation] = {
-    SPRQ.where(_.userId === id).list
+  def preReservationsByUsers(ids: List[UserId])(implicit s: Session): List[ShowPrereservationDetail] = {
+    val query = for {
+      (((showPreres, show), event), user) <- ShowPrereservations.leftJoin(Shows).on(_.showId === _.id).leftJoin(Events).on(_._2.eventId === _.id).leftJoin(Users).on(_._1._1.userId === _.id)
+      if showPreres.userId inSet ids
+    } yield (showPreres, show, event, user)
+    query.list.map{ case (spr: ShowPrereservation, s: Show, e: Event, u: User) => ShowPrereservationDetail(EventShow(s.id, e.id, e.name, s.venueId, s.date, s.archived), u, spr.quantity)}
   }
 
-  def preReservationsByUsers(ids: List[UserId])(implicit s: Session): List[ShowPrereservation] = {
-    SPRQ.where(_.userId inSet ids).list
+  def quotaByUser(id: UserId)(implicit s: Session): List[ReservationQuotumDetail] = {
+    quotaByUsers(List(id))
   }
 
-  def preReservationsByShowAndUser(showId: ShowId, userId: UserId)(implicit s: Session): List[ShowPrereservation] = {
-    {
-      for {
-        spr <- ShowPrereservations
-        if spr.showId === showId
-        if spr.userId === userId
-      } yield spr
-    }.list
-  }
-  
-  def quotaByUser(id: UserId)(implicit s: Session): List[ReservationQuotum] = {
-    RQQ.where(_.userId === id).list
-  }
-
-  def quotaByUsers(ids: List[UserId])(implicit s: Session): List[ReservationQuotum] = {
-    RQQ.where(_.userId inSet ids).list
+  def quotaByUsers(ids: List[UserId])(implicit s: Session): List[ReservationQuotumDetail] = {
+    val query = for {
+      ((rq, e), u) <- ReservationQuota.leftJoin(Events).on(_.eventId === _.id).leftJoin(Users).on(_._1.userId === _.id)
+      if rq.userId inSet ids
+    } yield (rq, e, u)
+    query.list.map{ case (rq, e, u) => ReservationQuotumDetail(e, u, rq.quota)}
   }
 
 
@@ -55,12 +46,12 @@ class PreReservationService @Inject()(orderService: OrderService) {
 
   def unusedQuotaByUsers(ids: List[UserId])(implicit s: Session): UnusedQuotaDisplay = {
     val query = for {
-      (spr, show) <- ShowPrereservations leftJoin Shows on (_.showId === _.id)
+      ((spr, show), event) <- ShowPrereservations.leftJoin(Shows).on(_.showId === _.id).leftJoin(Events).on(_._2.eventId === _.id)
       if spr.userId inSet ids
-    } yield (show.eventId, spr.quantity)
-    val eventMap = mutable.Map[EventId, Int]().withDefaultValue(0)
+    } yield (event, spr.quantity)
+    val eventMap = mutable.Map[Event, Int]().withDefaultValue(0)
 
-    quotaByUsers(ids).foreach { q : ReservationQuotum => eventMap(q.eventId) += q.quota }
+    quotaByUsers(ids).foreach { q : ReservationQuotumDetail => eventMap(q.event) += q.quota }
     query.list.foreach { t => eventMap(t._1) -= t._2}
 
     UnusedQuotaDisplay(eventMap.toMap)
@@ -74,10 +65,10 @@ class PreReservationService @Inject()(orderService: OrderService) {
   }
 
   def pendingPrereservationsByUsers(ids: List[UserId])(implicit s: Session): PendingPrereservationDisplay = {
-    val showMap = mutable.Map[ShowId, Int]().withDefaultValue(0)
+    val showMap = mutable.Map[EventShow, Int]().withDefaultValue(0)
 
-    preReservationsByUsers(ids).foreach { pr: ShowPrereservation => showMap(pr.showId) += pr.quantity }
-    orderService.byUserIds(ids).foreach { o: TicketSeatOrder => showMap(o.showId) -= 1 }
+    preReservationsByUsers(ids).foreach { pr: ShowPrereservationDetail => showMap(pr.show) += pr.quantity }
+    orderService.seatsByUsers(ids).foreach { o: TicketSeatOrderDetail => showMap(o.show) -= 1 }
 
     PendingPrereservationDisplay(showMap.toMap)
   }

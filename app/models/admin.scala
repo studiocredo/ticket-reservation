@@ -3,7 +3,7 @@ package models
 import models.entities._
 import models.ids._
 import org.joda.time.DateTime
-import models.entities.SeatType.SeatType
+import scala.collection.mutable
 
 object admin {
   case class RichUser(user: User, detail: UserDetail) {
@@ -14,6 +14,24 @@ object admin {
     def email = detail.email
     def address = detail.address
     def phone = detail.phone
+  }
+
+  case class RichUserWithReservationHistory(user: RichUser, otherUsers: List[User], orders: List[OrderDetail], prereservations: List[ShowPrereservationDetail], pendingPrereservations: PendingPrereservationDisplay, reservationQuota: List[ReservationQuotumDetail], unusedQuota: UnusedQuotaDisplay) {
+    def prereservationsByShow: Map[EventShow, ShowPrereservationDetail] = {
+      mutable.Map[EventShow, ShowPrereservationDetail]().toMap
+    }
+
+    def unusedPreReservationsByShow: Map[EventShow, Int] = {
+      mutable.Map[EventShow, Int]().withDefaultValue(0).toMap
+    }
+
+    def quotaByEvent: Map[Event, ReservationQuotumDetail] = {
+      mutable.Map[Event, ReservationQuotumDetail]().toMap
+    }
+
+    def unusedQuotaByEvent: Map[Event, Int] = {
+      mutable.Map[Event, Int]().withDefaultValue(0).toMap
+    }
   }
 
   case class UserFormData(name: String, username: String, email: Option[String], address: Option[String], phone: Option[String])

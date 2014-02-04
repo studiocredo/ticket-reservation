@@ -1,17 +1,150 @@
-@(info: models.admin.RichUser, userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
+@(info: models.admin.RichUserWithReservationHistory, userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
 @import helper._
 @import controllers.admin.routes
+@import be.studiocredo.util.Money
 
-@base("Administratie: Gebruiker " + info.name)(userContext) {
+@showName(show: models.entities.EventShow) = {
+    @show.name (@HumanDateTime.formatDateTimeCompact(show.date))
+}
+
+@orderRow(user: models.entities.User, ticketOrder: models.entities.TicketOrderDetail)= {
+    <td>@user.name</td>
+    <td>@showName(ticketOrder.show)</td>
+    <td>@ticketOrder.ticketSeatOrders.map(_.ticketSeatOrder.seat.name).sorted.mkString(", ") (@ticketOrder.ticketSeatOrders.length)</td>
+    <td>@CurrencyFormat.format(ticketOrder.ticketSeatOrders.foldLeft(Money(0))((total, tsod) => total.plus(tsod.ticketSeatOrder.price)))</td>
+    <td></td>
+}
+
+@base("Administratie: Gebruiker " + info.user.name)(userContext) {
 
     <div class="page-header">
-        <h1>@info.name <small>@info.email</small></h1>
+        <h1>@info.user.name <small>@info.user.email</small>
+            @form(routes.Users.edit(info.user.id), 'class -> "pull-right") {
+                <input type="submit" value="Bewerken" class="btn btn-warning">
+            }
+        </h1>
         <p>
-        @info.address
+        @info.user.address
         </p>
         <p>
-        @info.phone
+        @info.user.phone
         </p>
+
+        @if(!info.otherUsers.isEmpty) {
+        <p>
+            <em>Gekoppelde gebruikers:</em>
+            @info.otherUsers.map { otherUser =>
+            <a href="@routes.UserDetails.view(otherUser.id)" class="btn btn-default btn-xs" role="button">@otherUser.name</a>
+            }
+        </p>
+        }
+
+    </div>
+
+    <div>
+        <h3>Bestellingen</h3>
+        @if(info.orders.isEmpty) {
+            <p class="disabled">Geen bestellingen gevonden.</p>
+        } else {
+            <table class="table table-hover table-striped">
+                <thead>
+                <tr>
+                    <th>Datum</th>
+                    <th>Naam</th>
+                    <th>Voorstelling</th>
+                    <th>Plaatsen</th>
+                    <th>Prijs</th>
+                    <th>Betaling</th>
+                </tr>
+                </thead>
+                <tbody>
+                @info.orders.map { order =>
+                @defining(order.ticketOrders match { case head :: tail => (head, tail) }) { tuple =>
+                @defining(tuple._1) { first =>
+                @defining(tuple._2) { tail =>
+                    <tr>
+                        <td>@HumanDateTime.formatDateCompact(order.order.date)</td>
+                        @orderRow(order.user, first)
+                    </tr>
+                    @tail.map { ticketOrder =>
+                    <tr>
+                        <td/>
+                        @orderRow(order.user, ticketOrder)
+                    </tr>
+                    }
+                }
+                }
+                }
+                }
+                </tbody>
+            </table>
+        }
+    </div>
+
+    <div>
+        <h3>Pre-reservaties</h3>
+        @if(info.prereservations.isEmpty && info.pendingPrereservations.showMap.isEmpty) {
+            <p class="disabled">Geen pre-reservaties gevonden.</p>
+        } else {
+            <table class="table table-hover table-striped">
+                <thead>
+                <tr>
+                    <th>Voorstelling</th>
+                    <th>Naam</th>
+                    <th>Aantal</th>
+                </tr>
+                </thead>
+                <tbody>
+                    @info.prereservations.map { prereservation =>
+                    <tr>
+                        <td>@showName(prereservation.show)</td>
+                        <td>@prereservation.user.name</td>
+                        <td>@prereservation.quantity</td>
+                    </tr>
+                    }
+                    @info.pendingPrereservations.showMap.map { case (show: models.entities.EventShow, quantity: Int) =>
+                    <tr>
+                        <td>@showName(show)</td>
+                        <td>-</td>
+                        <td>@quantity ongebruikt</td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+
+    <div>
+        <h3>Quota</h3>
+        @if(info.reservationQuota.isEmpty && info.unusedQuota.eventMap.isEmpty) {
+        <p class="disabled">Geen quota gevonden.</p>
+        } else {
+            <table class="table table-hover table-striped">
+                <thead>
+                <tr>
+                    <th>Evenement</th>
+                    <th>Naam</th>
+                    <th>Aantal</th>
+                </tr>
+                </thead>
+                <tbody>
+                    @info.reservationQuota.map { quotum =>
+                    <tr>
+                        <td>@quotum.event.name</td>
+                        <td>@quotum.user.name</td>
+                        <td>@quotum.quota</td>
+                    </tr>
+                    }
+                    @info.unusedQuota.eventMap.map { case (event: models.entities.Event, quota: Int) =>
+                    <tr>
+                        <td>@event.name</td>
+                        <td>-</td>
+                        <td>@quota ongebruikt</td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        }
     </div>
 
 }

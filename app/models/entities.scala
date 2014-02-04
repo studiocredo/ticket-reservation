@@ -76,14 +76,13 @@ object entities {
   case class VenueEdit(         name: String, description: String, archived: Boolean)
 
   case class Show(id: ShowId, eventId: EventId, venueId: VenueId, date: DateTime, archived: Boolean) extends Archiveable with HasTime
+  case class EventShow(id: ShowId, eventId: EventId, name: String, venueId: VenueId, date: DateTime, archived: Boolean) extends Archiveable with HasTime
 
-  case class ShowAvailability(show: Show, byType: Map[SeatType, Int] ) {
+  case class ShowAvailability(show: EventShow, byType: Map[SeatType, Int] ) {
     def total: Int = {
       byType.values.sum
     }
   }
-
-  case class ShowOverview(name: String, date: DateTime, showId: ShowId, eventId: EventId, availability: ShowAvailability)
 
   sealed trait RowContent
   case class SeatId(name: String)
@@ -141,22 +140,27 @@ object entities {
 
   case class Order(id: OrderId, userId: UserId, date: DateTime, billingName: String, billingAddress: String)
   case class OrderEdit(         userId: UserId, date: DateTime, billingName: String, billingAddress: String)
+  case class OrderDetail(order: Order, user: User, ticketOrders: List[TicketOrderDetail])
 
   case class TicketOrder(id: TicketOrderId, orderId: OrderId, showId: ShowId)
+  case class TicketOrderDetail(ticketOrder: TicketOrder, order: Order, show: EventShow, ticketSeatOrders: List[TicketSeatOrderDetail])
 
   case class TicketSeatOrder(ticketOrderId: TicketOrderId, showId: ShowId, userId: Option[UserId], seat: SeatId, price: Money)
+  case class TicketSeatOrderDetail(ticketSeatOrder: TicketSeatOrder, show: EventShow, user: Option[User])
 
   case class ReservationQuotum(eventId: EventId, userId: UserId, quota: Int)
+  case class ReservationQuotumDetail(event: Event, user: User, quota: Int)
 
-  case class UnusedQuotaDisplay(eventMap: Map[EventId, Int]) {
+  case class UnusedQuotaDisplay(eventMap: Map[Event, Int]) {
     def total: Int = {
       eventMap.values.sum
     }
   }
 
   case class ShowPrereservation(showId: ShowId, userId: UserId, quantity: Int)
+  case class ShowPrereservationDetail(show: EventShow, user: User, quantity: Int)
 
-  case class PendingPrereservationDisplay(showMap: Map[ShowId, Int]) {
+  case class PendingPrereservationDisplay(showMap: Map[EventShow, Int]) {
     def total: Int = {
       showMap.values.sum
     }

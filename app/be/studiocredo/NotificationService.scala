@@ -13,10 +13,13 @@ class NotificationService @Inject()(prs: PreReservationService, os: OrderService
 
   def get(ids: List[UserId])(implicit s: DBSession): List[Notification] = {
     val pr = prs.pendingPrereservationsByUsers(ids)
-    val prEntries = pr.showMap.map{case(k,v) => val show = ss.get(k).get; NotificationEntry(s"${es.get(show.eventId).get.name} ${HumanDateTime.formatDateTime(show.date)} ($v)", NotificationType.PendingPrereservation)} toList
+    val prEntries = pr.showMap.map {
+      case(k,v) =>
+        NotificationEntry(s"${k.name} ${HumanDateTime.formatDateTimeCompact(k.date)} ($v)", NotificationType.PendingPrereservation)
+    }.toList
 
     val uq = prs.unusedQuotaByUsers(ids)
-    val uqEntries = uq.eventMap.map{case(k,v) => NotificationEntry(s"${es.get(k).get.name} ($v)", NotificationType.UnusedQuota)} toList
+    val uqEntries = uq.eventMap.map{case(k,v) => NotificationEntry(s"${k.name} ($v)", NotificationType.UnusedQuota)}.toList
 
     List(
       pr.total match {

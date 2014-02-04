@@ -3,9 +3,13 @@ package be.studiocredo.util
 import org.joda.money.{CurrencyUnit, Money => JMoney}
 import java.math.{BigDecimal => JBigDecimal, RoundingMode}
 
-class Money(underlying: JMoney) {
+class Money(val underlying: JMoney) {
 
   def amount: BigDecimal = underlying.getAmount
+
+  def plus(other: Money): Money = {
+    new Money(underlying.plus(other.underlying))
+  }
 }
 
 object Money {

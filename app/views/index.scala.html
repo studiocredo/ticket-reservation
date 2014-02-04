@@ -1,4 +1,4 @@
-@(nextShows: List[entities.ShowOverview], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
+@(nextShows: List[entities.ShowAvailability], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
 
 @base("Studio Credo Ticket Reservatie")(userContext) {
 
@@ -22,12 +22,12 @@
 <div class="row">
     @nextShows.map { info =>
     <div class="col-lg-4">
-        <h2>@info.name</h2>
+        <h2>@info.show.name</h2>
 
-        <p>@HumanDateTime.formatDateTime(info.date)</p>
+        <p>@HumanDateTime.formatDateTime(info.show.date)</p>
         <p>@AvailabilityFormat.format(info)</p>
 
-        <p><a class="btn btn-primary" href="@routes.Events.viewShow(info.eventId, info.showId)">Overzicht &raquo;</a></p>
+        <p><a class="btn btn-primary" href="@routes.Events.viewShow(info.show.eventId, info.show.id)">Overzicht &raquo;</a></p>
     </div>
     }
 </div>
