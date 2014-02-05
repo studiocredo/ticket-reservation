@@ -1,16 +1,16 @@
 @(userContext: Option[models.entities.UserContext])
-@import models.entities.NotificationType
+@import models.entities._
+@import helper._
 
 @notificationListElement(notification: models.entities.Notification) = {
     <li class="dropdown-header">@notification.title</li>
     @notification.entries.map { notificationEntry =>
-    @defining(notificationEntry.notificationType) { notificationType =>
     @defining(if (notificationEntry.disabled) "disabled" else "") { cssClass =>
-    @notificationType match {
-        case NotificationType.UnusedQuota => {  <li class="@cssClass"><a href="#">@notificationEntry.message</a></li> }
-        case NotificationType.PendingPrereservation => {  <li class="@cssClass"><a href="#">@notificationEntry.message</a></li> }
-        case _ => {  <li class="@cssClass"><a href="#">@notificationEntry.message</a></li> }
-    }
+    @notificationEntry match {
+        case UnusedQuotaNotificationEntry(event, quantity, _) => {  <li class="@cssClass"><a href="@controllers.routes.Prereservations.start(Some(event.id))">@event.name (@quantity)</a></li> }
+        case PendingPrereservationNotificationEntry(show, quantity, _) => {  <li class="@cssClass"><a href="@controllers.routes.Prereservations.start(Some(show.eventId))">@showName(show)</a></li> }
+        case DefaultNotificationEntry(message, _) => {  <li class="@cssClass"><a href="#">@message</a></li> }
+        case _ => { <li class="@cssClass"><a href="#">@notificationEntry.notificationType</a></li> }
     }
     }
     }

@@ -171,8 +171,23 @@ object entities {
     val PendingPrereservation, UnusedQuota, Default = Value
   }
   import NotificationType._
+
+  sealed trait NotificationEntry {
+    def notificationType: NotificationType
+    def disabled: Boolean
+  }
+
   case class Notification(title: String, entries: List[NotificationEntry])
-  case class NotificationEntry(message: String, notificationType: NotificationType, disabled: Boolean = false)
+  case class PendingPrereservationNotificationEntry(subject: EventShow, value: Int, disabled: Boolean = false) extends NotificationEntry {
+    val notificationType = PendingPrereservation
+  }
+  case class UnusedQuotaNotificationEntry(subject: Event, value: Int, disabled: Boolean = false) extends NotificationEntry {
+    val notificationType = UnusedQuota
+  }
+  case class DefaultNotificationEntry(subject: String, disabled: Boolean = false) extends NotificationEntry {
+    val notificationType = Default
+  }
+
   case class UserContext(notifications: List[Notification], otherUsers: List[User])
 }
 

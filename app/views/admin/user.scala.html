@@ -3,10 +3,6 @@
 @import controllers.admin.routes
 @import be.studiocredo.util.Money
 
-@showName(show: models.entities.EventShow) = {
-    @show.name (@HumanDateTime.formatDateTimeCompact(show.date))
-}
-
 @orderRow(user: models.entities.User, ticketOrder: models.entities.TicketOrderDetail)= {
     <td>@user.name</td>
     <td>@showName(ticketOrder.show)</td>
