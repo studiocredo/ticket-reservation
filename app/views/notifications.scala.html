@@ -7,8 +7,8 @@
     @notification.entries.map { notificationEntry =>
     @defining(if (notificationEntry.disabled) "disabled" else "") { cssClass =>
     @notificationEntry match {
-        case UnusedQuotaNotificationEntry(event, quantity, _) => {  <li class="@cssClass"><a href="@controllers.routes.Prereservations.start(Some(event.id))">@event.name (@quantity)</a></li> }
-        case PendingPrereservationNotificationEntry(show, quantity, _) => {  <li class="@cssClass"><a href="@controllers.routes.Prereservations.start(Some(show.eventId))">@showName(show)</a></li> }
+        case UnusedQuotaNotificationEntry(event, quantity, _) => {  <li class="@cssClass"><a href="@controllers.routes.Prereservations.start(event.id)">@event.name (@quantity)</a></li> }
+        case PendingPrereservationNotificationEntry(show, quantity, _) => {  <li class="@cssClass"><a href="@controllers.routes.Prereservations.start(show.eventId)">@show.name @HumanDateTime.formatDateTimeCompact(show.date) (@quantity)</a></li> }
         case DefaultNotificationEntry(message, _) => {  <li class="@cssClass"><a href="#">@message</a></li> }
         case _ => { <li class="@cssClass"><a href="#">@notificationEntry.notificationType</a></li> }
     }
