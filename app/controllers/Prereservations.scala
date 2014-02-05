@@ -3,15 +3,14 @@ package controllers
 import com.google.inject.Inject
 import be.studiocredo._
 import be.studiocredo.auth.{Authorization, Secure, AuthenticatorService}
-import play.api.mvc.{Result, Controller}
+import play.api.mvc.Controller
 import models.ids.{ShowId, EventId}
 import play.api.data.Form
 import play.api.data.Forms._
 import scala.Some
 import be.studiocredo.auth.SecuredDBRequest
 import models.entities.ShowPrereservation
-import controllers.admin.routes
-import models.admin.VenueShow
+
 
 case class ShowPrereservationForm(showId: ShowId, quantity: Int)
 case class PrereservationForm(showPrereservations: List[ShowPrereservationForm])
@@ -24,29 +23,29 @@ class Prereservations @Inject()(eventService: EventService, showService: ShowSer
       "preres" -> list[ShowPrereservationForm] (
         mapping(
           "show" -> of[ShowId],
-          "quantity" -> number
+          "quantity" -> number(min = 0)
         )(ShowPrereservationForm.apply)(ShowPrereservationForm.unapply)
       )
     )(PrereservationForm.apply)(PrereservationForm.unapply)
   )
 
-  //TODO: add ad-hoc contraints on maximum value (= totalquota) and sum of all values
-  //http://www.playframework.com/documentation/2.2.x/ScalaForms
-
-  def start(eventId: Option[EventId]) = AuthDBAction { implicit rs =>
-    eventId match {
-      case None => Redirect(routes.Application.index())
-      case Some(id) => page(EventId(id))
-    }
+  def start(id: EventId) = AuthDBAction { implicit rs =>
+    page(id)
   }
 
   def save(id: EventId) = AuthDBAction { implicit rs =>
-    prereservationForm.bindFromRequest.fold(
+    val bindedForm = prereservationForm.bindFromRequest
+    bindedForm.fold(
       formWithErrors => page(id, formWithErrors, BadRequest),
-      success => {
+      preres => {
         val userIds = rs.currentUser.get.id :: userContext.get.otherUsers.map{_.id}
-        prereservationService.updateOrInsert(success.showPrereservations.map{ spr => ShowPrereservation(spr.showId, rs.currentUser.get.id, spr.quantity) }, userIds )
-        Redirect(routes.Application.index).flashing("success" -> "Pre-reservaties bewaard")
+        validatePrereservations(bindedForm, preres, prereservationService.totalQuotaByUsersAndEvent(userIds, id)).fold(
+          formWithErrors => page(id, formWithErrors, BadRequest),
+          success => {
+            prereservationService.updateOrInsert(preres.showPrereservations.map{ spr => ShowPrereservation(spr.showId, rs.currentUser.get.id, spr.quantity) }, userIds )
+            Redirect(routes.Application.index).flashing("success" -> "Pre-reservaties bewaard")
+          }
+        )
       }
     )
   }
@@ -61,6 +60,22 @@ class Prereservations @Inject()(eventService: EventService, showService: ShowSer
       case Some(event) => {
         val showPreresevations = event.shows.map{_.shows.map{_.id}}.flatten.map{id => ShowPrereservationForm(id, event.prereservationsByShow(id))}
         status(views.html.preorder(event, form.fill(PrereservationForm(showPreresevations)), userContext))
+      }
+    }
+  }
+
+  //two step validation: http://workwithplay.com/blog/2013/07/10/advanced-forms-techniques/
+  private def validatePrereservations(form: Form[PrereservationForm], preres: PrereservationForm, totalQuotaOption: Option[Int]): Either[Form[PrereservationForm], PrereservationForm] = {
+    val totalQuota = totalQuotaOption.getOrElse(0)
+    preres.showPrereservations.map{_.quantity}.sum match {
+      case sum if sum <= totalQuota => Right(preres)
+      case _ => {
+        val message = totalQuota match {
+          case 0 => s"Je hebt geen recht op pre-reservaties"
+          case 1 => s"Je hebt recht op $totalQuota pre-reservatie"
+          case _ => s"Je hebt recht op maximum $totalQuota pre-reservaties"
+        }
+        Left(form.withGlobalError(message))
       }
     }
   }
