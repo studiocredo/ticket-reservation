@@ -33,6 +33,15 @@ class PreReservationService @Inject()(orderService: OrderService) {
     quotaByUsers(List(id))
   }
 
+  def totalQuotaByUsersAndEvent(users: List[UserId], event: EventId)(implicit s: Session): Option[Int] = {
+    val query = for {
+      rq <- ReservationQuota
+      if rq.userId inSet users
+      if rq.eventId === event
+    } yield (rq.quota)
+    query.sum.run
+  }
+
   def quotaByUsers(ids: List[UserId])(implicit s: Session): List[ReservationQuotumDetail] = {
     val query = for {
       ((rq, e), u) <- ReservationQuota.leftJoin(Events).on(_.eventId === _.id).leftJoin(Users).on(_._1.userId === _.id)
