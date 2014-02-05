@@ -24,7 +24,7 @@ class UserDetails @Inject()(val userService: UserService, val authService: Authe
 
   def getReservationHistory(user: RichUser)(implicit s: DBSession): RichUserWithReservationHistory = {
     val otherUsers = userService.findOtherUsers(user.user)
-    val allUserIds = otherUsers.map{_.id} :+ user.id
+    val allUserIds = user.id :: otherUsers.map{_.id}
     RichUserWithReservationHistory(user, otherUsers, orderService.detailedOrdersByUsers(allUserIds), prereservationService.preReservationsByUsers(allUserIds), prereservationService.pendingPrereservationsByUsers(allUserIds), prereservationService.quotaByUsers(allUserIds), prereservationService.unusedQuotaByUsers(allUserIds))
   }
 }

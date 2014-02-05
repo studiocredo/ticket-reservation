@@ -1,14 +1,20 @@
-@(id: String, init: Int = 0, min: Int = 0, max: Int = 9)
+@(field: play.api.data.Field, args: (Symbol,Any)*)(implicit handler: FieldConstructor, lang: play.api.i18n.Lang)
 
-<div class="row amount-input">
-    <div class="col-xs-6 col-xs-offset-5">
-        <input id="@id" name="@id" maxlength="2" class="form-control input-xl text-right" value="@init" onkeypress="return CounterInput.isNumberKey(event);">
-    </div>
+@min = @{ args.toMap.get('min).getOrElse(0) }
+@max = @{ args.toMap.get('max).getOrElse(9) }
+@maxLength = @{ args.toMap.get('maxLength).getOrElse(2) }
 
-    <div class="col-xs-1 pull-middle">
-        <div class="btn-group-vertical text-left">
-            <button type="button" class="btn btn-primary btn-xs" onclick="CounterInput.increment($('#@id'),@max);">+</button>
-            <button type="button" class="btn btn-primary btn-xs" onclick="CounterInput.decrement($('#@id'),@min);">-</button>
+@helper.input(field, '_showConstraints -> false :: args.toList:_*) { (id, name, value, htmlArgs) =>
+    <div class="row amount-input">
+        <div class="col-xs-6 col-xs-offset-5">
+            <input id="@id" name="@name" maxlength="@maxLength" class="form-control input-xl text-right" value="@value" onkeypress="return CounterInput.isNumberKey(event);">
+        </div>
+
+        <div class="col-xs-1 pull-middle">
+            <div class="btn-group-vertical text-left">
+                <button type="button" class="btn btn-primary btn-xs" onclick="CounterInput.increment($('#@id'),@max);">+</button>
+                <button type="button" class="btn btn-primary btn-xs" onclick="CounterInput.decrement($('#@id'),@min);">-</button>
+            </div>
         </div>
     </div>
-</div>
+}

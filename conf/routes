@@ -62,13 +62,12 @@ POST        /admin/event/:id/show/:show             @controllers.admin.EventDeta
 POST        /admin/event/:id/show/:show/delete      @controllers.admin.EventDetails.deleteShow(id:EventId, show:ShowId)
 
 GET         /order                                  @controllers.Orders.start(event:Option[EventId], show:Option[ShowId])
+GET         /preorder                               @controllers.Prereservations.start(event:Option[EventId])
+GET         /preorder/save/:id                      @controllers.Prereservations.save(id:EventId)
 GET         /events/                                @controllers.Events.list(p:Int ?= 0)
 GET         /events/:event                          @controllers.Events.view(event:EventId)
 GET         /events/:event/show/:show               @controllers.Events.viewShow(event:EventId, show:ShowId)
 GET         /events/floorplan/:id                   @controllers.Events.ajaxFloorplan(id:VenueId)
-
-GET         /reservation/:id/new                    @controllers.reservation.Reservations.create(id:EventId)
-
 
 # Assets
 GET         /assets/javascripts/routes              @controllers.Application.javascriptRoutes

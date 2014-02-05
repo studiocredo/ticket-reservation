@@ -41,6 +41,18 @@ object admin {
     def id = event.id
   }
 
+  case class EventPrereservationsDetail(event: Event, users: List[User], shows: List[VenueShows], prereservations: List[ShowPrereservationDetail], reservationQuota: List[ReservationQuotumDetail]) {
+    def id = event.id
+
+    def totalQuota: Int = {
+      reservationQuota.map{_.quota}.sum
+    }
+
+    def prereservationsByShow(showId: ShowId): Int = {
+      prereservations.collect{case sprd if sprd.show.id == showId => sprd.quantity}.sum
+    }
+  }
+
   case class ShowEdit(venueId: VenueId, date: DateTime)
 
   case class VenueShows(venue: Venue, shows: List[Show])

@@ -44,6 +44,10 @@ class UserService @Inject()() {
     UDQ.filter(q => q._1.id === id).firstOption.map(richUser)
   }
 
+  def findUsers(ids: List[UserId])(implicit s: Session): List[User] = {
+    UsersQ.filter(q => q.id inSet ids).list
+  }
+
   def findByUserName(name: String)(implicit s: Session): Option[RichUser] = {
     UDQ.filter(q => q._1.username.toLowerCase === name.toLowerCase).firstOption.map(richUser)
   }

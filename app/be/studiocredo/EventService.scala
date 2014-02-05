@@ -7,7 +7,7 @@ import models.ids._
 import com.google.inject.Inject
 import models.admin._
 
-class EventService @Inject()(showService: ShowService) {
+class EventService @Inject()(showService: ShowService, preResevationService: PreReservationService, userService: UserService) {
   import models.queries._
   import models.schema.tables._
 
@@ -38,6 +38,10 @@ class EventService @Inject()(showService: ShowService) {
 
   def eventDetails(id: EventId)(implicit s: Session): Option[EventDetail] = {
     get(id).map{(event) => EventDetail(event, showService.listForEvent(event.id))}
+  }
+
+  def eventPrereservationDetails(id: EventId, users: List[UserId])(implicit s: Session): Option[EventPrereservationsDetail] = {
+    get(id).map{(event) => EventPrereservationsDetail(event, userService.findUsers(users), showService.listForEvent(event.id), preResevationService.preReservationsByUsers(users), preResevationService.quotaByUsers(users))}
   }
 
   private def byId(id: ids.EventId)=  EventsQ.where(_.id === id)

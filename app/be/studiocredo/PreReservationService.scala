@@ -5,12 +5,17 @@ import models.ids._
 import com.google.inject.Inject
 import models.entities._
 import scala.collection.mutable
+import models.ids
 
 class PreReservationService @Inject()(orderService: OrderService) {
   import models.schema.tables._
 
   val SPRQ = Query(ShowPrereservations)
   val RQQ = Query(ReservationQuota)
+
+  def hasPreReservation(p: ShowPrereservation)(implicit s: Session): Boolean = {
+    findPreReservation(p).length.run > 0
+  }
 
   def preReservationsByUser(id: UserId)(implicit s: Session): List[ShowPrereservationDetail] = {
     preReservationsByUsers(List(id))
@@ -54,7 +59,7 @@ class PreReservationService @Inject()(orderService: OrderService) {
     quotaByUsers(ids).foreach { q : ReservationQuotumDetail => eventMap(q.event) += q.quota }
     query.list.foreach { t => eventMap(t._1) -= t._2}
 
-    UnusedQuotaDisplay(eventMap.toMap)
+    UnusedQuotaDisplay(eventMap.filter(_._2 > 0).toMap)
   }
 
   //TODO: validate should be >= 0
@@ -70,11 +75,21 @@ class PreReservationService @Inject()(orderService: OrderService) {
     preReservationsByUsers(ids).foreach { pr: ShowPrereservationDetail => showMap(pr.show) += pr.quantity }
     orderService.seatsByUsers(ids).foreach { o: TicketSeatOrderDetail => showMap(o.show) -= 1 }
 
-    PendingPrereservationDisplay(showMap.toMap)
+    PendingPrereservationDisplay(showMap.filter(_._2 > 0).toMap)
   }
 
   //TODO: validate prereservation should not exceed quotum
   def insert(showPrereservation: ShowPrereservation)(implicit s: Session) = ShowPrereservations.*.insert(showPrereservation)
   def insert(reservationQuotum: ReservationQuotum)(implicit s: Session) = ReservationQuota.*.insert(reservationQuotum)
 
+  def updateOrInsert(showPrereservations: List[ShowPrereservation], users: List[UserId])(implicit s: Session) = {
+    showPrereservations.foreach { showPrereservation =>
+      hasPreReservation(showPrereservation) match {
+        case true => findPreReservation(showPrereservation).map(_.quantity).update(showPrereservation.quantity)
+        case _ => ShowPrereservations.*.insert(showPrereservation)
+      }
+    }
+  }
+
+  private def findPreReservation(p: ShowPrereservation)= SPRQ.where(_.showId === p.showId).where(_.userId === p.userId)
 }

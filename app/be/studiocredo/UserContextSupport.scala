@@ -12,7 +12,7 @@ trait UserContextSupport extends Controller {
     DB.withSession {
       implicit session =>
         request.currentUser match {
-          case Some(identity) => Some(UserContext(notificationService.get(identity.otherUsers.map { _.id } :+ identity.id), identity.otherUsers))
+          case Some(identity) => Some(UserContext(notificationService.get(identity.id :: identity.otherUsers.map { _.id }), identity.otherUsers))
           case None => None
         }
     }
