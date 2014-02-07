@@ -15,7 +15,7 @@ class PreReservationService @Inject()(orderService: OrderService) {
   val RQQ = Query(ReservationQuota)
 
   def hasPreReservation(p: ShowPrereservation)(implicit s: Session): Boolean = {
-    findPreReservation(p).length.run > 0
+    findPreReservation(p).exists.run
   }
 
   def preReservationsByUser(id: UserId)(implicit s: Session): List[ShowPrereservationDetail] = {
