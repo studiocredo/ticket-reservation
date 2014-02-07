@@ -1,6 +1,6 @@
 package be.studiocredo.util
 
-import play.api.i18n.Messages
+import play.api.i18n.{Lang, Messages}
 
 object ServiceReturnValues {
 
@@ -11,6 +11,6 @@ object ServiceReturnValues {
   def serviceFailure(message: String, args: Seq[Any] = Nil): ServiceFailure = (message, args)
 
   //http://stackoverflow.com/questions/3568002/scala-tuple-unpacking
-  def serviceMessage(m: (String, Seq[Any])): String = (Messages.apply _).tupled(m)
+  def serviceMessage(m: (String, Seq[Any]))(implicit lang: Lang): String = (Messages.apply _).tupled(m)
 
 }

@@ -1,5 +1,11 @@
 @(info: models.admin.EventPrereservationsDetail, prereservationForm: Form[controllers.PrereservationForm], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
 @import helper._
+@import views.Bootstrap._
+
+@showVenueLabel(show: models.entities.Show, venue: models.entities.Venue) = {
+<h3 class="text-info form-control-static">@HumanDateTime.formatDateTime(show.date)</h3>
+<h4 class="text-muted">@venue.name</h4>
+}
 
 @base("Pre-reservatie " + info.event.name, helper.counterScripts())(userContext) {
 
@@ -20,18 +26,18 @@
         <fieldset>
 
             @if(!info.users.isEmpty) {
-                @formControlStatic("Gekoppelde gebruikers") {
+                @formControlStatic("Gekoppelde gebruikers", 6, 6) {
                     @info.users.map { user =>
                         <a href="#" class="btn btn-default btn-xs" role="button">@user.name</a>
                     }
                 }
 
-                @formControlStatic("Totaal aantal pre-reservaties") { @info.totalQuota }
+                @formControlStatic("Totaal aantal pre-reservaties", 6, 6) { @info.totalQuota }
             }
 
 
             @for(((venue, show), index) <- info.shows.map{ vs => vs.shows.map{(vs.venue, _)}}.flatten.zipWithIndex) {
-                @counterInput(prereservationForm(s"preres[$index].quantity"), '_label -> s"${HumanDateTime.formatDateTime(show.date)} @ ${venue.name}",  'max -> info.totalQuota, 'class -> "form-control")
+                @counterInput(prereservationForm(s"preres[$index].quantity"), '_label -> showVenueLabel(show, venue),  '_labelcol -> 6, '_inputcol -> 3, 'max -> info.totalQuota, 'class -> "form-control")
                 @hiddenInput(prereservationForm(s"preres[$index].show"))
             }
         </fieldset>

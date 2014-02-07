@@ -1,8 +1,8 @@
 @(elements: views.html.helper.FieldElements)
 
 <div class="form-group @elements.args.get('_class) @if(elements.hasErrors) {has-error}" id="@elements.args.get('_id).getOrElse(elements.id + "_field")">
-    <label for="@elements.id" class="col-lg-2  control-label">@elements.label(elements.lang)</label>
-    <div class="col-lg-10">
+    <label for="@elements.id" class="col-lg-@elements.args.get('_labelcol).getOrElse(2) control-label">@elements.label(elements.lang)</label>
+    <div class="col-lg-@elements.args.get('_inputcol).getOrElse(10)">
         @elements.input
         @if(!elements.errors.isEmpty) {
             <span class="help-inline">@elements.errors(elements.lang).mkString(", ")</span>

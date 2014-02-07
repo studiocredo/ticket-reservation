@@ -1,8 +1,8 @@
-@(name: String)(value: Html)
+@(name: String, labelcol: Int = 2, inputcol: Int = 10)(value: Html)
 
 <div class="form-group">
-    <label class="col-lg-2 control-label">@name</label>
-    <div class="col-lg-10">
+    <label class="col-lg-@labelcol control-label">@name</label>
+    <div class="col-lg-@inputcol">
         <p class="form-control-static">@value</p>
     </div>
 </div>

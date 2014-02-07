@@ -51,3 +51,7 @@ prereservations.quota.exceeded=Maximaal aantal pre-reservaties overschreden
 #prereservations.quota.success
 prereservations.capacity.exceeded=Er is niet voldoende plaats meer voor {0} op {1}, gelieve {2} pre-reservatie(s) te verwijderen.
 #prereservations.capacity.success
+
+# --- Reservations
+reservations.seat.unknown=Plaats {0} bestaat niet voor locatie {1}
+reservations.success=Reservaties bewaard
