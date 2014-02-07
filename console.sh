@@ -1,2 +1,6 @@
 #!/bin/bash
-play -DapplyEvolutions.default=true console
+args=""
+if [ "$1" == "debug" ]; then
+  args="debug"
+fi
+play $args -DapplyEvolutions.default=true console

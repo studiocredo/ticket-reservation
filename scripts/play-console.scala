@@ -17,10 +17,10 @@ import play.api.db.slick._
 import org.joda.time.DateTime
 
 val vs = new VenueService()
-val os = new OrderService()
+val os = new OrderService(vs)
 val prs = new PreReservationService(os)
 val ss = new ShowService(vs, os, prs)
-val es = new EventService(ss)
+val es = new EventService(ss, prs, us)
 val us = new UserService()
 val is = new IdentityService(us)
 
