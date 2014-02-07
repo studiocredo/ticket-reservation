@@ -38,7 +38,7 @@ class OrderService @Inject()(venueService: VenueService) {
     } yield (tso)
     query.list.filter{ tso =>
       tso.userId match {
-        case Some(userId) =>excludedUsers.contains(userId)
+        case Some(userId) => !excludedUsers.contains(userId)
         case None => true
       }
     }

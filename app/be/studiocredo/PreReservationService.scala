@@ -101,9 +101,6 @@ class PreReservationService @Inject()(orderService: OrderService) {
 
   def insert(reservationQuotum: ReservationQuotum)(implicit s: Session) = ReservationQuota.*.insert(reservationQuotum)
 
-
-  //TODO redistribute all preres over all users (in order) making sure individual capacity is not overrun, set all others to 0
-  //verify
   def updateOrInsert(event: EventId, showPrereservations: List[ShowPrereservationUpdate], users: List[UserId])(implicit s: Session): Either[ServiceFailure, ServiceSuccess] = {
     validateQuota(event, showPrereservations, users).fold(
       error => Left(error),
@@ -118,7 +115,6 @@ class PreReservationService @Inject()(orderService: OrderService) {
   }
 
   private def fillPrereservations(event: EventId, showPrereservations: List[ShowPrereservationUpdate], users: List[UserId])(implicit s: Session): Either[ServiceFailure, ServiceSuccess] = {
-    //TODO fill up
     showPrereservations.foreach { showPrereservationUpdate =>
       var quantity = showPrereservationUpdate.quantity
       users.foreach { user =>
