@@ -261,7 +261,7 @@ object schema {
   implicit val ticketOrderIdType = MappedTypeMapper.base[TicketOrderId, Long](_.id, new TicketOrderId(_))
 
   implicit val moneyType = MappedTypeMapper.base[Money, BigDecimal](_.amount, Money(_))
-  implicit val seatIdType = MappedTypeMapper.base[SeatId, String](_.name, new SeatId(_))
+  implicit val seatIdType = MappedTypeMapper.base[SeatId, String](_.name, SeatId(_))
 
   import FloorPlanJson._
   implicit val floorplanType = MappedTypeMapper.base[FloorPlan, String]({ plan => Json.stringify(Json.toJson(plan))}, { plan => Json.parse(plan).as[FloorPlan]})

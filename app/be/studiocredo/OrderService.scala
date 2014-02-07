@@ -1,28 +1,14 @@
 package be.studiocredo
 
 import play.api.db.slick.Config.driver.simple._
-import models.ids
+import models._
 import models.entities._
 import models.ids._
-import models.entities.TicketSeatOrder
-import models.entities.OrderEdit
 import scala.collection.mutable
 import models.entities.SeatType._
-import models.entities.TicketOrderDetail
-import models.entities.TicketSeatOrder
-import models.entities.SeatType
-import models.entities.OrderDetail
 import scala.Some
-import models.entities.Event
-import models.entities.User
-import models.entities.TicketOrder
-import models.entities.OrderEdit
-import models.entities.EventShow
-import models.entities.ShowAvailability
-import models.entities.Order
-import models.entities.TicketSeatOrderDetail
-import models.entities.Show
 import com.google.inject.Inject
+import be.studiocredo.util.ServiceReturnValues._
 
 class OrderService @Inject()(venueService: VenueService) {
   import models.schema.tables._
@@ -60,6 +46,17 @@ class OrderService @Inject()(venueService: VenueService) {
     detailedOrdersByUsers(List(id))
   }
 
+  //http://stackoverflow.com/questions/18147396/comparing-type-mapped-values-in-slick-queries
+  //TODO
+  def seatOrderExists(show: ShowId, seat: SeatId)(implicit s: Session): Boolean = {
+    val query = for {
+      tso <- TSOQ
+      if tso.showId === show
+//      if tso.seat === (seat:SeatId)  <- THIS DOESNT WORK
+    } yield tso
+    query.list.filter(tso => tso.seat == seat).headOption.isDefined
+  }
+
   def detailedOrdersByUsers(ids: List[UserId])(implicit s: Session): List[OrderDetail] = {
     val query = for {
       (((((order, ticketOrder), ticketSeatOrder), show), event), user) <- Orders.leftJoin(TicketOrders).on(_.id === _.orderId).leftJoin(TicketSeatOrders).on(_._2.id === _.ticketOrderId).leftJoin(Shows).on(_._2.showId === _.id).leftJoin(Events).on(_._2.eventId === _.id).leftJoin(Users).on(_._1._1._1._1.userId === _.id)
@@ -91,8 +88,36 @@ class OrderService @Inject()(venueService: VenueService) {
 
   def insert(orderId: OrderId, showId: ShowId)(implicit s: Session): TicketOrderId = TicketOrders.autoInc.insert((orderId, showId))
 
-  //TODO validate if the seats from the seat order actually exist in the shows floorplan
-  def insert(seatOrders: List[TicketSeatOrder])(implicit s: Session) = seatOrders.foreach { TicketSeatOrders.*.insert(_) }
+  def insert(seatOrders: List[TicketSeatOrder])(implicit s: Session): Either[ServiceFailure, ServiceSuccess] = {
+    seatOrders.map{_.seat}
+
+    //TODO proper call to venue service?
+    val vQuery = for {
+      (show, venue) <- Shows.leftJoin(Venues).on(_.venueId === _.id)
+      if show.id inSet seatOrders.map{_.showId}
+    } yield (show.id, venue)
+    val venueMap = vQuery.list.toMap
+
+    val badSeat = seatOrders.view.find {
+      case so =>
+        venueMap(so.showId).floorplan match {
+          case Some(floorplan) => floorplan.seat(so.seat).isEmpty
+          case None => true
+        }
+    }
+    badSeat match {
+      case Some(seatOrder) => Left(serviceFailure("reservations.seat.unknown", List(seatOrder.seat.name, venueMap(seatOrder.showId).name)))
+      case None => {
+        seatOrders.find { case so => seatOrderExists(so.showId, so.seat) } match {
+          case Some(seatOrder) => Left(serviceFailure("reservation.seat.reserved", List(seatOrder.seat.name)))
+          case None => {
+            seatOrders.foreach { TicketSeatOrders.*.insert }
+            Right(serviceSuccess("reservations.success"))
+          }
+        }
+      }
+    }
+  }
 
   //TODO need transaction?
   def capacity(show: EventShow, excludedUsers: List[UserId] = List())(implicit s: Session): ShowAvailability = {
