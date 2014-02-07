@@ -9,7 +9,8 @@ import play.api.data.Form
 import play.api.data.Forms._
 import scala.Some
 import be.studiocredo.auth.SecuredDBRequest
-import models.entities.ShowPrereservation
+import models.entities.{ShowPrereservationUpdate, ShowPrereservation}
+import be.studiocredo.util.ServiceReturnValues._
 
 
 case class ShowPrereservationForm(showId: ShowId, quantity: Int)
@@ -42,8 +43,10 @@ class Prereservations @Inject()(eventService: EventService, showService: ShowSer
         validatePrereservations(bindedForm, preres, prereservationService.totalQuotaByUsersAndEvent(userIds, id)).fold(
           formWithErrors => page(id, formWithErrors, BadRequest),
           success => {
-            prereservationService.updateOrInsert(preres.showPrereservations.map{ spr => ShowPrereservation(spr.showId, rs.currentUser.get.id, spr.quantity) }, userIds )
-            Redirect(routes.Application.index).flashing("success" -> "Pre-reservaties bewaard")
+            prereservationService.updateOrInsert(id, preres.showPrereservations.map{ spr => ShowPrereservationUpdate(spr.showId, spr.quantity) }, userIds ).fold(
+              failure => page(id, bindedForm.withGlobalError(serviceMessage(failure))),
+              success => Redirect(routes.Application.index).flashing("success" -> serviceMessage(success))
+            )
           }
         )
       }

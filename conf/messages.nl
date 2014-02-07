@@ -44,3 +44,10 @@ error.pattern=Waarde moet voldoen aan {0}
 #error.path.empty=Empty path
 #error.path.missing=Missing path
 #error.path.result.multiple=Multiple results for the given path
+
+# --- Prereservations
+prereservations.success=Pre-reservaties bewaard
+prereservations.quota.exceeded=Maximaal aantal pre-reservaties overschreden
+#prereservations.quota.success
+prereservations.capacity.exceeded=Er is niet voldoende plaats meer voor {0} op {1}, gelieve {2} pre-reservatie(s) te verwijderen.
+#prereservations.capacity.success

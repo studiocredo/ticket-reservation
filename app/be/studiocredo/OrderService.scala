@@ -7,16 +7,41 @@ import models.ids._
 import models.entities.TicketSeatOrder
 import models.entities.OrderEdit
 import scala.collection.mutable
+import models.entities.SeatType._
+import models.entities.TicketOrderDetail
+import models.entities.TicketSeatOrder
+import models.entities.SeatType
+import models.entities.OrderDetail
+import scala.Some
+import models.entities.Event
+import models.entities.User
+import models.entities.TicketOrder
+import models.entities.OrderEdit
+import models.entities.EventShow
+import models.entities.ShowAvailability
+import models.entities.Order
+import models.entities.TicketSeatOrderDetail
+import models.entities.Show
+import com.google.inject.Inject
 
-class OrderService {
+class OrderService @Inject()(venueService: VenueService) {
   import models.schema.tables._
 
   val OQ = Query(Orders)
   val TOQ = Query(TicketOrders)
   val TSOQ = Query(TicketSeatOrders)
 
-  def byShowId(id: ShowId)(implicit s: Session): List[TicketSeatOrder] = {
-    TSOQ.where(_.showId === id).list
+  def byShowId(id: ShowId, excludedUsers: List[UserId] = List())(implicit s: Session): List[TicketSeatOrder] = {
+    val query = for {
+      tso <- TSOQ
+      if tso.showId === id
+    } yield (tso)
+    query.list.filter{ tso =>
+      tso.userId match {
+        case Some(userId) =>excludedUsers.contains(userId)
+        case None => true
+      }
+    }
   }
 
   def seatsByUser(id: UserId)(implicit s: Session): List[TicketSeatOrderDetail] = {
@@ -68,6 +93,19 @@ class OrderService {
 
   //TODO validate if the seats from the seat order actually exist in the shows floorplan
   def insert(seatOrders: List[TicketSeatOrder])(implicit s: Session) = seatOrders.foreach { TicketSeatOrders.*.insert(_) }
+
+  //TODO need transaction?
+  def capacity(show: EventShow, excludedUsers: List[UserId] = List())(implicit s: Session): ShowAvailability = {
+    val venue = venueService.get(show.venueId).get
+    val ticketSeatOrders = byShowId(show.id, excludedUsers)
+    val floorplan = venue.floorplan.get
+
+    val seatTypeMap = mutable.Map[SeatType, Int]()
+    SeatType.values.foreach { st => seatTypeMap(st) = venue.capacityByType(st) }
+
+    ticketSeatOrders.foreach { tso => floorplan.seat(tso.seat) match { case Some(seat) => seatTypeMap(seat.kind) -= 1; case None => }}
+    ShowAvailability(show, seatTypeMap.toMap)
+  }
 
   private def byId(id: ids.OrderId)= OQ.where(_.id === id)
 }

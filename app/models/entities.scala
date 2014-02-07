@@ -158,6 +158,7 @@ object entities {
   }
 
   case class ShowPrereservation(showId: ShowId, userId: UserId, quantity: Int)
+  case class ShowPrereservationUpdate(showId: ShowId, quantity: Int)
   case class ShowPrereservationDetail(show: EventShow, user: User, quantity: Int)
 
   case class PendingPrereservationDisplay(showMap: Map[EventShow, Int]) {

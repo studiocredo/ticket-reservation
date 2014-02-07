@@ -5,7 +5,8 @@ import models.ids._
 import com.google.inject.Inject
 import models.entities._
 import scala.collection.mutable
-import models.ids
+import models.{HumanDateTime, ids}
+import be.studiocredo.util.ServiceReturnValues._
 
 class PreReservationService @Inject()(orderService: OrderService) {
   import models.schema.tables._
@@ -87,16 +88,65 @@ class PreReservationService @Inject()(orderService: OrderService) {
     PendingPrereservationDisplay(showMap.filter(_._2 > 0).toMap)
   }
 
-  //TODO: validate prereservation should not exceed quotum
+  //TODO: validate prereservation should not exceed user quotum for show and total should not exceed show capacity
   def insert(showPrereservation: ShowPrereservation)(implicit s: Session) = ShowPrereservations.*.insert(showPrereservation)
+
+  private def updateQuantity(showPrereservation: ShowPrereservation)(implicit s: Session) = {
+    showPrereservation.quantity match {
+      case 0 => if (hasPreReservation(showPrereservation)) delete(showPrereservation)
+      case _ => if (hasPreReservation(showPrereservation)) findPreReservation(showPrereservation).map(_.quantity).update(showPrereservation.quantity) else ShowPrereservations.*.insert(showPrereservation)
+    }
+  }
+  def delete(showPrereservation: ShowPrereservation)(implicit s: Session) = ShowPrereservations.where(_.showId === showPrereservation.showId).where(_.userId === showPrereservation.userId).delete
+
   def insert(reservationQuotum: ReservationQuotum)(implicit s: Session) = ReservationQuota.*.insert(reservationQuotum)
 
-  def updateOrInsert(showPrereservations: List[ShowPrereservation], users: List[UserId])(implicit s: Session) = {
-    showPrereservations.foreach { showPrereservation =>
-      hasPreReservation(showPrereservation) match {
-        case true => findPreReservation(showPrereservation).map(_.quantity).update(showPrereservation.quantity)
-        case _ => ShowPrereservations.*.insert(showPrereservation)
+
+  //TODO redistribute all preres over all users (in order) making sure individual capacity is not overrun, set all others to 0
+  //verify
+  def updateOrInsert(event: EventId, showPrereservations: List[ShowPrereservationUpdate], users: List[UserId])(implicit s: Session): Either[ServiceFailure, ServiceSuccess] = {
+    validateQuota(event, showPrereservations, users).fold(
+      error => Left(error),
+      success => validateCapacity(event, showPrereservations, users).fold(
+        error => Left(error),
+        success => fillPrereservations(event, showPrereservations, users).fold(
+          error => Left(error),
+          success => Right(success)
+        )
+      )
+    )
+  }
+
+  private def fillPrereservations(event: EventId, showPrereservations: List[ShowPrereservationUpdate], users: List[UserId])(implicit s: Session): Either[ServiceFailure, ServiceSuccess] = {
+    //TODO fill up
+    showPrereservations.foreach { showPrereservationUpdate =>
+      var quantity = showPrereservationUpdate.quantity
+      users.foreach { user =>
+        val quantityByUser = Math.min(quantity, totalQuotaByUsersAndEvent(List(user), EventId(1)).getOrElse(quantity))
+        quantity -= quantityByUser
+        updateQuantity(ShowPrereservation(showPrereservationUpdate.showId, user, quantityByUser))
       }
+    }
+    Right(serviceSuccess("prereservations.success"))
+  }
+
+  private def validateQuota(event: EventId, showPrereservations: List[ShowPrereservationUpdate], users: List[UserId])(implicit s: Session): Either[ServiceFailure, ServiceSuccess] = {
+    showPrereservations.map{_.quantity}.sum > totalQuotaByUsersAndEvent(users, event).getOrElse(0) match {
+      case true => Left(serviceFailure("prereservations.quota.exceeded"))
+      case _ => Right(serviceSuccess("prereservations.quota.success"))
+    }
+  }
+
+  private def validateCapacity(event: EventId, showPrereservations: List[ShowPrereservationUpdate], users: List[UserId])(implicit s: Session): Either[ServiceFailure, ServiceSuccess] = {
+    //validate venue capacity
+    val showMap = mutable.Map[ShowId, Int]().withDefaultValue(0)
+    showPrereservations.foreach { pr: ShowPrereservationUpdate => showMap(pr.showId) += pr.quantity }
+    val eventShowMap = Shows.leftJoin(Events).on(_.eventId === _.id).where(_._1.id inSet showMap.keys).list.map{ case (s: Show, e: Event) => (s.id, EventShow(s.id, s.eventId, e.name, s.venueId, s.date, s.archived))}.toMap
+    showMap.keys.foreach { showId: ShowId => showMap(showId) -= orderService.capacity(eventShowMap(showId), users).byType(SeatType.Normal) }
+
+    showMap.view.filter{ case (showId: ShowId, overCapacity: Int) => overCapacity > 0 }.map{case (showId: ShowId, overCapacity: Int) => (eventShowMap(showId), overCapacity)}.headOption match {
+      case Some((show, overCapacity)) => Left(serviceFailure("prereservations.capacity.exceeded", List(overCapacity, show.name, HumanDateTime.formatDateTimeCompact(show.date))))
+      case None => Right(serviceSuccess("prereservations.capacity.success"))
     }
   }
 

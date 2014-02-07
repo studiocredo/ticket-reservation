@@ -51,23 +51,8 @@ class ShowService @Inject()(venueService: VenueService, orderService: OrderServi
     val list = (for (s <- next; e <- s.event) yield (s, e)).sortBy(_._1.date).take(limit).list
 
     list map {
-      case (show, event) => capacity(EventShow(show.id, event.id, event.name, show.venueId, show.date, show.archived))
+      case (show, event) => orderService.capacity(EventShow(show.id, event.id, event.name, show.venueId, show.date, show.archived))
     }
-  }
-
-  //TODO need transaction?
-  def capacity(show: EventShow)(implicit s: Session): ShowAvailability = {
-
-    val venue = venueService.get(show.venueId).get
-    val ticketSeatOrders = orderService.byShowId(show.id)
-    val floorplan = venue.floorplan.get
-
-    val seatTypeMap = mutable.Map[SeatType, Int]()
-    SeatType.values.foreach { st => seatTypeMap(st) = venue.capacityByType(st) }
-
-    ticketSeatOrders.foreach { tso => floorplan.seat(tso.seat) match { case Some(seat) => seatTypeMap(seat.kind) -= 1; case None => }}
-
-    ShowAvailability(show, seatTypeMap.toMap)
   }
 
   private def byId(id: ids.ShowId)=  ShowsQ.where(_.id === id)
