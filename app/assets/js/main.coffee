@@ -1,5 +1,5 @@
 "use strict"
-App = angular.module("credo", ["floorplan"])
+App = angular.module("credo", ["floorplan", "counterInput"])
 
 Floorplan = angular.module("floorplan", ["ngDragDrop", "ui.sortable", "ng"])
 
@@ -122,7 +122,7 @@ Floorplan.directive 'floorplan', () ->
         <div data-ng-model="row.content">
             <div class="content" data-ng-repeat="content in row.content">
                 <div class="spacer spacer-{{content.width}}" data-ng-show="content.ct == 'spacer'"></div>
-                <div class="clickable seat seat-{{content.kind}}" ng-click="count = count + 1" ng-init="count=0" data-ng-show="content.ct == 'seat'">{{count}}{{content.id.name}}</div>
+                <div class="clickable seat seat-{{content.kind}}" data-ng-click="count = count + 1" data-ng-init="count=0" data-ng-show="content.ct == 'seat'">{{count}}{{content.id.name}}</div>
             </div>
         </div>
     </div>
@@ -131,3 +131,22 @@ Floorplan.directive 'floorplan', () ->
     scope:
         venue: '='
     controller: 'FloorPlanCtrl'
+
+CounterInput = angular.module("counterInput", [])
+
+CounterInput.controller "CounterInputCtrl", ($scope, $http) ->
+    $scope.values = { }
+    $scope.maxQuota = 0
+
+    $scope.increment = (index, max = 9) ->
+        if ($scope.totalUsed() < $scope.maxQuota) then $scope.values[index] = Math.min(++$scope.values[index],max)
+
+    $scope.decrement = (index, min = 0) ->
+        $scope.values[index] = Math.max(--$scope.values[index],min)
+
+    $scope.isNumberKey = (evt) ->
+        charCode = if evt.which then evt.which else event.keyCode
+        if (charCode > 31 && (charCode < 48 || charCode > 57)) then false else true
+
+    $scope.totalUsed = ->
+        (value for index,value of $scope.values).reduce (t, s) -> t + s
