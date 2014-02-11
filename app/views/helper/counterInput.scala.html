@@ -8,7 +8,7 @@
 @helper.input(field, '_showConstraints -> false :: args.toList:_*) { (id, name, value, htmlArgs) =>
     <div class="row amount-input">
         <div class="col-xs-6 col-xs-offset-5">
-            <input id="@id" type="number" name="@name" min="@min" max="@max" data-ng-pattern="/[0-9]+/" data-ng-minlength="1" data-ng-maxlength="@maxLength" data-ng-required="true" class="form-control input-xl text-right" data-ng-model="values[@ngModelIndex]" data-ng-init="values[@ngModelIndex] = @value">
+            <input id="@id" type="number" digits-only maxlength="@maxLength" minlength="1" name="@name" min="@min" max="@max" data-ng-pattern="/[0-9]+/" data-ng-minlength="1" data-ng-maxlength="@maxLength" data-ng-required="true" class="form-control input-xl text-right" data-ng-model="values[@ngModelIndex]" data-ng-init="values[@ngModelIndex] = @value">
         </div>
 
         <div class="col-xs-1 pull-middle">

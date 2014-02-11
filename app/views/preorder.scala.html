@@ -21,7 +21,7 @@
 }
 
 @if(!info.shows.isEmpty) {
-    @form(action = controllers.routes.Prereservations.save(info.event.id), 'class -> "form form-horizontal") {
+    @form(action = controllers.routes.Prereservations.save(info.event.id), 'class -> "form form-horizontal", 'name -> "preresForm") {
 
         @globalFormErrors(prereservationForm)
         @defining(info.shows.map{ vs => vs.shows.map{(vs.venue, _)}}.flatten) { venueShows =>
@@ -34,7 +34,7 @@
                     }
                 }
 
-                @formControlStatic("Gebruikte pre-reservaties", 6, 6) { {{totalUsed()}} / @info.totalQuota }
+                @formControlStatic("Gebruikte pre-reservaties", 6, 6) { {{totalUsed() || "?"}} / @info.totalQuota }
             }
 
 
@@ -46,7 +46,7 @@
         }
 
         @twFormActions {
-            <button type="submit" class="btn btn-primary">Bewaren</button>
+            <button type="submit" class="btn btn-primary" data-ng-disabled="preresForm.$invalid">Bewaren</button>
             <a class="btn btn-warning" href="@controllers.routes.Application.index">Annuleren</a>
         }
     }

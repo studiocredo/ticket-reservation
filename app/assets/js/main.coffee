@@ -144,9 +144,17 @@ CounterInput.controller "CounterInputCtrl", ($scope, $http) ->
     $scope.decrement = (index, min = 0) ->
         $scope.values[index] = Math.max(--$scope.values[index],min)
 
-    $scope.isNumberKey = (evt) ->
-        charCode = if evt.which then evt.which else event.keyCode
-        if (charCode > 31 && (charCode < 48 || charCode > 57)) then false else true
-
     $scope.totalUsed = ->
         (value for index,value of $scope.values).reduce (t, s) -> t + s
+
+CounterInput.directive 'digitsOnly', () ->
+    restrict: 'A',
+    require: '?ngModel',
+    link: (scope, element, attrs, ngModel) ->
+        return if (!ngModel)
+        ngModel.$parsers.unshift((inputValue) ->
+            digits = inputValue.split('').filter((s) -> (!isNaN(s) && s != ' ')).join('')
+            ngModel.$viewValue = digits;
+            ngModel.$render();
+            digits
+        )
