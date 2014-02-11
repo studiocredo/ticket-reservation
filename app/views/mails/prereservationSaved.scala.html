@@ -1,0 +1,44 @@
+@(user: models.admin.RichUser, preres: models.admin.EventPrereservationsDetail)(implicit request: RequestHeader)
+@showQuantity(number: Int) = {
+    @number match {
+        case 1 => { 1 plaats }
+        case _ => { @number plaatsen }
+    }
+}
+
+<html>
+    <body>
+        <p>Beste @user.name,</p>
+
+        <p>Je wijziging van de pre-reservaties werd bewaard.</p>
+
+        <p>Evenement: @preres.event.name</p>
+
+        <ul>
+        @defining(preres.shows.map{ vs => vs.shows.map{(vs.venue, _)}}.flatten) { venueShows =>
+            @for(((venue, show), index) <- venueShows.zipWithIndex) {
+            @defining(preres.prereservationsByShow(show.id)) { quantity =>
+            @if(quantity > 0) {
+                <li>@HumanDateTime.formatDateTime(show.date) (@venue.name): <strong>@showQuantity(quantity)</strong></li>
+            }
+            }
+            }
+        }
+        </ul>
+
+        @defining(preres.totalQuota) { total =>
+        @defining(preres.prereservations.map{_.quantity}.sum) { used => @used match {
+            case i if (i == total) => { <p>Je hebt alle @total plaatsen gebruikt.</p> }
+            case _ => { <p>Je hebt @used van de @total plaatsen gebruikt.</p> }
+        }
+        }
+        }
+        @if(preres.event.preReservationEnd.isDefined) {
+        <p>Tot @HumanDateTime.formatDate(preres.event.preReservationEnd.get) kan je je voorkeuren nog <a href="@controllers.routes.Prereservations.start(preres.event.id).absoluteURL()">wijzigen</a> via de website.</p>
+        } else {
+        <p>Je kan je voorkeuren steeds <a href="@controllers.routes.Prereservations.start(preres.event.id).absoluteURL()">wijzigen</a> via de website.</p>
+        }
+
+        @emailFooter()
+    </body>
+</html>

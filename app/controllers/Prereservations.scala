@@ -11,6 +11,7 @@ import scala.Some
 import be.studiocredo.auth.SecuredDBRequest
 import models.entities.{ShowPrereservationUpdate, ShowPrereservation}
 import be.studiocredo.util.ServiceReturnValues._
+import controllers.auth.Mailer
 
 
 case class ShowPrereservationForm(showId: ShowId, quantity: Int)
@@ -39,13 +40,17 @@ class Prereservations @Inject()(eventService: EventService, showService: ShowSer
     bindedForm.fold(
       formWithErrors => page(id, formWithErrors, BadRequest),
       preres => {
-        val userIds = rs.currentUser.get.id :: userContext.get.otherUsers.map{_.id}
+        val currentUser = rs.currentUser.get
+        val userIds = currentUser.id :: userContext.get.otherUsers.map{_.id}
         validatePrereservations(bindedForm, preres, prereservationService.totalQuotaByUsersAndEvent(userIds, id)).fold(
           formWithErrors => page(id, formWithErrors, BadRequest),
           success => {
             prereservationService.updateOrInsert(id, preres.showPrereservations.map{ spr => ShowPrereservationUpdate(spr.showId, spr.quantity) }, userIds ).fold(
               failure => page(id, bindedForm.withGlobalError(serviceMessage(failure))),
-              success => Redirect(routes.Application.index).flashing("success" -> serviceMessage(success))
+              success => {
+                Mailer.sendPrereservationSavedEmail(currentUser.user, eventService.eventPrereservationDetails(id, userIds))
+                Redirect(routes.Application.index).flashing("success" -> serviceMessage(success))
+              }
             )
           }
         )

@@ -7,28 +7,42 @@ import play.api.libs.concurrent.Akka
 import java.nio.charset.StandardCharsets
 import play.api.mvc.RequestHeader
 import be.studiocredo.auth.EmailToken
-import models.admin.RichUser
+import models.admin.{EventPrereservationsDetail, RichUser}
 
 object Mailer {
   val fromAddress = current.configuration.getString("smtp.from").get
-
+  val subjectPrefix = "[Studio Credo Ticket Reservatie]"
 
   def sendSignUpEmail(to: String, token: EmailToken)(implicit request: RequestHeader)  {
-    val txtAndHtml  = (None, Some(views.html.auth.mails.signUpEmail(token.id)))
+    val txtAndHtml  = (None, Some(views.html.mails.signUpEmail(token.id)))
 
-    sendEmail("[Studio Credo Ticket Reservatie] Instructies voor registratie", to, txtAndHtml)
+    sendEmail(s"$subjectPrefix Instructies voor registratie", to, txtAndHtml)
   }
 
   def sendPasswordResetEmail(to: String, users: List[RichUser], token: EmailToken)(implicit request: RequestHeader) {
-    val txtAndHtml = (None, Some(views.html.auth.mails.passwordReset(users, token.id)))
-    sendEmail("[Studio Credo Ticket Reservatie] Instructies om je wachtwoord te wijzigen", to, txtAndHtml)
+    val txtAndHtml = (None, Some(views.html.mails.passwordReset(users, token.id)))
+    sendEmail(s"$subjectPrefix Instructies om je wachtwoord te wijzigen", to, txtAndHtml)
   }
 
   def sendPasswordChangedNotification(to: String, user: RichUser)(implicit request: RequestHeader) = {
-    val txtAndHtml = (None, Some(views.html.auth.mails.passwordChangedNotice(user)))
-    sendEmail("[Studio Credo Ticket Reservatie] Wachtwoord gewijzigd", to, txtAndHtml)
+    val txtAndHtml = (None, Some(views.html.mails.passwordChangedNotice(user)))
+    sendEmail(s"$subjectPrefix  Wachtwoord gewijzigd", to, txtAndHtml)
   }
 
+  def sendPrereservationSavedEmail(user: RichUser, preres: Option[EventPrereservationsDetail])(implicit request: RequestHeader) = {
+    preres match {
+      case Some(preres) => {
+        user.email match {
+          case Some(email) => {
+            val txtAndHtml = (None, Some(views.html.mails.prereservationSaved(user, preres)))
+            sendEmail(s"$subjectPrefix Pre-reservaties geregistreerd", email, txtAndHtml)
+          }
+          case None => ()
+        }
+      }
+      case None => ()
+    }
+  }
 
   private def sendEmail(subject: String, recipient: String, body: (Option[Txt], Option[Html])) {
     import com.typesafe.plugin._
