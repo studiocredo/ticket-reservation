@@ -139,13 +139,19 @@ CounterInput.controller "CounterInputCtrl", ($scope, $http) ->
     $scope.maxQuota = 0
 
     $scope.increment = (index, max = 9) ->
-        if ($scope.totalUsed() < $scope.maxQuota) then $scope.values[index] = Math.min(++$scope.values[index],max)
+        if isNaN($scope.totalUsed())
+            $scope.values[index] = 0
+        else
+            if ($scope.totalUsed() < $scope.maxQuota) then $scope.values[index] = Math.min(++$scope.values[index],max)
 
     $scope.decrement = (index, min = 0) ->
-        $scope.values[index] = Math.max(--$scope.values[index],min)
+        $scope.values[index] = Math.max(--$scope.values[index],min) || 0
 
     $scope.totalUsed = ->
         (value for index,value of $scope.values).reduce (t, s) -> t + s
+
+    $scope.isMaxQuotaSatisfied = ->
+        $scope.totalUsed() <= $scope.maxQuota
 
 CounterInput.directive 'digitsOnly', () ->
     restrict: 'A',

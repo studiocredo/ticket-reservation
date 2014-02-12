@@ -38,15 +38,15 @@ class Prereservations @Inject()(eventService: EventService, showService: ShowSer
   def save(id: EventId) = AuthDBAction { implicit rs =>
     val bindedForm = prereservationForm.bindFromRequest
     bindedForm.fold(
-      formWithErrors => page(id, formWithErrors, BadRequest),
+      formWithErrors => page(id, Some(formWithErrors), BadRequest),
       preres => {
         val currentUser = rs.currentUser.get
         val userIds = currentUser.id :: userContext.get.otherUsers.map{_.id}
         validatePrereservations(bindedForm, preres, prereservationService.totalQuotaByUsersAndEvent(userIds, id)).fold(
-          formWithErrors => page(id, formWithErrors, BadRequest),
+          formWithErrors => page(id, Some(formWithErrors), BadRequest),
           success => {
             prereservationService.updateOrInsert(id, preres.showPrereservations.map{ spr => ShowPrereservationUpdate(spr.showId, spr.quantity) }, userIds ).fold(
-              failure => page(id, bindedForm.withGlobalError(serviceMessage(failure))),
+              failure => page(id, Some(bindedForm.withGlobalError(serviceMessage(failure))), BadRequest),
               success => {
                 Mailer.sendPrereservationSavedEmail(currentUser.user, eventService.eventPrereservationDetails(id, userIds))
                 Redirect(routes.Application.index).flashing("success" -> serviceMessage(success))
@@ -58,7 +58,7 @@ class Prereservations @Inject()(eventService: EventService, showService: ShowSer
     )
   }
 
-  private def page(eventId: EventId, form: Form[PrereservationForm] = prereservationForm, status: Status = Ok)(implicit rs: SecuredDBRequest[_]) = {
+  private def page(eventId: EventId, form: Option[Form[PrereservationForm]] = None, status: Status = Ok)(implicit rs: SecuredDBRequest[_]) = {
     val users = rs.currentUser match {
       case None => List()
       case Some(identity) => identity.id :: identity.otherUsers.map { _.id }
@@ -66,8 +66,13 @@ class Prereservations @Inject()(eventService: EventService, showService: ShowSer
     eventService.eventPrereservationDetails(eventId, users) match {
       case None => BadRequest(s"Evenement $eventId niet gevonden")
       case Some(event) => {
-        val showPreresevations = event.shows.map{_.shows.map{_.id}}.flatten.map{id => ShowPrereservationForm(id, event.prereservationsByShow(id))}
-        status(views.html.preorder(event, form.fill(PrereservationForm(showPreresevations)), userContext))
+        form match {
+          case Some(form) => status(views.html.preorder(event, form , userContext))
+          case _ => {
+            val showPreresevations = event.shows.map{_.shows.map{_.id}}.flatten.map{id => ShowPrereservationForm(id, event.prereservationsByShow(id))}
+            status(views.html.preorder(event, prereservationForm.fill(PrereservationForm(showPreresevations)), userContext))
+          }
+        }
       }
     }
   }
