@@ -6,6 +6,8 @@ import models.entities._
 import models.ids._
 import com.google.inject.Inject
 import models.admin._
+import be.studiocredo.util.ServiceReturnValues._
+import org.joda.time.DateTime
 
 class EventService @Inject()(showService: ShowService, preResevationService: PreReservationService, userService: UserService) {
   import models.queries._
@@ -26,8 +28,21 @@ class EventService @Inject()(showService: ShowService, preResevationService: Pre
     Page(values, page, pageSize, offset, total)
   }
 
-  def insert(event: EventEdit)(implicit s: Session): EventId = Events.autoInc.insert(event)
-  def update(id: EventId, event: EventEdit)(implicit s: Session) = editById(id).update(event)
+  def insert(event: EventEdit)(implicit s: Session): Either[ServiceFailure, EventId] = {
+    validateEvent(event).fold(
+      error => Left(error),
+      success => Right(Events.autoInc.insert(event))
+    )
+  }
+  def update(id: EventId, event: EventEdit)(implicit s: Session): Either[ServiceFailure, ServiceSuccess] = {
+    validateEvent(event).fold(
+      error => Left(error),
+      success => {
+        editById(id).update(event)
+        Right(serviceSuccess("event.save.success"))
+      }
+    )
+  }
 
   def list()(implicit s: Session) = active.list
 
@@ -46,4 +61,27 @@ class EventService @Inject()(showService: ShowService, preResevationService: Pre
 
   private def byId(id: ids.EventId)=  EventsQ.where(_.id === id)
   private def editById(id: ids.EventId) = byId(id).map(_.edit)
+
+  private def validateEvent(event: EventEdit): Either[ServiceFailure, ServiceSuccess] = {
+    validateBeforeOrUndefined(event.preReservationStart, event.preReservationEnd, "preres").fold(
+      error => Left(error),
+      success => {
+        validateBeforeOrUndefined(event.reservationStart, event.reservationEnd, "res").fold(
+          error => Left(error),
+          success => Right(success)
+        )
+      }
+    )
+  }
+
+  private def validateBeforeOrUndefined(start: Option[DateTime], end: Option[DateTime], key: String): Either[ServiceFailure, ServiceSuccess] = {
+    if (start.isDefined && end.isDefined) {
+      if (!start.get.isBefore(end.get)) {
+        return Left(serviceFailure(s"event.save.$key.before"))
+      }
+    } else if (start.isDefined || end.isDefined) {
+      return Left(serviceFailure(s"event.save.$key.both"))
+    }
+    return Right(serviceSuccess(s"event.save.$key.success"))
+  }
 }

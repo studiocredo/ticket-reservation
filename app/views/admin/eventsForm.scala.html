@@ -3,6 +3,8 @@
 @import helper._
 @import views.Bootstrap._
 
+@globalFormErrors(eventForm)
+
 <fieldset>
 
     @inputText(eventForm("name"), '_label -> "Naam",  'class -> "form-control")

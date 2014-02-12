@@ -7,6 +7,9 @@ import models.entities._
 import be.studiocredo.{UserService, NotificationService, UserContextSupport, EventService}
 import com.google.inject.Inject
 import be.studiocredo.auth.AuthenticatorService
+import be.studiocredo.util.ServiceReturnValues._
+import models.entities.EventEdit
+import scala.Some
 
 class Events @Inject()(eventService: EventService, val authService: AuthenticatorService, val notificationService: NotificationService, val userService: UserService) extends AdminController with UserContextSupport {
 
@@ -34,12 +37,14 @@ class Events @Inject()(eventService: EventService, val authService: Authenticato
     Ok(views.html.admin.eventsCreateForm(eventForm, userContext))
   }
   def save() = AuthDBAction { implicit rs =>
-    eventForm.bindFromRequest.fold(
+    val bindedForm = eventForm.bindFromRequest
+    bindedForm.fold(
       formWithErrors => BadRequest(views.html.admin.eventsCreateForm(formWithErrors, userContext)),
       event => {
-        eventService.insert(event)
-
-        ListPage.flashing("success" -> "Evenement '%s' aangemaakt".format(event.name))
+        eventService.insert(event).fold(
+          error => BadRequest(views.html.admin.eventsCreateForm(bindedForm.withGlobalError(serviceMessage(error)), userContext)),
+          success => ListPage.flashing("success" -> "Evenement '%s' aangemaakt".format(event.name))
+        )
       }
     )
   }
@@ -51,12 +56,14 @@ class Events @Inject()(eventService: EventService, val authService: Authenticato
     }
   }
   def update(id: EventId) = AuthDBAction { implicit rs =>
-    eventForm.bindFromRequest.fold(
+    val bindedForm = eventForm.bindFromRequest
+    bindedForm.bindFromRequest.fold(
       formWithErrors => BadRequest(views.html.admin.eventsEditForm(id, formWithErrors, userContext)),
       event => {
-        eventService.update(id, event)
-
-        ListPage.flashing("success" -> "Evenement '%s' aangepast".format(event.name))
+        eventService.update(id, event).fold(
+          error => BadRequest(views.html.admin.eventsEditForm(id, bindedForm.withGlobalError(serviceMessage(error)), userContext)),
+          success => ListPage.flashing("success" -> "Evenement '%s' aangepast".format(event.name))
+        )
       }
     )
   }

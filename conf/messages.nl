@@ -55,3 +55,10 @@ prereservations.capacity.exceeded=Er is niet voldoende plaats meer voor {0} op {
 # --- Reservations
 reservations.seat.unknown=Plaats {0} bestaat niet voor locatie {1}
 reservations.success=Reservaties bewaard
+
+# --- Events
+#event.save.success
+event.save.res.before=Start reservaties moet vóór einde reservaties zijn
+event.save.preres.before=Start pre-reservaties moet vóór einde pre-reservaties zijn
+event.save.res.both=Start en einde reservaties moeten beide wel óf beide niet ingevuld zijn
+event.save.preres.both=Start en einde pre-reservaties moeten beide wel óf beide niet ingevuld zijn
