@@ -3,7 +3,9 @@
 @base("Bestelling voor " + info.event.name)(userContext) {
     <div class="page-header">
         <h1>@info.event.name </h1>
+    </div>
 
+    @if(info.event.reservationAllowed) {
         @info.shows.map { case vs =>
         <div class="panel panel-default">
             <div class="panel-heading">@vs.venue.name</div>
@@ -15,7 +17,11 @@
                     <div class="col-xs-3">@HumanDateTime.formatDuration(show.date)</div>
                 </div>
             }
-
+        </div>
+        }
+    } else {
+        <div class="alert alert-warning">
+            Je kan op dit moment niet reserveren voor dit evenement.
         </div>
     }
 }

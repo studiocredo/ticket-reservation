@@ -46,7 +46,16 @@ object entities {
 
   case class UserRole(id: UserId, role: Roles.Role)
 
-  case class Event(id: EventId, name: String, description: String, preReservationStart: Option[DateTime], preReservationEnd: Option[DateTime], reservationStart: Option[DateTime], reservationEnd: Option[DateTime], archived: Boolean) extends Archiveable
+  case class Event(id: EventId, name: String, description: String, preReservationStart: Option[DateTime], preReservationEnd: Option[DateTime], reservationStart: Option[DateTime], reservationEnd: Option[DateTime], archived: Boolean) extends Archiveable {
+    def preReservationAllowed = preReservationStart match {
+      case Some(preReservationStart) => !archived && preReservationStart.isBeforeNow && preReservationEnd.get.isAfterNow
+      case None => true
+    }
+    def reservationAllowed = reservationStart match {
+      case Some(reservationStart) => !archived && reservationStart.isBeforeNow && reservationEnd.get.isAfterNow
+      case None => true
+    }
+  }
   case class EventEdit(         name: String, description: String, preReservationStart: Option[DateTime], preReservationEnd: Option[DateTime], reservationStart: Option[DateTime], reservationEnd: Option[DateTime], archived: Boolean)
 
 

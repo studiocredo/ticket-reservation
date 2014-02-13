@@ -5,11 +5,12 @@ import be.studiocredo._
 import be.studiocredo.auth.{Authorization, Secure, AuthenticatorService}
 import play.api.mvc.Controller
 import models.ids.{VenueId, ShowId, EventId}
-import models.entities.FloorPlanJson
+import models.entities.{UserContext, FloorPlanJson}
 import play.api.libs.json.Json
 import scala.Some
+import be.studiocredo.util.DBSupport._
 
-class Events @Inject()(venueService: VenueService, eventService: EventService, showService: ShowService, val authService: AuthenticatorService, val notificationService: NotificationService, val userService : UserService) extends Controller with Secure with UserContextSupport {
+class Events @Inject()(venueService: VenueService, eventService: EventService, showService: ShowService, preReservationService: PreReservationService, val authService: AuthenticatorService, val notificationService: NotificationService, val userService : UserService) extends Controller with Secure with UserContextSupport {
 
   val defaultAuthorization = Some(Authorization.ANY)
 
@@ -20,14 +21,36 @@ class Events @Inject()(venueService: VenueService, eventService: EventService, s
   def view(id: EventId) = AuthAwareDBAction { implicit rs =>
     eventService.eventDetails(id) match {
       case None => BadRequest(s"Evenement $id niet gevonden")
-      case Some(details) => Ok(views.html.event(details, None, userContext))
+      case Some(details) => {
+        val currentUserContext = userContext
+        Ok(views.html.event(details, None, hasQuota(id, currentUserContext), currentUserContext))
+      }
     }
   }
 
   def viewShow(eventId: EventId, showId: ShowId) = AuthAwareDBAction { implicit rs =>
     eventService.eventDetails(eventId) match {
       case None => BadRequest(s"Evenement $eventId niet gevonden")
-      case Some(details) => Ok(views.html.event(details, details.shows.flatMap(_.shows).find(_.id == showId), userContext))
+      case Some(details) => {
+        val currentUserContext = userContext
+        Ok(views.html.event(details, details.shows.flatMap(_.shows).find(_.id == showId), hasQuota(eventId, currentUserContext), currentUserContext))
+      }
+    }
+  }
+
+  private def hasQuota(eventId: EventId, userContext: Option[UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_]): Boolean = {
+    request.currentUser match {
+      case Some(user) => {
+        val userIds = user.id :: userContext.get.otherUsers.map { _.id }
+        DB.withSession {
+          implicit session =>
+            preReservationService.totalQuotaByUsersAndEvent(userIds, eventId) match {
+              case Some(total) => total > 0
+              case None => false
+            }
+        }
+      }
+      case None => false
     }
   }
 

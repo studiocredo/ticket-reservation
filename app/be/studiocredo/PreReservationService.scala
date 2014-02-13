@@ -18,20 +18,26 @@ class PreReservationService @Inject()(orderService: OrderService) {
     findPreReservation(p).exists.run
   }
 
-  def preReservationsByUser(id: UserId)(implicit s: Session): List[ShowPrereservationDetail] = {
-    preReservationsByUsers(List(id))
+  def activePreReservationsByUsers(ids: List[UserId])(implicit s: Session): List[ShowPrereservationDetail] = {
+    preReservationsByUsers(ids, Some(activePreReservationFilter))
   }
 
-  def preReservationsByUsers(ids: List[UserId])(implicit s: Session): List[ShowPrereservationDetail] = {
+  private def activePreReservationFilter(t: (ShowPrereservation, Show, Event, User)): Boolean = {
+    t._3.reservationAllowed
+  }
+
+  def preReservationsByUsers(ids: List[UserId], f: Option[((ShowPrereservation, Show, Event, User)) => Boolean] = None)(implicit s: Session): List[ShowPrereservationDetail] = {
     val query = for {
       (((showPreres, show), event), user) <- ShowPrereservations.leftJoin(Shows).on(_.showId === _.id).leftJoin(Events).on(_._2.eventId === _.id).leftJoin(Users).on(_._1._1.userId === _.id)
       if showPreres.userId inSet ids
+      if !show.archived
+      if !event.archived
     } yield (showPreres, show, event, user)
-    query.list.map{ case (spr: ShowPrereservation, s: Show, e: Event, u: User) => ShowPrereservationDetail(EventShow(s.id, e.id, e.name, s.venueId, s.date, s.archived), u, spr.quantity)}
-  }
-
-  def quotaByUser(id: UserId)(implicit s: Session): List[ReservationQuotumDetail] = {
-    quotaByUsers(List(id))
+    val list = f match {
+      case Some(f) => query.list.withFilter(f)
+      case None => query.list
+    }
+    list.map{ case (spr: ShowPrereservation, s: Show, e: Event, u: User) => ShowPrereservationDetail(EventShow(s.id, e.id, e.name, s.venueId, s.date, s.archived), u, spr.quantity)}
   }
 
   def totalQuotaByUsersAndEvent(users: List[UserId], event: EventId)(implicit s: Session): Option[Int] = {
@@ -43,31 +49,50 @@ class PreReservationService @Inject()(orderService: OrderService) {
     query.sum.run
   }
 
-  def quotaByUsers(ids: List[UserId])(implicit s: Session): List[ReservationQuotumDetail] = {
+  def activeQuotaByUsers(ids: List[UserId], f: Option[((ReservationQuotum, Event, User)) => Boolean] = None)(implicit s: Session): List[ReservationQuotumDetail] = {
+    quotaByUsers(ids, Some(activeQuotaFilter))
+  }
+
+  private def activeQuotaFilter(t: (ReservationQuotum, Event, User)): Boolean = {
+    t._2.preReservationAllowed
+  }
+
+  def quotaByUsers(ids: List[UserId], f: Option[((ReservationQuotum, Event, User)) => Boolean] = None)(implicit s: Session): List[ReservationQuotumDetail] = {
     val query = for {
       ((rq, e), u) <- ReservationQuota.leftJoin(Events).on(_.eventId === _.id).leftJoin(Users).on(_._1.userId === _.id)
       if rq.userId inSet ids
     } yield (rq, e, u)
-    query.list.map{ case (rq, e, u) => ReservationQuotumDetail(e, u, rq.quota)}
+    val list = f match {
+      case Some(f) => query.list.withFilter(f)
+      case None => query.list
+    }
+    list.map{ case (rq, e, u) => ReservationQuotumDetail(e, u, rq.quota)}
   }
 
 
   //TODO: validate should be >= 0
   //TODO: only for events that are not archived and not passed
   //TODO: only when pre-reservation period is active
-  def unusedQuotaByUser(id: UserId)(implicit s: Session): UnusedQuotaDisplay = {
-    unusedQuotaByUsers(List(id))
+  def activeUnusedQuotaByUsers(ids: List[UserId])(implicit s: Session): UnusedQuotaDisplay = {
+    unusedQuotaByUsers(ids, activeQuotaByUsers(ids))
   }
 
   def unusedQuotaByUsers(ids: List[UserId])(implicit s: Session): UnusedQuotaDisplay = {
+    unusedQuotaByUsers(ids, quotaByUsers(ids))
+  }
+
+  private def unusedQuotaByUsers(ids: List[UserId], rqd: List[ReservationQuotumDetail])(implicit s: Session): UnusedQuotaDisplay = {
     val query = for {
       ((spr, show), event) <- ShowPrereservations.leftJoin(Shows).on(_.showId === _.id).leftJoin(Events).on(_._2.eventId === _.id)
       if spr.userId inSet ids
+      if !show.archived
+      if !event.archived
     } yield (event, spr.quantity)
     val eventMap = mutable.Map[Event, Int]().withDefaultValue(0)
 
-    quotaByUsers(ids).foreach { q : ReservationQuotumDetail => eventMap(q.event) += q.quota }
-    query.list.foreach { t => eventMap(t._1) -= t._2}
+    rqd.foreach { q : ReservationQuotumDetail => eventMap(q.event) += q.quota }
+    val x = query.list
+      x.foreach { t => eventMap(t._1) -= t._2}
 
     UnusedQuotaDisplay(eventMap.filter(_._2 > 0).toMap)
   }
@@ -75,14 +100,18 @@ class PreReservationService @Inject()(orderService: OrderService) {
   //TODO: validate should be >= 0
   //TODO: only for events that are not archived and not passed
   //TODO: only when reservatin period is active
-  def pendingPrereservationsByUser(id: UserId)(implicit s: Session): PendingPrereservationDisplay = {
-    pendingPrereservationsByUsers(List(id))
+  def activePendingPrereservationsByUsers(ids: List[UserId])(implicit s: Session): PendingPrereservationDisplay = {
+    pendingPrereservationsByUsers(ids, activePreReservationsByUsers(ids))
   }
 
   def pendingPrereservationsByUsers(ids: List[UserId])(implicit s: Session): PendingPrereservationDisplay = {
+    pendingPrereservationsByUsers(ids, preReservationsByUsers(ids))
+  }
+
+  private def pendingPrereservationsByUsers(ids: List[UserId], prd: List[ShowPrereservationDetail])(implicit s: Session): PendingPrereservationDisplay = {
     val showMap = mutable.Map[EventShow, Int]().withDefaultValue(0)
 
-    preReservationsByUsers(ids).foreach { pr: ShowPrereservationDetail => showMap(pr.show) += pr.quantity }
+    prd.foreach { pr: ShowPrereservationDetail => showMap(pr.show) += pr.quantity }
     orderService.seatsByUsers(ids).foreach { o: TicketSeatOrderDetail => showMap(o.show) -= 1 }
 
     PendingPrereservationDisplay(showMap.filter(_._2 > 0).toMap)

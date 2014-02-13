@@ -1,4 +1,4 @@
-@(info: models.admin.EventDetail, show: Option[models.entities.Show], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
+@(info: models.admin.EventDetail, show: Option[models.entities.Show], hasQuota: Boolean, userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
 
 @base(info.event.name)(userContext) {
 
@@ -9,7 +9,12 @@
             </div>
         </div>
         <div class="col-xs-6 col-sm-3" >
-            <a href="@routes.Orders.start(Some(info.id), show.map(_.id))" class="btn btn-success btn-block btn-lg" style="margin-top: 46px;">Kaarten bestellen</a>
+            @if(info.event.reservationAllowed) {
+                <a href="@routes.Orders.start(Some(info.id), show.map(_.id))" class="btn btn-success btn-block btn-lg" style="margin-top: 46px;">Kaarten bestellen</a>
+            }
+            @if(info.event.preReservationAllowed && hasQuota) {
+                <a href="@routes.Prereservations.start(info.id)" class="btn btn-success btn-block btn-lg" style="margin-top: 46px;">Pre-reservaties</a>
+            }
         </div>
     </div>
 
