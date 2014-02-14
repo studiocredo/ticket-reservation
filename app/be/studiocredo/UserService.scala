@@ -10,6 +10,17 @@ import com.google.inject.Inject
 import be.studiocredo.auth.{Passwords, Password, Roles}
 import models.admin._
 import models.Page
+import be.studiocredo.util.ServiceReturnValues._
+import models.admin.RichUser
+import models.entities.UserDetailEdit
+import models.entities.UserDetail
+import models.Page
+import scala.Some
+import models.entities.User
+import models.entities.UserEdit
+import be.studiocredo.auth.Password
+import models.entities.UserRole
+import models.admin.UserFormData
 
 class UserService @Inject()() {
   val UsersQ = Query(Users)
@@ -140,18 +151,39 @@ class UserService @Inject()() {
     }
   }
 
-  def update(id: UserId, data: UserFormData)(implicit s: Session) = {
-    s.withTransaction {
-      val userUpdate = for {
-        u <- UsersQ.filter(_.id === id)
-      } yield u.name ~ u.username
+  def update(id: UserId, data: UserFormData)(implicit s: Session): Either[ServiceFailure, ServiceSuccess] = {
+    validateUserUpdate(id, data.username).fold(
+      failure => Left(failure),
+      success => {
+        s.withTransaction {
+          val userUpdate = for {
+            u <- UsersQ.filter(_.id === id)
+          } yield u.name ~ u.username
 
-      userUpdate.update((data.name, data.username.toLowerCase))
-      val detailUpdate = for {
-        u <- UsersDetailsQ.filter(_.id === id)
-      } yield u.email ~ u.address ~ u.phone
+          userUpdate.update((data.name, data.username.toLowerCase))
+          val detailUpdate = for {
+            u <- UsersDetailsQ.filter(_.id === id)
+          } yield u.email ~ u.address ~ u.phone
 
-      detailUpdate.update((data.email, data.address, data.phone))
+          detailUpdate.update((data.email, data.address, data.phone))
+        }
+        Right(serviceSuccess("user.update.success"))
+      })
+  }
+
+  private def validateUserUpdate(id: UserId, otherName: String)(implicit s: Session): Either[ServiceFailure, ServiceSuccess] = {
+    find(id) match {
+      case None => Left(serviceFailure("user.update.notfound"))
+      case Some(user) => {
+        if (user.username != otherName) {
+          findByUserName(otherName) match {
+            case None => Right(serviceSuccess("user.update.name.accepted"))
+            case Some(otherUser) => Left(serviceFailure("user.update.name.used", List(otherName)))
+          }
+        } else {
+          Right(serviceSuccess("user.update.name.unchanged"))
+        }
+      }
     }
   }
 }

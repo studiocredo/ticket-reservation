@@ -26,6 +26,8 @@ GET         /reset/:token/:username                 @controllers.auth.PasswordRe
 POST        /reset/:token/:username                 @controllers.auth.PasswordReset.handleResetPassword(token:String, username: String)
 GET         /password                               @controllers.auth.PasswordChange.page
 POST        /password                               @controllers.auth.PasswordChange.handlePasswordChange
+GET         /profile                                @controllers.Profile.edit
+POST        /profile                                @controllers.Profile.update
 
 
 # Admin

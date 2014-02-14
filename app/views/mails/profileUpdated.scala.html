@@ -1,0 +1,44 @@
+@(user: models.admin.RichUser)(implicit request: RequestHeader)
+
+<html>
+    <body>
+        <p>Beste @user.name,</p>
+
+        <p>Je gebruikersprofiel voor <a href="@controllers.routes.Application.index.absoluteURL()">Studio Credo Ticket Reservatie</a> is gewijzigd.</p>
+
+        <p>Je gegevens zijn:</p>
+
+        <dl>
+            <dt><strong>Naam</strong></dt>
+            <dd>@user.name</dd>
+
+            <dt><strong>Gebruikersnaam</strong></dt>
+            <dd>@user.username</dd>
+
+            <dt><strong>E-mail</strong></dt>
+            <dd>@user.email.getOrElse("-")</dd>
+
+            <dt><strong>Adres</strong></dt>
+            <dd>
+                @defining(user.addressLines match { case head :: tail => (head, tail) }) { tuple =>
+                @defining(tuple._1) { head =>
+                @defining(tuple._2) { tail =>
+                    @head
+                    @tail.map { elem =>
+                    <br/>
+                    @elem
+                    }
+                }
+                }
+                }
+            </dd>
+
+            <dt><strong>Telefoon</strong></dt>
+            <dd>@user.phone.getOrElse("-")</dd>
+        </dl>
+
+        <p>Je kan je gegevens steeds <a href="@controllers.routes.Profile.edit.absoluteURL()">aanpassen</a> via de website.</p>
+
+        @emailFooter()
+    </body>
+</html>

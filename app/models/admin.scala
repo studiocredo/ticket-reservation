@@ -4,6 +4,7 @@ import models.entities._
 import models.ids._
 import org.joda.time.DateTime
 import scala.collection.mutable
+import play.api.templates.Html
 
 object admin {
   case class RichUser(user: User, detail: UserDetail) {
@@ -14,6 +15,10 @@ object admin {
     def email = detail.email
     def address = detail.address
     def phone = detail.phone
+    def addressLines: List[String] = address match {
+      case None => List()
+      case Some(address) => address.split("\n").toList
+    }
   }
 
   case class RichUserWithReservationHistory(user: RichUser, otherUsers: List[User], orders: List[OrderDetail], prereservations: List[ShowPrereservationDetail], pendingPrereservations: PendingPrereservationDisplay, reservationQuota: List[ReservationQuotumDetail], unusedQuota: UnusedQuotaDisplay) {

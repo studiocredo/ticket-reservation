@@ -6,6 +6,7 @@ import play.api.data.Forms._
 import models.ids._
 import com.google.inject.Inject
 import be.studiocredo.auth.AuthenticatorService
+import be.studiocredo.util.ServiceReturnValues._
 
 import models.admin._
 
@@ -48,12 +49,14 @@ class Users @Inject()(val userService: UserService, val authService: Authenticat
     }
   }
   def update(id: UserId) = AuthDBAction { implicit rs =>
-    userForm.bindFromRequest.fold(
+    val bindedForm = userForm.bindFromRequest
+    bindedForm.fold(
       formWithErrors => BadRequest(views.html.admin.usersEditForm(id, formWithErrors, userContext)),
       user => {
-        userService.update(id, user)
-
-        ListPage.flashing("success" -> "Gebruiker aangepast")
+        userService.update(id, user).fold(
+          failure => BadRequest(views.html.admin.usersEditForm(id, bindedForm.withGlobalError(serviceMessage(failure)), userContext)),
+          success => ListPage.flashing("success" -> "Gebruiker aangepast")
+        )
       }
     )
   }

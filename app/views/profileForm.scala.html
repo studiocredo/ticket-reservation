@@ -1,0 +1,29 @@
+@(profileForm: Form[models.admin.UserFormData], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
+@import controllers.routes
+@import helper._
+@import views.Bootstrap._
+
+@base("Profiel bewerken")(userContext) {
+
+    <h1>Profiel bewerken</h1>
+
+
+    @form(action = routes.Profile.update, 'class -> "form form-horizontal") {
+
+    @globalFormErrors(profileForm)
+    <fieldset>
+        @inputText(profileForm("name"), '_label -> "Naam",  'class -> "form-control")
+        @inputText(profileForm("username"), '_label -> "Gebruikersnaam",  'class -> "form-control")
+        @inputText(profileForm("email.email"), '_label -> "E-mail", 'class -> "form-control")
+        @inputText(profileForm("email.confirmation"), '_label -> "E-mail bevestigen", '_error -> profileForm.error("email"), 'class -> "form-control")
+        @textarea(profileForm("address"), '_label -> "Adres", '_help -> "Gebruik twee regels, één voor straat en huisnummer en één voor postcode en gemeente", 'class -> "form-control")
+        @inputText(profileForm("phone"), '_label -> "Telefoon", 'class -> "form-control")
+    </fieldset>
+
+        @twFormActions {
+            <input type="submit" value="Aanpassen" class="btn btn-primary">
+            <a href="@routes.Application.index()" class="btn btn-warning">Annuleren</a>
+        }
+    }
+}
+

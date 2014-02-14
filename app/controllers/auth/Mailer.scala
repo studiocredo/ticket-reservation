@@ -44,6 +44,16 @@ object Mailer {
     }
   }
 
+  def sendProfileUpdatedEmail(user: RichUser)(implicit request: RequestHeader) = {
+    user.email match {
+      case Some(email) => {
+        val txtAndHtml = (None, Some(views.html.mails.profileUpdated(user)))
+        sendEmail(s"$subjectPrefix Gebruikersprofiel gewijzigd", email, txtAndHtml)
+      }
+      case None => ()
+    }
+  }
+
   private def sendEmail(subject: String, recipient: String, body: (Option[Txt], Option[Html])) {
     import com.typesafe.plugin._
     import scala.concurrent.duration._
