@@ -55,13 +55,18 @@
                 </thead>
                 <tbody>
                 @info.orders.map { order =>
-                @defining(order.ticketOrders match { case head :: tail => (head, tail) }) { tuple =>
+                @defining(order.ticketOrders match { case head :: tail => (Some(head), tail); case _ => (None, Nil) }) { tuple =>
                 @defining(tuple._1) { first =>
                 @defining(tuple._2) { tail =>
-                    <tr>
-                        <td>@HumanDateTime.formatDateCompact(order.order.date)</td>
-                        @orderRow(order.user, first)
-                    </tr>
+                    @first match {
+                        case Some(first) => {
+                            <tr>
+                                <td>@HumanDateTime.formatDateCompact(order.order.date)</td>
+                                @orderRow(order.user, first)
+                            </tr>
+                        }
+                        case None => { }
+                    }
                     @tail.map { ticketOrder =>
                     <tr>
                         <td/>

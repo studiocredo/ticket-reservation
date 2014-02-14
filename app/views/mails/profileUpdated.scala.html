@@ -20,7 +20,7 @@
 
             <dt><strong>Adres</strong></dt>
             <dd>
-                @defining(user.addressLines match { case head :: tail => (head, tail) }) { tuple =>
+                @defining(user.addressLines match { case head :: tail => (head, tail); case _ => ("-",Nil) }) { tuple =>
                 @defining(tuple._1) { head =>
                 @defining(tuple._2) { tail =>
                     @head

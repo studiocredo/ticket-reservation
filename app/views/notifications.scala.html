@@ -27,10 +27,13 @@
                 <b class="caret"></b>
             </a>
         <ul class="dropdown-menu ">
-            @defining(notifications match { case head :: tail => (head, tail) }) { tuple =>
+            @defining(notifications match { case head :: tail => (Some(head), tail); case _ => (None, Nil) }) { tuple =>
             @defining(tuple._1) { head =>
             @defining(tuple._2) { tail =>
-                @notificationListElement(head)
+                @head match {
+                    case Some(head) => { @notificationListElement(head) }
+                    case None => { }
+                }
                 @tail.map { notification =>
                     <li class="divider"></li>
                     @notificationListElement(notification)
