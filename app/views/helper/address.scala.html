@@ -1,0 +1,12 @@
+@(address: List[String], emptyValue: String = "")
+@defining(address match { case head :: tail => (head, tail); case _ => (emptyValue, Nil) }) { tuple =>
+@defining(tuple._1) { head =>
+@defining(tuple._2) { tail =>
+@head
+@tail.map { elem =>
+<br/>
+@elem
+}
+}
+}
+}

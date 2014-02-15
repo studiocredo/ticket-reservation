@@ -1,6 +1,7 @@
 @(currentPage: Page[models.admin.RichUser], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
 
 @import controllers.admin.routes
+@import helper._
 @base("Administratie: Gebruikers")(userContext) {
 
     <div>
@@ -23,7 +24,7 @@
                 <tr>
                     <td>@user.id</td>
                     <td><a href="@{routes.UserDetails.view(user.id)}">@user.name</a></td>
-                    <td>@user.address</td>
+                    <td>@address(user.addressLines)</td>
                     <td>@user.phone</td>
                     <td><a class="btn btn-default btn-xs" href="@{routes.Users.edit(user.id)}">Bewerken</a></td>
                 </tr>

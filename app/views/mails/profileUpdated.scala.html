@@ -1,4 +1,5 @@
 @(user: models.admin.RichUser)(implicit request: RequestHeader)
+@import helper._
 
 <html>
     <body>
@@ -20,17 +21,7 @@
 
             <dt><strong>Adres</strong></dt>
             <dd>
-                @defining(user.addressLines match { case head :: tail => (head, tail); case _ => ("-",Nil) }) { tuple =>
-                @defining(tuple._1) { head =>
-                @defining(tuple._2) { tail =>
-                    @head
-                    @tail.map { elem =>
-                    <br/>
-                    @elem
-                    }
-                }
-                }
-                }
+                @address(user.addressLines, "-")
             </dd>
 
             <dt><strong>Telefoon</strong></dt>
