@@ -38,8 +38,8 @@ object entities {
     def email = user.email
   }
 
-  case class User(id: UserId, name: String, username: String, password: Password, loginGroupId: Option[UserId])
-  case class UserEdit(        name: String, username: String, password: Password)
+  case class User(id: UserId, name: String, username: String, password: Password, loginGroupId: Option[UserId], active: Boolean)
+  case class UserEdit(        name: String, username: String, password: Password, active: Boolean)
 
   case class UserDetail(id: UserId, email: Option[String], address: Option[String], phone: Option[String])
   case class UserDetailEdit(        email: Option[String], address: Option[String], phone: Option[String])

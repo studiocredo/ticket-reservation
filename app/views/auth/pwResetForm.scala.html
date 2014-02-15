@@ -1,10 +1,10 @@
-@(resetForm: Form[controllers.auth.PasswordSet], token: String, user: String, userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
+@(resetForm: Form[controllers.auth.PasswordSet], token: String, user: String, firstTime: Boolean, userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
 @import helper._
 @import views.Bootstrap._
 
 @base("Wachtwoord opnieuw instellen")(userContext) {
     <div class="page-header">
-        <h1>Wachtwoord opnieuw instellen</h1>
+        <h1>@if(firstTime) { Wachtwoord instellen } else { Wachtwoord opnieuw instellen }</h1>
     </div>
 
     @form(action = controllers.auth.routes.PasswordReset.handleResetPassword(token, user), 'class -> "form form-horizontal") {
@@ -27,7 +27,7 @@
         </fieldset>
 
         @twFormActions {
-            <button type="submit" class="btn btn-primary">Opnieuw instellen</button>
+            <button type="submit" class="btn btn-primary">@if(firstTime) { Instellen } else { Opnieuw instellen }</button>
         }
     }
 }

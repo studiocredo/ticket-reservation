@@ -1,0 +1,46 @@
+@(user: models.admin.RichUser)(implicit request: RequestHeader)
+
+<html>
+    <body>
+        <p>Beste @user.name,</p>
+
+        <p>Er werd voor jou een gebruikersprofiel aangemaakt voor de <a href="@controllers.routes.Application.index.absoluteURL()">Studio Credo Ticket Reservatie</a>.</p>
+
+        <p>Je moet je profiel <a href="@controllers.auth.routes.PasswordReset.startActivateProfile(user.username).absoluteURL()">activeren</a> om pre-reservaties en reservaties te kunnen doen.</p>
+
+        <p>Je gegevens zijn:</p>
+
+        <dl>
+            <dt><strong>Gebruikersnaam</strong></dt>
+            <dd>@user.username</dd>
+
+            <dt><strong>Naam</strong></dt>
+            <dd>@user.name</dd>
+
+            <dt><strong>E-mail</strong></dt>
+            <dd>@user.email.getOrElse("-")</dd>
+
+            <dt><strong>Adres</strong></dt>
+            <dd>
+                @defining(user.addressLines match { case head :: tail => (head, tail); case _ => ("-",Nil) }) { tuple =>
+                @defining(tuple._1) { head =>
+                @defining(tuple._2) { tail =>
+                    @head
+                    @tail.map { elem =>
+                    <br/>
+                    @elem
+                    }
+                }
+                }
+                }
+            </dd>
+
+            <dt><strong>Telefoon</strong></dt>
+            <dd>@user.phone.getOrElse("-")</dd>
+        </dl>
+
+        <p>Na activatie kan je je gegevens <a href="@controllers.routes.Profile.edit.absoluteURL()">aanpassen</a> via de website.</p>
+
+        @emailFooter()
+    </body>
+</html>

@@ -1,0 +1,10 @@
+@(user: models.admin.RichUser, token: String)(implicit request: RequestHeader)
+<html>
+    <body>
+        <p>Beste @user.name,</p>
+
+        <p>Wij ontvingen een aanvraag om je profiel te activeren. Dit doe je door <a href="@controllers.auth.routes.PasswordReset.handleActivateProfile(token, user.username).absoluteURL()">een wachtwoord in te stellen.</a></p>
+
+        @emailFooter()
+    </body>
+</html>

@@ -19,7 +19,8 @@ class Users @Inject()(val userService: UserService, val authService: Authenticat
       "username" -> nonEmptyText,
       "email" -> optional(email),
       "address" -> optional(text),
-      "phone" -> optional(text)
+      "phone" -> optional(text),
+      "active" -> boolean
     )(UserFormData.apply)(UserFormData.unapply)
   )
 

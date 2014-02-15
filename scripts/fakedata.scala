@@ -1,9 +1,9 @@
-val userAdmin = us.insert(UserEdit("Admin", "admin", Passwords.hash("qsdfghjklm")), UserDetailEdit(Some("sven@studiocredo.be"), None, None))
+val userAdmin = us.insert(UserEdit("Admin", "admin", Passwords.hash("qsdfghjklm"), true), UserDetailEdit(Some("sven@studiocredo.be"), None, None))
 us.addRole(userAdmin, Roles.Admin)
 
-val thomas = us.insert(UserFormData("Thomas", "thomas", Some("selckin@selckin.be"), None, None))
-val sven = us.insert(UserFormData("sven", "sven",Some("sven@example.com"), None, None))
-val jantje = us.insert(UserFormData("Jantje", "jantje", Some("selckin@selckin.be"), Some("veldstraat 20 gent"), Some("09/2345435453435")))
+val thomas = us.insert(UserFormData("Thomas", "thomas", Some("selckin@selckin.be"), None, None, true))
+val sven = us.insert(UserFormData("sven", "sven",Some("sven@example.com"), None, None, true))
+val jantje = us.insert(UserFormData("Jantje", "jantje", Some("selckin@selckin.be"), Some("veldstraat 20 gent"), Some("09/2345435453435"), true))
 
 val event1 = es.insert(EventEdit("xmas special", "", preReservationStart = Some(new DateTime(2013, 12, 9, 0 ,0)), preReservationEnd = Some(new DateTime(2013, 12, 20, 0, 0)), reservationStart = Some(new DateTime(2013, 12, 21, 0 ,0)), reservationEnd = Some(new DateTime(2013, 12, 24, 0 ,0)), archived = false)).fold(error => None, success => Some(success)).get
 val event2 = es.insert(EventEdit("Big show 2013", "", preReservationStart = Some(new DateTime(2013, 12, 9, 0 ,0)), preReservationEnd = Some(new DateTime(2013, 12, 20, 0, 0)), reservationStart = Some(new DateTime(2013, 12, 21, 0 ,0)), reservationEnd = Some(new DateTime(2013, 12, 24, 0 ,0)), archived = false)).fold(error => None, success => Some(success)).get
@@ -50,3 +50,36 @@ ss.insert(event2, ShowEdit(ven2, new DateTime(2013, 12, 5, 17, 0)))
 ss.insert(event2, ShowEdit(ven3, new DateTime(2013, 12, 5, 19, 0)))
 ss.insert(event2, ShowEdit(ven1, new DateTime(2014, 4, 6, 17, 0)))
 ss.insert(event2, ShowEdit(ven1, new DateTime(2014, 5, 6, 19, 0)))
+
+val sven  = us.findByUserName("sven").get.user
+us.changePassword(sven.id, Passwords.hash("sven"))
+
+val show = ss.get(ShowId(1)).get
+
+
+val orderId = os.insert(OrderEdit(sven.id, new DateTime(2013, 12, 5, 17, 0), "Dhr. X van Y", "adresje in Gent"))
+val ticketOrderId = os.insert(orderId, show.id)
+os.insert(List(TicketSeatOrder(ticketOrderId, show.id, Some(sven.id), SeatId("A4"), Money(12.5)), TicketSeatOrder(ticketOrderId, show.id, Some(sven.id), SeatId("B4"), Money(15))))
+
+val show2 = ss.get(ShowId(2)).get
+
+val rq1 = prs.insert(ReservationQuotum(show.eventId, sven.id, 13))
+val rq2 = prs.insert(ReservationQuotum(EventId(2), sven.id, 6))
+
+prs.quotaByUsers(List(sven.id))
+prs.unusedQuotaByUsers(List(sven.id))
+prs.preReservationsByUser(List(sven.id))
+prs.pendingPrereservationsByUsers(List(sven.id))
+
+val pr1 = prs.insert(ShowPrereservation(show.id, sven.id, 3))
+
+prs.quotaByUsers(List(sven.id))
+prs.unusedQuotaByUsers(List(sven.id))
+prs.preReservationsByUsers(List(sven.id))
+prs.pendingPrereservationsByUsers(List(sven.id))
+
+val jantje  = us.findByUserName("jantje").get.user
+us.changePassword(jantje.id, Passwords.hash("jantje"))
+val rq3 = prs.insert(ReservationQuotum(show.eventId, jantje.id, 17))
+
+us.createLoginGroup(List(sven.id, jantje.id))

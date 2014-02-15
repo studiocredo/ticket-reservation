@@ -101,7 +101,7 @@ class SignUp @Inject()(val userService: UserService, val authService: Authentica
       }, {
         info => {
           val userId = userService.insert(
-            UserEdit(info.name, info.username, Passwords.hash(info.password.newPassword)),
+            UserEdit(info.name, info.username, Passwords.hash(info.password.newPassword), true),
             UserDetailEdit(Some(token.email), None, None)
           )
           Redirect(routes.LoginPage.login()).flashing("success" -> "Bedankt voor je registratie. Je kan jezelf nu aanmelden.")

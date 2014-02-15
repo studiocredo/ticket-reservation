@@ -63,6 +63,10 @@ class UserService @Inject()() {
     UDQ.filter(q => q._1.username.toLowerCase === name.toLowerCase).firstOption.map(richUser)
   }
 
+  def findActiveByUserName(name: String)(implicit s: Session): Option[RichUser] = {
+    UDQ.filter(q => q._1.username.toLowerCase === name.toLowerCase && q._1.active).firstOption.map(richUser)
+  }
+
   def findByEmail(email: String)(implicit s: Session): List[RichUser] = {
     UDQ.filter(q => q._2.email.toLowerCase === email.toLowerCase).list.map(richUser)
   }
@@ -107,13 +111,17 @@ class UserService @Inject()() {
 
 
   def getEdit(id: UserId)(implicit s: Session): Option[UserFormData] = {
-    find(id) map {um => UserFormData(um.name, um.username, um.email, um.address, um.phone)}
+    find(id) map {um => UserFormData(um.name, um.username, um.email, um.address, um.phone, um.active)}
   }
 
   def insert(data: UserFormData)(implicit s: Session): UserId = {
     s.withTransaction {
-      insert(UserEdit(data.name, data.username, Passwords.random()), UserDetailEdit(data.email, data.address, data.phone))
+      insert(UserEdit(data.name, data.username, Passwords.random(), data.active), UserDetailEdit(data.email, data.address, data.phone))
     }
+  }
+
+  def activate(username: String)(implicit s: Session) = {
+    UsersQ.where(_.username === username).map(_.active).update(true)
   }
 
   //restrictions:

@@ -21,7 +21,7 @@ create unique index "idx_showseat" on "order-ticket-seat" ("show_id","seat");
 create table "user_detail" ("id" BIGINT NOT NULL PRIMARY KEY,"email" TEXT,"address" TEXT,"phone" TEXT);
 create table "roles" ("id" BIGINT NOT NULL,"role" TEXT NOT NULL);
 create unique index "idx_userrole" on "roles" ("id","role");
-create table "user" ("id" SERIAL NOT NULL PRIMARY KEY,"name" TEXT NOT NULL,"username" TEXT NOT NULL,"password" TEXT NOT NULL,"salt" TEXT NOT NULL,"login-group_id" BIGINT);
+create table "user" ("id" SERIAL NOT NULL PRIMARY KEY,"name" TEXT NOT NULL,"username" TEXT NOT NULL,"password" TEXT NOT NULL,"salt" TEXT NOT NULL,"login-group_id" BIGINT,"active" BOOLEAN NOT NULL);
 create unique index "idx_username" on "user" ("username");
 create table "venue" ("id" SERIAL NOT NULL PRIMARY KEY,"name" TEXT NOT NULL,"description" TEXT NOT NULL,"floorplan" TEXT,"archived" BOOLEAN DEFAULT false NOT NULL);
 alter table "dvd" add constraint "event_fk" foreign key("event_id") references "event"("id") on update NO ACTION on delete NO ACTION;

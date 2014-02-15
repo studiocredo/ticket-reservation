@@ -19,6 +19,7 @@ object admin {
       case None => List()
       case Some(address) => address.split("\n").toList
     }
+    def active = user.active
   }
 
   case class RichUserWithReservationHistory(user: RichUser, otherUsers: List[User], orders: List[OrderDetail], prereservations: List[ShowPrereservationDetail], pendingPrereservations: PendingPrereservationDisplay, reservationQuota: List[ReservationQuotumDetail], unusedQuota: UnusedQuotaDisplay) {
@@ -39,7 +40,7 @@ object admin {
     }
   }
 
-  case class UserFormData(name: String, username: String, email: Option[String], address: Option[String], phone: Option[String])
+  case class UserFormData(name: String, username: String, email: Option[String], address: Option[String], phone: Option[String], active: Boolean)
 
 
   case class EventDetail(event: Event, shows: List[VenueShows]) {

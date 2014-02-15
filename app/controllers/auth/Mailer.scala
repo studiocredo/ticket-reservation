@@ -44,6 +44,16 @@ object Mailer {
     }
   }
 
+  def sendProfileCreatedEmail(user: RichUser)(implicit request: RequestHeader) = {
+    user.email match {
+      case Some(email) => {
+        val txtAndHtml = (None, Some(views.html.mails.profileCreated(user)))
+        sendEmail(s"$subjectPrefix Gebruikersprofiel aangemaakt", email, txtAndHtml)
+      }
+      case None => ()
+    }
+  }
+
   def sendProfileUpdatedEmail(user: RichUser)(implicit request: RequestHeader) = {
     user.email match {
       case Some(email) => {
@@ -52,6 +62,11 @@ object Mailer {
       }
       case None => ()
     }
+  }
+
+  def sendProfileActivationEmail(to: String, user: RichUser, token: EmailToken)(implicit request: RequestHeader) {
+    val txtAndHtml = (None, Some(views.html.mails.profileActivation(user, token.id)))
+    sendEmail(s"$subjectPrefix Instructies om je wachtwoord in te stellen", to, txtAndHtml)
   }
 
   private def sendEmail(subject: String, recipient: String, body: (Option[Txt], Option[Html])) {

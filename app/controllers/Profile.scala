@@ -7,7 +7,6 @@ import be.studiocredo.{UserContextSupport, NotificationService, UserService}
 import play.api.data.Form
 import play.api.data.Forms._
 import models.admin.UserFormData
-import controllers.admin.routes
 import play.api.data.validation.{Valid, Invalid, Constraint}
 import be.studiocredo.util.ServiceReturnValues._
 import controllers.auth.Mailer
@@ -49,7 +48,7 @@ class Profile @Inject()(val userService: UserService, val authService: Authentic
       )(EmailSet.apply)(EmailSet.unapply).verifying(validEmails),
       "address" -> optional(text),
       "phone" -> optional(text)
-    )((name, userName, emailSet, address, phone) => UserFormData(name,userName, emailSet.email, address, phone))(ufd => Some((ufd.name, ufd.username, EmailSet(ufd.email, None), ufd.address, ufd.phone)))
+    )((name, userName, emailSet, address, phone) => UserFormData(name,userName, emailSet.email, address, phone, true))(ufd => Some((ufd.name, ufd.username, EmailSet(ufd.email, None), ufd.address, ufd.phone)))
   )
 
   def edit = AuthDBAction { implicit rq =>

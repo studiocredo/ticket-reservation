@@ -48,15 +48,16 @@ object schema {
     def password = column[String]("password", O.DBType("TEXT"))
     def salt = column[String]("salt", O.DBType("TEXT"))
     def loginGroupId = column[Option[UserId]]("login-group_id")
+    def active = column[Boolean]("active")
 
-    def * = id ~ name ~ username ~ password  ~ salt ~ loginGroupId <>(
-      { (id, name, username, password, salt, loginGroupId) => User(id, name, username, Password(password, salt), loginGroupId)},
-      {(user: User) => Some((user.id, user.name, user.username, user.password.hashed, user.password.salt, user.loginGroupId))}
+    def * = id ~ name ~ username ~ password ~ salt ~ loginGroupId ~ active <>(
+      { (id, name, username, password, salt, loginGroupId, active) => User(id, name, username, Password(password, salt), loginGroupId, active)},
+      {(user: User) => Some((user.id, user.name, user.username, user.password.hashed, user.password.salt, user.loginGroupId, user.active))}
       )
 
-    def autoInc = name ~ username ~ password ~ salt <>(
-      {(name, username, password, salt) => UserEdit(name, username, Password(password, salt))},
-      {(user: UserEdit) => Some((user.name, user.username, user.password.hashed, user.password.salt))}
+    def autoInc = name ~ username ~ password ~ salt ~ active <>(
+      {(name, username, password, salt, active) => UserEdit(name, username, Password(password, salt), active)},
+      {(user: UserEdit) => Some((user.name, user.username, user.password.hashed, user.password.salt, user.active))}
       ) returning id
 
     def uniqueUserName = index("idx_username", username, unique = true)

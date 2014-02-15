@@ -24,7 +24,7 @@ class IdentityService @Inject()(userService: UserService) {
 
   def findByUserName(user: String): Option[Identity] = {
     DB.withSession { implicit session =>
-      userService.findByUserName(user) map toIdentity
+      userService.findActiveByUserName(user) map toIdentity
     }
   }
 

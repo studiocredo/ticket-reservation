@@ -21,7 +21,6 @@ object Modules {
       bind[controllers.Application].in[Singleton]
       bind[controllers.admin.EventDetails].in[Singleton]
       bind[controllers.admin.Events].in[Singleton]
-      bind[controllers.admin.FakeData].in[Singleton]
       bind[controllers.admin.UserDetails].in[Singleton]
       bind[controllers.admin.Venues].in[Singleton]
     }

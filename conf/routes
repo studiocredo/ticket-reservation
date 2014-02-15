@@ -21,9 +21,12 @@ POST        /signup/force                           @controllers.auth.SignUp.for
 GET         /signup/:token                          @controllers.auth.SignUp.signUp(token)
 POST        /signup/:token                          @controllers.auth.SignUp.handleSignUp(token:String)
 GET         /reset                                  @controllers.auth.PasswordReset.startResetPassword
+GET         /activate/:username                     @controllers.auth.PasswordReset.startActivateProfile(username: String)
 POST        /reset                                  @controllers.auth.PasswordReset.handleStartResetPassword
+POST        /activate/:username                     @controllers.auth.PasswordReset.handleStartActivateProfile(username: String)
 GET         /reset/:token/:username                 @controllers.auth.PasswordReset.resetPassword(token:String, username: String)
 POST        /reset/:token/:username                 @controllers.auth.PasswordReset.handleResetPassword(token:String, username: String)
+GET         /activate/:token/:username              @controllers.auth.PasswordReset.handleActivateProfile(token:String, username: String)
 GET         /password                               @controllers.auth.PasswordChange.page
 POST        /password                               @controllers.auth.PasswordChange.handlePasswordChange
 GET         /profile                                @controllers.Profile.edit
@@ -75,6 +78,3 @@ GET         /events/floorplan/:id                   @controllers.Events.ajaxFloo
 GET         /assets/javascripts/routes              @controllers.Application.javascriptRoutes
 GET         /assets/*file                           controllers.Assets.at(path="/public", file)
 GET         /webjars/*file                          controllers.WebJarAssets.at(file)
-
-# Test
-GET         /admin/test/fakedata                    @controllers.admin.FakeData.insert()
