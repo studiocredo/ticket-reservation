@@ -1,20 +1,20 @@
-@(show: models.entities.Show)
+@(info: models.entities.ShowAvailability)
 
 <div class="row">
     <dl class="dl-horizontal">
         <dt>Tijdstip</dt>
-        <dd>@HumanDateTime.formatDateTime(show.date)</dd>
-        @if(show.isDone) {
+        <dd>@HumanDateTime.formatDateTime(info.show.date)</dd>
+        @if(info.show.isDone) {
         <dt/>
         <dd>Deze show is afgelopen</dd>
         } else {
-        <dt/>Nog</dt>
-        <dd>@HumanDateTime.formatDuration(show.date)</dd>
+        <dt/>Beschikbaarheid</dt>
+        <dd>@AvailabilityFormat.format(info)</dd>
         }
     </dl>
 </div>
 <div class="row">
 
-    <div data-floorplan data-venue="@show.venueId"></div>
+    <div data-floorplan data-venue="@info.show.venueId"></div>
 
 </div>

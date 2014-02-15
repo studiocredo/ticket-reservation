@@ -55,5 +55,10 @@ class ShowService @Inject()(venueService: VenueService, orderService: OrderServi
     }
   }
 
+  def getEventShow(id: ShowId)(implicit s: Session): EventShow = {
+    val q = for (s <- byId(id); e <- s.event) yield (s.id, e.id, e.name, s.venueId, s.date, s.archived)
+    (EventShow.apply _) tupled q.first
+  }
+
   private def byId(id: ids.ShowId)=  ShowsQ.where(_.id === id)
 }

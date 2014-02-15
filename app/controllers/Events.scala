@@ -4,13 +4,13 @@ import com.google.inject.Inject
 import be.studiocredo._
 import be.studiocredo.auth.{Authorization, Secure, AuthenticatorService}
 import play.api.mvc.Controller
-import models.ids.{VenueId, ShowId, EventId}
-import models.entities.{UserContext, FloorPlanJson}
+import models.ids.{UserId, VenueId, ShowId, EventId}
+import models.entities.{ShowAvailability, EventShow, UserContext, FloorPlanJson}
 import play.api.libs.json.Json
 import scala.Some
 import be.studiocredo.util.DBSupport._
 
-class Events @Inject()(venueService: VenueService, eventService: EventService, showService: ShowService, preReservationService: PreReservationService, val authService: AuthenticatorService, val notificationService: NotificationService, val userService : UserService) extends Controller with Secure with UserContextSupport {
+class Events @Inject()(venueService: VenueService, eventService: EventService, showService: ShowService, preReservationService: PreReservationService, orderService: OrderService, val authService: AuthenticatorService, val notificationService: NotificationService, val userService : UserService) extends Controller with Secure with UserContextSupport {
 
   val defaultAuthorization = Some(Authorization.ANY)
 
@@ -33,7 +33,9 @@ class Events @Inject()(venueService: VenueService, eventService: EventService, s
       case None => BadRequest(s"Evenement $eventId niet gevonden")
       case Some(details) => {
         val currentUserContext = userContext
-        Ok(views.html.event(details, details.shows.flatMap(_.shows).find(_.id == showId), hasQuota(eventId, currentUserContext), currentUserContext))
+        val show = details.shows.flatMap(_.shows).find(_.id == showId)
+        val showAvailability = show.map{ s => orderService.capacity(showService.getEventShow(s.id))}
+        Ok(views.html.event(details, showAvailability, hasQuota(eventId, currentUserContext), currentUserContext))
       }
     }
   }
