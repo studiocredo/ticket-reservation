@@ -21,8 +21,9 @@ class Application @Inject()(showService: ShowService, val authService: Authentic
     Ok(
       Routes.javascriptRouter("jsRoutes")(
         mr.Events.ajaxFloorplan,
-
-        ar.Floorplans.ajaxSaveFloorPlan, ar.Floorplans.ajaxFloorPlan
+        mr.Events.ajaxAvailabilityFloorplan,
+        ar.Floorplans.ajaxSaveFloorPlan,
+        ar.Floorplans.ajaxFloorPlan
       )).as("text/javascript")
   }
 

@@ -5,6 +5,20 @@ import models._
 import models.entities._
 import models.ids._
 import com.google.inject.Inject
+import models.entities.SeatStatus.SeatStatus
+import models.entities.SeatStatus
+import be.studiocredo.util.ServiceReturnValues._
+import models.entities.TicketSeatOrder
+import models.entities.VenueEdit
+import models.entities.FloorPlan
+import models.Page
+import models.entities.SeatId
+import scala.Some
+import models.entities.Seat
+import models.entities.SeatWithStatus
+import models.entities.Row
+import models.entities.Venue
+import models.entities.Spacer
 
 class VenueService @Inject()() {
 
@@ -30,8 +44,31 @@ class VenueService @Inject()() {
 
   def insert(venue: VenueEdit)(implicit s: Session): VenueId = Venues.autoInc.insert(venue)
   def update(id: VenueId, venue: VenueEdit)(implicit s: Session) = editById(id).update(venue)
-  //TODO validate if the floorplan contains unique ids
-  def update(id: VenueId, floorPlan: FloorPlan)(implicit s: Session) = byId(id).map(_.floorplan).update(Some(floorPlan))
+
+  def update(id: VenueId, floorPlan: FloorPlan)(implicit s: Session): Either[ServiceFailure, ServiceSuccess] = {
+    validateFloorPlan(floorPlan).fold(
+      error => Left(error),
+      success => {
+        byId(id).map(_.floorplan).update(Some(floorPlan))
+        Right(success)
+      }
+    )
+  }
+
+  private def validateFloorPlan(floorPlan: FloorPlan): Either[ServiceFailure, ServiceSuccess] = {
+    //TODO validate if the floorplan contains unique ids
+    //TODO validate if the flooprlan does not have SeatWithStatus entries
+    val rowContent = floorPlan.rows.map{_.content}.flatten
+    val seats = rowContent.collect{case seat:Seat => seat}
+    if (rowContent.exists(_ match { case seat:SeatWithStatus => true; case _ => false})) {
+      Left(serviceFailure("floorplan.invalid.type"))
+    } else if (seats.size != seats.toSet.size) {
+      val dups: Iterable[String] = seats.groupBy{_.id.name}.filter{case (_,lst) => lst.size > 1 }.keys
+      Left(serviceFailure("floorplan.invalid.notunique", dups.toList))
+    } else {
+      Right(serviceSuccess("floorplan.save.success"))
+    }
+  }
 
   def get(id: VenueId)(implicit s: Session): Option[Venue] = byId(id).firstOption
   def getEdit(id: VenueId)(implicit s: Session): Option[VenueEdit] = editById(id).firstOption
@@ -39,6 +76,27 @@ class VenueService @Inject()() {
   def delete(id: VenueId)(implicit s: Session) = {
     (for (v <- VenuesQ if v.id === id) yield v.archived).update(true)
 
+  }
+
+  def fillFloorplan(fp: FloorPlan, tickets: List[TicketSeatOrder], users: List[UserId] = List()): FloorPlan = {
+   val (mine, notmine) = tickets.partition(ticket => ticket.userId match { case Some(userId) => users.contains(userId); case None => false})
+   FloorPlan(fp.rows.map{row => Row(row.content.map{ case seat: Seat => SeatWithStatus(seat.id, seat.kind, getSeatStatus(seat, mine.map{_.seat}, notmine.map{_.seat}, users)); case seat:SeatWithStatus => seat; case spacer:Spacer => spacer }, row.vspace) })
+  }
+
+  private def getSeatStatus(seat: Seat, mine: List[SeatId], notmine: List[SeatId], users: List[UserId]): SeatStatus = {
+    if (mine.contains(seat.id)) {
+      SeatStatus.Mine
+    } else if (notmine.contains(seat.id)) {
+      seat.kind match {
+        case SeatType.Normal => SeatStatus.Reserved
+        case _ => SeatStatus.Unavailable
+      }
+    } else {
+      seat.kind match {
+        case SeatType.Normal => SeatStatus.Free
+        case _ => SeatStatus.Unavailable
+      }
+    }
   }
 
   private def byId(id: ids.VenueId)=  VenuesQ.where(_.id === id)

@@ -69,3 +69,8 @@ user.update.notfound=Gebruiker niet gevonden
 #user.update.name.accepted
 user.update.name.used=Gebruikersnaam {0} is reeds in gebruik
 #user.update.name.unchanged
+
+# --- Floorplan
+floorplan.invalid.type=Zaalplan bevat ongeldig stoeltype
+floorplan.invalid.notunique=Zaalplan bevat niet-unieke plaatsen: {0}
+#floorplan.save.success

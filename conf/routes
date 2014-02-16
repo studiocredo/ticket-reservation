@@ -73,6 +73,7 @@ GET         /events/                                @controllers.Events.list(p:I
 GET         /events/:event                          @controllers.Events.view(event:EventId)
 GET         /events/:event/show/:show               @controllers.Events.viewShow(event:EventId, show:ShowId)
 GET         /events/floorplan/:id                   @controllers.Events.ajaxFloorplan(id:VenueId)
+GET         /events/availability/:id                @controllers.Events.ajaxAvailabilityFloorplan(id:ShowId)
 
 # Assets
 GET         /assets/javascripts/routes              @controllers.Application.javascriptRoutes

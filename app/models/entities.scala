@@ -67,6 +67,15 @@ object entities {
   }
   import SeatType._
 
+  object SeatStatus extends Enumeration {
+    type SeatStatus = Value
+    val Free = Value("free")
+    val Reserved = Value("reserved")
+    val Unavailable = Value("unavailable")
+    val Mine = Value("mine")
+  }
+  import SeatStatus._
+
   case class Venue(id: VenueId, name: String, description: String, floorplan: Option[FloorPlan], archived: Boolean) extends Archiveable {
       def totalCapacity: Int = {
         this.floorplan match {
@@ -96,9 +105,11 @@ object entities {
   sealed trait RowContent
   case class SeatId(name: String)
   case class Seat(id: SeatId, kind: SeatType) extends RowContent
+  case class SeatWithStatus(id: SeatId, kind: SeatType, status: SeatStatus) extends RowContent
   case class Spacer(width: Int) extends RowContent
   object RowContent {
     val SEAT_TYPE = "seat"
+    val SEAT_STATUS_TYPE = "seat-status"
     val SPACER_TYPE = "spacer"
   }
 
@@ -114,14 +125,17 @@ object entities {
     import play.api.libs.json._
 
     implicit val seatTypeFmt = EnumUtils.enumFormat(SeatType)
+    implicit val seatStatusFmt = EnumUtils.enumFormat(SeatStatus)
     implicit val seatIdFmt = Json.format[SeatId]
     implicit val seatFmt = Json.format[Seat]
+    implicit val seatWithStatusFmt = Json.format[SeatWithStatus]
     implicit val spacerFmt = Json.format[Spacer]
 
     implicit val rowContentFmt: Format[RowContent] = new Format[RowContent] {
       def reads(json: JsValue): JsResult[RowContent] = {
         json \ "ct" match {
           case JsString(RowContent.SEAT_TYPE) => Json.fromJson[Seat](json)(seatFmt)
+          case JsString(RowContent.SEAT_STATUS_TYPE) => Json.fromJson[SeatWithStatus](json)(seatWithStatusFmt)
           case JsString(RowContent.SPACER_TYPE) => Json.fromJson[Spacer](json)(spacerFmt)
           case other  => JsError(s"Unexpected json content '$other'")
         }
@@ -130,6 +144,7 @@ object entities {
       def writes(content: RowContent): JsValue = {
         content match {
           case b: Seat => toJson(RowContent.SEAT_TYPE, Json.toJson(b)(seatFmt))
+          case b: SeatWithStatus => toJson(RowContent.SEAT_STATUS_TYPE, Json.toJson(b)(seatWithStatusFmt))
           case b: Spacer => toJson(RowContent.SPACER_TYPE, Json.toJson(b)(spacerFmt))
         }
       }

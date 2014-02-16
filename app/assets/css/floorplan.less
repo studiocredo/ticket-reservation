@@ -18,6 +18,11 @@
 }
 .vspacers(@spacer-sizer, 0) {}
 
+.seat(@item) {
+    @items: '{"mine": 1, "reserved": 2, "disabled": 3, "vip": 4, "unavailable": 5, "normal": 6, "free": 6 }';
+    .sprite('../images/seats_sprite.png', 32px, @item, @items);
+}
+
 .fp {
   .content, .seat, .spacer {
     display: inline-block;
@@ -81,12 +86,43 @@
       }
   }
 
-  &.fp-fancy {
-    .seat(@item) {
-        @items: '{"free": 1, "reserved": 2, "disabled": 3, "vip": 4, "unavailable": 5, "normal": 6 }';
-        .sprite('../images/seats_sprite.png', 32px, @item, @items);
+  &.fp-fancy-legend {
+    @seat-size: 32px;
+    @spacer-size: @seat-size / 2;
+    @vspacer-size: 32px;
+
+    padding: 0;
+    background-color: inherit;
+    margin-right: 0;
+
+    .legend-label {
+        border: none;
+        margin-left: 3px;
+        height: @seat-size;
+        line-height: @seat-size;
+        text-align: left;
+        padding-top: @seat-size*0.1;
+        padding-left: @seat-size*1.1;
     }
 
+    .legend-label-free {
+        .seat("free")
+    }
+
+    .legend-label-reserved {
+        .seat("reserved")
+    }
+
+    .legend-label-unavailable {
+        .seat("unavailable")
+    }
+
+    .legend-label-mine {
+        .seat("mine")
+    }
+  }
+
+  &.fp-fancy {
     @seat-size: 32px;
     @spacer-size: @seat-size / 2;
     @vspacer-size: 32px;
@@ -120,6 +156,22 @@
 
     .seat-disabled {
         .seat("disabled");
+    }
+
+    .seat-status-free {
+        .seat("free")
+    }
+
+    .seat-status-reserved {
+        .seat("reserved")
+    }
+
+    .seat-status-unavailable {
+        .seat("unavailable")
+    }
+
+    .seat-status-mine {
+        .seat("mine")
     }
 
     .delete-paint {

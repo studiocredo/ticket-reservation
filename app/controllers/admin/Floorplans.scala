@@ -8,6 +8,13 @@ import models.ids.VenueId
 import play.api.libs.json.{JsError, Json}
 import models.entities._
 import play.api.mvc.Result
+import be.studiocredo.util.ServiceReturnValues._
+import models.entities.Row
+import models.entities.Venue
+import models.entities.FloorPlan
+import models.entities.SeatId
+import scala.Some
+import models.entities.Seat
 
 class Floorplans @Inject()(venueService: VenueService, val authService: AuthenticatorService, val notificationService: NotificationService, val userService: UserService) extends AdminController with UserContextSupport {
 
@@ -27,8 +34,10 @@ class Floorplans @Inject()(venueService: VenueService, val authService: Authenti
   def ajaxSaveFloorPlan(id: VenueId) = AuthDBAction(parse.json) { implicit rs =>
     rs.body.validate[FloorPlan].map {
       plan => {
-        venueService.update(id, plan)
-        Ok("")
+        venueService.update(id, plan).fold(
+          error => BadRequest(serviceMessage(error)),
+          success => Ok("")
+        )
       }
     }.recoverTotal {
       e => BadRequest("Er heeft zich een fout voorgedaan:" + JsError.toFlatJson(e))

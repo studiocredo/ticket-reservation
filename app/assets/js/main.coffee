@@ -121,8 +121,8 @@ Floorplan.directive 'floorplan', () ->
     <div class="row seat-row vspacer-{{row.vspace}}" data-ng-repeat="row in rows">
         <div data-ng-model="row.content">
             <div class="content" data-ng-repeat="content in row.content">
-                <div class="spacer spacer-{{content.width}}" data-ng-show="content.ct == 'spacer'"></div>
-                <div class="clickable seat seat-{{content.kind}}" data-ng-click="count = count + 1" data-ng-init="count=0" data-ng-show="content.ct == 'seat'">{{count}}{{content.id.name}}</div>
+                <div class="spacer spacer-{{content.width}}" data-ng-if="content.ct == 'spacer'"></div>
+                <div class="clickable seat seat-{{content.kind}}" data-ng-if="content.ct == 'seat'">{{content.id.name}}</div>
             </div>
         </div>
     </div>
@@ -131,6 +131,31 @@ Floorplan.directive 'floorplan', () ->
     scope:
         venue: '='
     controller: 'FloorPlanCtrl'
+
+Floorplan.controller "ShowAvailabilityCtrl", ($scope, $http) ->
+     $http.get(jsRoutes.controllers.Events.ajaxAvailabilityFloorplan($scope.show).url).success (plan) ->
+             $scope.plan = plan
+             $scope.rows = plan.rows
+
+Floorplan.directive 'availabilityFloorplan', () ->
+    restrict: 'EA'
+    template: """
+<div class="fp fp-fancy">
+    <div class="row seat-row vspacer-{{row.vspace}}" data-ng-repeat="row in rows">
+        <div data-ng-model="row.content">
+            <div class="content" data-ng-repeat="content in row.content">
+                <div class="spacer spacer-{{content.width}}" data-ng-if="content.ct == 'spacer'"></div>
+                <div class="seat seat-{{content.kind}}" data-ng-if="content.ct == 'seat'">{{content.id.name}}</div>
+                <div class="seat seat-status-{{content.status}}" data-ng-if="content.ct == 'seat-status'">{{content.id.name}}</div>
+            </div>
+        </div>
+    </div>
+    <p class="text-center">Podium</p>
+</div>
+"""
+    scope:
+        show: '='
+    controller: 'ShowAvailabilityCtrl'
 
 CounterInput = angular.module("counterInput", [])
 

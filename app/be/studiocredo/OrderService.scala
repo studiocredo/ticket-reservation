@@ -119,7 +119,6 @@ class OrderService @Inject()(venueService: VenueService) {
     }
   }
 
-  //TODO need transaction?
   def capacity(show: EventShow, excludedUsers: List[UserId] = List())(implicit s: Session): ShowAvailability = {
     val venue = venueService.get(show.venueId).get
     val ticketSeatOrders = byShowId(show.id, excludedUsers)
