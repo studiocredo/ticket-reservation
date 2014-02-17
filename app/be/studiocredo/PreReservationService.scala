@@ -144,11 +144,15 @@ class PreReservationService @Inject()(orderService: OrderService) {
   }
 
   private def fillPrereservations(event: EventId, showPrereservations: List[ShowPrereservationUpdate], users: List[UserId])(implicit s: Session): Either[ServiceFailure, ServiceSuccess] = {
+    val userMap = mutable.Map(users.map{userId => (userId, totalQuotaByUsersAndEvent(List(userId), event))}.toSeq: _*)
     showPrereservations.foreach { showPrereservationUpdate =>
       var quantity = showPrereservationUpdate.quantity
       users.foreach { user =>
-        val quantityByUser = Math.min(quantity, totalQuotaByUsersAndEvent(List(user), EventId(1)).getOrElse(quantity))
+        val quantityByUser = Math.min(quantity, userMap(user).getOrElse(0))
         quantity -= quantityByUser
+        if (userMap.contains(user)) {
+          userMap.put(user, Some(userMap(user).get - quantityByUser))
+        }
         updateQuantity(ShowPrereservation(showPrereservationUpdate.showId, user, quantityByUser))
       }
     }
