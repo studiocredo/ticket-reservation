@@ -87,31 +87,34 @@
         @if(info.prereservations.isEmpty && info.pendingPrereservations.showMap.isEmpty) {
             <p class="disabled">Geen pre-reservaties gevonden.</p>
         } else {
-            <table class="table table-hover table-striped">
-                <thead>
-                <tr>
-                    <th>Voorstelling</th>
-                    <th>Naam</th>
-                    <th>Aantal</th>
-                </tr>
-                </thead>
-                <tbody>
-                    @info.prereservations.map { prereservation =>
+            @info.shows.map { show =>
+                <h4 class="text-info">@showName(show)</h4>
+                <table class="table table-condensed table-hover table-striped">
+                    <thead>
                     <tr>
-                        <td>@showName(prereservation.show)</td>
-                        <td>@prereservation.user.name</td>
-                        <td>@prereservation.quantity</td>
+                        <th>Naam</th>
+                        <th>Aantal</th>
                     </tr>
-                    }
-                    @info.pendingPrereservations.showMap.map { case (show: models.entities.EventShow, quantity: Int) =>
-                    <tr>
-                        <td>@showName(show)</td>
-                        <td>-</td>
-                        <td>@quantity ongebruikt</td>
-                    </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @info.prereservationsByShow.getOrElse(show, List()).map { prereservation =>
+                        <tr>
+                            <td>@prereservation.user.name</td>
+                            <td><strong>@prereservation.quantity</strong></td>
+                        </tr>
+                        }
+                        @info.unusedPreReservationsByShow.get(show) match {
+                            case Some(quotum) => {
+                                <tr>
+                                    <td class="text-danger">Ongebruikt</td>
+                                    <td class="text-danger"><strong>@quotum</strong></td>
+                                </tr>
+                            }
+                            case None => { }
+                        }
+                    </tbody>
+                </table>
+            }
         }
     </div>
 
@@ -120,31 +123,34 @@
         @if(info.reservationQuota.isEmpty && info.unusedQuota.eventMap.isEmpty) {
         <p class="disabled">Geen quota gevonden.</p>
         } else {
-            <table class="table table-hover table-striped">
+            @info.events.map { event =>
+            <h4 class="text-info">@event.name</h4>
+            <table class="table table-condensed table-hover table-striped">
                 <thead>
-                <tr>
-                    <th>Evenement</th>
-                    <th>Naam</th>
-                    <th>Aantal</th>
-                </tr>
+                    <tr>
+                        <th>Naam</th>
+                        <th>Aantal</th>
+                    </tr>
                 </thead>
                 <tbody>
-                    @info.reservationQuota.map { quotum =>
-                    <tr>
-                        <td>@quotum.event.name</td>
-                        <td>@quotum.user.name</td>
-                        <td>@quotum.quota</td>
-                    </tr>
+                    @info.quotaByEvent.getOrElse(event, List()).map { quotum =>
+                        <tr>
+                            <td>@quotum.user.name</td>
+                            <td><strong>@quotum.quota</strong></td>
+                        </tr>
                     }
-                    @info.unusedQuota.eventMap.map { case (event: models.entities.Event, quota: Int) =>
-                    <tr>
-                        <td>@event.name</td>
-                        <td>-</td>
-                        <td>@quota ongebruikt</td>
-                    </tr>
+                    @info.unusedQuotaByEvent.get(event) match {
+                        case Some(quotum) => {
+                        <tr>
+                            <td class="text-danger">Ongebruikt</td>
+                            <td class="text-danger"><strong>@quotum</strong></td>
+                        </tr>
+                        }
+                        case None => { }
                     }
                 </tbody>
             </table>
+            }
         }
     </div>
 

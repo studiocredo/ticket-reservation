@@ -5,6 +5,7 @@ import models.ids._
 import org.joda.time.DateTime
 import scala.collection.mutable
 import play.api.templates.Html
+import be.studiocredo.util.Joda._
 
 object admin {
   case class RichUser(user: User, detail: UserDetail) {
@@ -23,20 +24,28 @@ object admin {
   }
 
   case class RichUserWithReservationHistory(user: RichUser, otherUsers: List[User], orders: List[OrderDetail], prereservations: List[ShowPrereservationDetail], pendingPrereservations: PendingPrereservationDisplay, reservationQuota: List[ReservationQuotumDetail], unusedQuota: UnusedQuotaDisplay) {
-    def prereservationsByShow: Map[EventShow, ShowPrereservationDetail] = {
-      mutable.Map[EventShow, ShowPrereservationDetail]().toMap
+    def prereservationsByShow: Map[EventShow, List[ShowPrereservationDetail]] = {
+      prereservations.groupBy(_.show)
     }
 
     def unusedPreReservationsByShow: Map[EventShow, Int] = {
-      mutable.Map[EventShow, Int]().withDefaultValue(0).toMap
+      pendingPrereservations.showMap
     }
 
-    def quotaByEvent: Map[Event, ReservationQuotumDetail] = {
-      mutable.Map[Event, ReservationQuotumDetail]().toMap
+    def shows: List[EventShow] = {
+      (prereservations.map{_.show} ++ pendingPrereservations.showMap.keys).distinct.sortBy(_.date)
+    }
+
+    def events: List[Event] = {
+      (reservationQuota.map{_.event} ++ unusedQuota.eventMap.keys).distinct
+    }
+
+    def quotaByEvent: Map[Event, List[ReservationQuotumDetail]] = {
+      reservationQuota.groupBy(_.event)
     }
 
     def unusedQuotaByEvent: Map[Event, Int] = {
-      mutable.Map[Event, Int]().withDefaultValue(0).toMap
+      unusedQuota.eventMap
     }
   }
 
