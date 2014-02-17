@@ -166,9 +166,9 @@ class UserService @Inject()() {
         s.withTransaction {
           val userUpdate = for {
             u <- UsersQ.filter(_.id === id)
-          } yield u.name ~ u.username
+          } yield u.name ~ u.username ~ u.active
 
-          userUpdate.update((data.name, data.username.toLowerCase))
+          userUpdate.update((data.name, data.username.toLowerCase, data.active))
           val detailUpdate = for {
             u <- UsersDetailsQ.filter(_.id === id)
           } yield u.email ~ u.address ~ u.phone
