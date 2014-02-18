@@ -12,32 +12,32 @@ val ven1 = vs.insert(VenueEdit("Big room 1", "", archived = false))
 val ven2 = vs.insert(VenueEdit("Big room 2", "", archived = false))
 val ven3 = vs.insert(VenueEdit("Small room", "", archived = false))
 
-def norm(name: String): Seat = { Seat(SeatId(name), SeatType.Normal) }
-def vip(name: String): Seat = { Seat(SeatId(name), SeatType.Vip) }
-def disa(name: String): Seat = { Seat(SeatId(name), SeatType.Disabled) }
+def norm(name: String, pref: Int): Seat = { Seat(SeatId(name), SeatType.Normal, pref) }
+def vip(name: String, pref: Int): Seat = { Seat(SeatId(name), SeatType.Vip, pref) }
+def disa(name: String, pref: Int): Seat = { Seat(SeatId(name), SeatType.Disabled, pref) }
 
 vs.update(ven1, FloorPlan(List(
-    Row(List(norm("A1"), norm("A2"), norm("A3"), norm("A4"), norm("A5"), norm("A6"), norm("A7"), disa("A8")), 0),
-    Row(List(norm("B1"), norm("B2"), norm("B3"), norm("B4"), norm("B5"), norm("B6"), norm("B7"), disa("B8")), 0),
-    Row(List(norm("C1"), norm("C2"), norm("C3"), norm("C4"), norm("C5"), norm("C6"), norm("C7"), disa("C8")), 0),
-    Row(List(norm("D1"), norm("D2"), norm("D3"), norm("D4"), norm("D5"), norm("D6"), norm("D7"), disa("D8")), 0),
-    Row(List(norm("E1"), norm("E2"), norm("E3"), norm("E4"), norm("E5"), norm("E6"), norm("E7"), disa("E8")), 0),
-    Row(List(Spacer(1), norm("F1"), norm("F2"), norm("F3"), norm("F4"), norm("F5"), norm("F6"), disa("F7")), 1),
-    Row(List(Spacer(2), norm("G1"), norm("G2"), norm("G3"), norm("G4"), norm("G5"), disa("G6")), 0),
-    Row(List(Spacer(2), vip("H1"), vip("H2"), vip("H3"), vip("H4"), vip("H5"), disa("H6")), 0),
-    Row(List(Spacer(4), vip("I1"), vip("I2"), vip("I3"), vip("I4")), 0)
+    Row(List(norm("A1",1), norm("A2",1), norm("A3",1), norm("A4",1), norm("A5",1), norm("A6",1), norm("A7",1), disa("A8",1)), 0),
+    Row(List(norm("B1",1), norm("B2",1), norm("B3",1), norm("B4",1), norm("B5",1), norm("B6",1), norm("B7",1), disa("B8",1)), 0),
+    Row(List(norm("C1",1), norm("C2",1), norm("C3",1), norm("C4",1), norm("C5",1), norm("C6",1), norm("C7",1), disa("C8",1)), 0),
+    Row(List(norm("D1",1), norm("D2",1), norm("D3",1), norm("D4",1), norm("D5",1), norm("D6",1), norm("D7",1), disa("D8",1)), 0),
+    Row(List(norm("E1",1), norm("E2",1), norm("E3",1), norm("E4",1), norm("E5",1), norm("E6",1), norm("E7",1), disa("E8",1)), 0),
+    Row(List(Spacer(1), norm("F1",1), norm("F2",1), norm("F3",1), norm("F4",1), norm("F5",1), norm("F6",1), disa("F7",1)), 1),
+    Row(List(Spacer(2), norm("G1",1), norm("G2",1), norm("G3",1), norm("G4",1), norm("G5",1), disa("G6",1)), 0),
+    Row(List(Spacer(2), vip("H1",1), vip("H2",1), vip("H3",1), vip("H4",1), vip("H5",1), disa("H6",1)), 0),
+    Row(List(Spacer(4), vip("I1",1), vip("I2",1), vip("I3",1), vip("I4",1)), 0)
 )))
 vs.update(ven2, FloorPlan(List(
-  Row(List(norm("D1"), norm("D2"), norm("D3"), norm("D4"), norm("D5"), norm("D6"), norm("D7"), disa("D8")), 0),
-  Row(List(norm("C1"), norm("C2"), norm("C3"), norm("C4"), norm("C5"), norm("C6"), norm("C7"), disa("C8")), 0),
-  Row(List(norm("B1"), norm("B2"), norm("B3"), norm("B4"), norm("B5"), norm("B6"), norm("B7"), disa("B8")), 1),
-  Row(List(norm("A1"), norm("A2"), norm("A3"), norm("A4"), norm("A5"), norm("A6"), norm("A7"), disa("A8")), 0)
+  Row(List(norm("D1",1), norm("D2",1), norm("D3",1), norm("D4",1), norm("D5",1), norm("D6",1), norm("D7",1), disa("D8",1)), 0),
+  Row(List(norm("C1",1), norm("C2",1), norm("C3",1), norm("C4",1), norm("C5",1), norm("C6",1), norm("C7",1), disa("C8",1)), 0),
+  Row(List(norm("B1",1), norm("B2",1), norm("B3",1), norm("B4",1), norm("B5",1), norm("B6",1), norm("B7",1), disa("B8",1)), 1),
+  Row(List(norm("A1",1), norm("A2",1), norm("A3",1), norm("A4",1), norm("A5",1), norm("A6",1), norm("A7",1), disa("A8",1)), 0)
 )))
 vs.update(ven3, FloorPlan(List(
-  	Row(List(norm("D1"), norm("D2"), norm("D3"), norm("D4"), norm("D5"), norm("D6"), norm("D7"), disa("D8")), 0),
-    Row(List(norm("C1"), norm("C2"), norm("C3"), norm("C4"), norm("C5"), norm("C6"), norm("C7"), disa("C8")), 0),
-    Row(List(norm("B1"), norm("B2"), norm("B3"), norm("B4"), norm("B5"), norm("B6"), norm("B7"), disa("B8")), 0),
-    Row(List(norm("A1"), norm("A2"), norm("A3"), norm("A4"), norm("A5"), norm("A6"), norm("A7"), disa("A8")), 0)
+  	Row(List(norm("D1",1), norm("D2",1), norm("D3",1), norm("D4",1), norm("D5",1), norm("D6",1), norm("D7",1), disa("D8",1)), 0),
+    Row(List(norm("C1",1), norm("C2",1), norm("C3",1), norm("C4",1), norm("C5",1), norm("C6",1), norm("C7",1), disa("C8",1)), 0),
+    Row(List(norm("B1",1), norm("B2",1), norm("B3",1), norm("B4",1), norm("B5",1), norm("B6",1), norm("B7",1), disa("B8",1)), 0),
+    Row(List(norm("A1",1), norm("A2",1), norm("A3",1), norm("A4",1), norm("A5",1), norm("A6",1), norm("A7",1), disa("A8",1)), 0)
 )))
 
 ss.insert(event1, ShowEdit(ven1, new DateTime(2013, 12, 5, 17, 0)))

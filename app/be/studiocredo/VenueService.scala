@@ -56,8 +56,6 @@ class VenueService @Inject()() {
   }
 
   private def validateFloorPlan(floorPlan: FloorPlan): Either[ServiceFailure, ServiceSuccess] = {
-    //TODO validate if the floorplan contains unique ids
-    //TODO validate if the flooprlan does not have SeatWithStatus entries
     val rowContent = floorPlan.rows.map{_.content}.flatten
     val seats = rowContent.collect{case seat:Seat => seat}
     if (rowContent.exists(_ match { case seat:SeatWithStatus => true; case _ => false})) {
@@ -65,6 +63,8 @@ class VenueService @Inject()() {
     } else if (seats.size != seats.toSet.size) {
       val dups: Iterable[String] = seats.groupBy{_.id.name}.filter{case (_,lst) => lst.size > 1 }.keys
       Left(serviceFailure("floorplan.invalid.notunique", dups.toList))
+    } else if (seats.exists(_.preference <= 0)) {
+      Left(serviceFailure("floorplan.invalid.preference.notpositive"))
     } else {
       Right(serviceSuccess("floorplan.save.success"))
     }
@@ -80,7 +80,7 @@ class VenueService @Inject()() {
 
   def fillFloorplan(fp: FloorPlan, tickets: List[TicketSeatOrder], users: List[UserId] = List()): FloorPlan = {
    val (mine, notmine) = tickets.partition(ticket => ticket.userId match { case Some(userId) => users.contains(userId); case None => false})
-   FloorPlan(fp.rows.map{row => Row(row.content.map{ case seat: Seat => SeatWithStatus(seat.id, seat.kind, getSeatStatus(seat, mine.map{_.seat}, notmine.map{_.seat}, users)); case seat:SeatWithStatus => seat; case spacer:Spacer => spacer }, row.vspace) })
+   FloorPlan(fp.rows.map{row => Row(row.content.map{ case seat: Seat => SeatWithStatus(seat.id, seat.kind, getSeatStatus(seat, mine.map{_.seat}, notmine.map{_.seat}, users), seat.preference); case seat:SeatWithStatus => seat; case spacer:Spacer => spacer }, row.vspace) })
   }
 
   private def getSeatStatus(seat: Seat, mine: List[SeatId], notmine: List[SeatId], users: List[UserId]): SeatStatus = {

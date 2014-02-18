@@ -104,8 +104,8 @@ object entities {
 
   sealed trait RowContent
   case class SeatId(name: String)
-  case class Seat(id: SeatId, kind: SeatType) extends RowContent
-  case class SeatWithStatus(id: SeatId, kind: SeatType, status: SeatStatus) extends RowContent
+  case class Seat(id: SeatId, kind: SeatType, preference: Int) extends RowContent
+  case class SeatWithStatus(id: SeatId, kind: SeatType, status: SeatStatus, preference: Int) extends RowContent
   case class Spacer(width: Int) extends RowContent
   object RowContent {
     val SEAT_TYPE = "seat"

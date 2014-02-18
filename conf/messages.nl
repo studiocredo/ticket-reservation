@@ -73,4 +73,5 @@ user.update.name.used=Gebruikersnaam {0} is reeds in gebruik
 # --- Floorplan
 floorplan.invalid.type=Zaalplan bevat ongeldig stoeltype
 floorplan.invalid.notunique=Zaalplan bevat niet-unieke plaatsen: {0}
+floorplan.invalid.preference.notpositive=Waarde voor voorkeur van opvullen moet strikt positief zijn
 #floorplan.save.success

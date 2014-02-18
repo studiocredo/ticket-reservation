@@ -19,7 +19,7 @@ import models.entities.Seat
 class Floorplans @Inject()(venueService: VenueService, val authService: AuthenticatorService, val notificationService: NotificationService, val userService: UserService) extends AdminController with UserContextSupport {
 
   import FloorPlanJson._
-  val defaultPlan = FloorPlan((1 to 10).map (row => Row((1 to 20).map ( seat => Seat(SeatId(s"$row-$seat"), SeatType.Normal)).toList, 0)).toList)
+  val defaultPlan = FloorPlan((1 to 10).map (row => Row((1 to 20).map ( seat => Seat(SeatId(s"$row-$seat"), SeatType.Normal, 1)).toList, 0)).toList)
 
   def view(id: VenueId) = AuthDBAction { implicit rs =>
     forVenue(id) { venue =>
