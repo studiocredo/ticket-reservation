@@ -46,14 +46,18 @@
     </div>
     @nextShows.map { info =>
     <div class="col-lg-3">
-        <div class="panel panel-default">
+        <div class="panel panel-default upcoming-button">
             <div class="panel-body">
                 <h4 class="text-info">@info.show.name</h4>
 
-                <p><strong>@HumanDateTime.formatDateTime(info.show.date)</strong></p>
-                <p class="text-default">@info.show.venueName</p>
-                <p class="text-muted"><em>@AvailabilityFormat.format(info)</em></p>
-                <p><a class="btn btn-default btn-sm" href="@routes.Events.viewShow(info.show.eventId, info.show.id)">Overzicht &raquo;</a></p>
+                <p>
+                    <strong>@HumanDateTime.formatDateTime(info.show.date)</strong><br/>
+                    <span class="text-default">@info.show.venueName</span><br/>
+                    <span class="text-muted"><em>@AvailabilityFormat.format(info)</em></span><br/>
+                </p>
+                <p>
+                    <a class="btn btn-default btn-sm" href="@routes.Events.viewShow(info.show.eventId, info.show.id)">Overzicht &raquo;</a>
+                </p>
             </div>
         </div>
     </div>
