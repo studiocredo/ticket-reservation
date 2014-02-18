@@ -10,10 +10,16 @@
         </div>
         <div class="col-xs-6 col-sm-3" >
             @if(info.event.reservationAllowed) {
-                <a href="@routes.Orders.start(Some(info.id), show.map(_.show.id))" class="btn btn-success btn-block btn-lg" style="margin-top: 46px;">Kaarten bestellen</a>
+            @defining(if (info.event.preReservationAllowed && hasQuota) "26px" else "46px") { marginTop =>
+                <a href="@routes.Orders.start(Some(info.id), show.map(_.show.id))" class="btn btn-success btn-block btn-lg" style="margin-top: @marginTop;">Kaarten bestellen</a>
+            }
             }
             @if(info.event.preReservationAllowed && hasQuota) {
-                <a href="@routes.Prereservations.start(info.id)" class="btn btn-success btn-block btn-lg" style="margin-top: 46px;">Pre-reservaties</a>
+            @defining(if (info.event.reservationAllowed) "10px" else "46px") { marginTop =>
+            @defining(if (info.event.reservationAllowed) "10px" else "0px") { marginBottom =>
+                <a href="@routes.Prereservations.start(info.id)" class="btn btn-success btn-block btn-lg" style="margin-top: @marginTop; margin-bottom: @marginBottom">Pre-reservaties</a>
+            }
+            }
             }
         </div>
     </div>

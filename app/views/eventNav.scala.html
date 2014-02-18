@@ -1,8 +1,8 @@
-@(info: models.admin.EventDetail, active: Option[ids.ShowId] = None)
+@(info: models.admin.EventDetail, active: Option[ids.ShowId] = None)(implicit request: be.studiocredo.auth.SecureRequest[_])
 
 @info.shows.map { sv =>
     <div class="panel panel-default">
-        <div class="panel-heading">@sv.venue.name</div>
+        <div class="panel-heading">Voorstellingen</div>
 
         <div class="list-group">
             @sv.shows.map { show =>
@@ -10,6 +10,18 @@
                 @HumanDateTime.formatDateTime(show.date)
                 </a>
             }
+        </div>
+    </div>
+
+    <div class="panel panel-default">
+        <div class="panel-heading">Legende</div>
+        <div class="panel-body fp fp-fancy-legend">
+            @if(request.currentUser.isDefined) {
+            <div class="text-info legend-label legend-label-mine">Mijn plaatsen</div>
+            }
+            <div class="text-info legend-label legend-label-free">Beschikbaar</div>
+            <div class="text-info legend-label legend-label-reserved">Gereserveerd</div>
+            <div class="text-info legend-label legend-label-unavailable">Niet beschikbaar</div>
         </div>
     </div>
 
