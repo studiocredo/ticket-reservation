@@ -22,22 +22,22 @@ class PreReservationService @Inject()(orderService: OrderService) {
     preReservationsByUsers(ids, Some(activePreReservationFilter))
   }
 
-  private def activePreReservationFilter(t: (ShowPrereservation, Show, Event, User)): Boolean = {
+  private def activePreReservationFilter(t: (ShowPrereservation, Show, Event, User, Venue)): Boolean = {
     t._3.reservationAllowed
   }
 
-  def preReservationsByUsers(ids: List[UserId], f: Option[((ShowPrereservation, Show, Event, User)) => Boolean] = None)(implicit s: Session): List[ShowPrereservationDetail] = {
+  def preReservationsByUsers(ids: List[UserId], f: Option[((ShowPrereservation, Show, Event, User, Venue)) => Boolean] = None)(implicit s: Session): List[ShowPrereservationDetail] = {
     val query = for {
-      (((showPreres, show), event), user) <- ShowPrereservations.leftJoin(Shows).on(_.showId === _.id).leftJoin(Events).on(_._2.eventId === _.id).leftJoin(Users).on(_._1._1.userId === _.id)
+      ((((showPreres, show), event), user), venue) <- ShowPrereservations.leftJoin(Shows).on(_.showId === _.id).leftJoin(Events).on(_._2.eventId === _.id).leftJoin(Users).on(_._1._1.userId === _.id).leftJoin(Venues).on(_._1._1._2.venueId === _.id)
       if showPreres.userId inSet ids
       if !show.archived
       if !event.archived
-    } yield (showPreres, show, event, user)
+    } yield (showPreres, show, event, user, venue)
     val list = f match {
       case Some(f) => query.list.withFilter(f)
       case None => query.list
     }
-    list.map{ case (spr: ShowPrereservation, s: Show, e: Event, u: User) => ShowPrereservationDetail(EventShow(s.id, e.id, e.name, s.venueId, s.date, s.archived), u, spr.quantity)}
+    list.map{ case (spr: ShowPrereservation, s: Show, e: Event, u: User, v: Venue) => ShowPrereservationDetail(EventShow(s.id, e.id, e.name, s.venueId, v.name, s.date, s.archived), u, spr.quantity)}
   }
 
   def totalQuotaByUsersAndEvent(users: List[UserId], event: EventId)(implicit s: Session): Option[Int] = {
@@ -170,7 +170,7 @@ class PreReservationService @Inject()(orderService: OrderService) {
     //validate venue capacity
     val showMap = mutable.Map[ShowId, Int]().withDefaultValue(0)
     showPrereservations.foreach { pr: ShowPrereservationUpdate => showMap(pr.showId) += pr.quantity }
-    val eventShowMap = Shows.leftJoin(Events).on(_.eventId === _.id).where(_._1.id inSet showMap.keys).list.map{ case (s: Show, e: Event) => (s.id, EventShow(s.id, s.eventId, e.name, s.venueId, s.date, s.archived))}.toMap
+    val eventShowMap = Shows.leftJoin(Events).on(_.eventId === _.id).where(_._1.id inSet showMap.keys).list.map{ case (s: Show, e: Event) => (s.id, EventShow(s.id, s.eventId, e.name, s.venueId, "dummy", s.date, s.archived))}.toMap
     showMap.keys.foreach { showId: ShowId => showMap(showId) -= orderService.capacity(eventShowMap(showId), users).byType(SeatType.Normal) }
 
     showMap.view.filter{ case (showId: ShowId, overCapacity: Int) => overCapacity > 0 }.map{case (showId: ShowId, overCapacity: Int) => (eventShowMap(showId), overCapacity)}.headOption match {

@@ -94,7 +94,7 @@ object entities {
   case class VenueEdit(         name: String, description: String, archived: Boolean)
 
   case class Show(id: ShowId, eventId: EventId, venueId: VenueId, date: DateTime, archived: Boolean) extends Archiveable with HasTime
-  case class EventShow(id: ShowId, eventId: EventId, name: String, venueId: VenueId, date: DateTime, archived: Boolean) extends Archiveable with HasTime
+  case class EventShow(id: ShowId, eventId: EventId, name: String, venueId: VenueId, venueName: String, date: DateTime, archived: Boolean) extends Archiveable with HasTime
 
   case class ShowAvailability(show: EventShow, byType: Map[SeatType, Int] ) {
     def total: Int = {

@@ -11,10 +11,12 @@
         <dt/>Beschikbaarheid</dt>
         <dd>@AvailabilityFormat.format(info)</dd>
         }
+        <dt>Locatie</dt>
+        <dd>@info.show.venueName</dd>
     </dl>
 </div>
 <div class="row">
-
-    <div data-availability-floorplan data-show="@info.show.id"></div>
-
+    <div class="col-xs-12">
+        <div data-availability-floorplan data-show="@info.show.id"></div>
+    </div>
 </div>

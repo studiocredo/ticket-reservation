@@ -48,15 +48,15 @@ class ShowService @Inject()(venueService: VenueService, orderService: OrderServi
 
   def nextShows(limit: Int)(implicit s: Session): List[ShowAvailability] = {
     val next = active.filter(_.date >= DateTime.now())
-    val list = (for (s <- next; e <- s.event) yield (s, e)).sortBy(_._1.date).take(limit).list
+    val list = (for (s <- next; e <- s.event; v <- s.venue) yield (s, e, v)).sortBy(_._1.date).take(limit).list
 
     list map {
-      case (show, event) => orderService.capacity(EventShow(show.id, event.id, event.name, show.venueId, show.date, show.archived))
+      case (show, event, venue) => orderService.capacity(EventShow(show.id, event.id, event.name, show.venueId, venue.name, show.date, show.archived))
     }
   }
 
   def getEventShow(id: ShowId)(implicit s: Session): EventShow = {
-    val q = for (s <- byId(id); e <- s.event) yield (s.id, e.id, e.name, s.venueId, s.date, s.archived)
+    val q = for (s <- byId(id); e <- s.event; v <- s.venue) yield (s.id, e.id, e.name, s.venueId, v.name, s.date, s.archived)
     (EventShow.apply _) tupled q.first
   }
 

@@ -142,7 +142,7 @@ Floorplan.directive 'availabilityFloorplan', () ->
     template: """
 <div class="fp fp-fancy">
     <div class="row seat-row vspacer-{{row.vspace}}" data-ng-repeat="row in rows">
-        <div data-ng-model="row.content">
+        <div data-ng-model="row.content" class="span-12">
             <div class="content" data-ng-repeat="content in row.content">
                 <div class="spacer spacer-{{content.width}}" data-ng-if="content.ct == 'spacer'"></div>
                 <div class="seat seat-{{content.kind}}" data-ng-if="content.ct == 'seat'">{{content.id.name}}</div>

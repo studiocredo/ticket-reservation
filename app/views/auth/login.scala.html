@@ -43,13 +43,13 @@
                 'class -> "form-control"
             )
         </fieldset>
-        <div class="form-group">
-            <div class="col-sm-offset-2 col-sm-10">
+        @twFormActions {
                 <button type="submit" class="btn btn-primary">Aanmelden</button>
-            </div>
+         }
 
+        @twFormActions {
             <p><a href="@controllers.auth.routes.PasswordReset.startResetPassword()">Wachtwoord vergeten?</a></p>
             <p>Wie nog geen gebruikersnaam en wachtwoord heeft, dient zich eerst te <a href="@controllers.auth.routes.SignUp.startSignUp()">registreren</a>.</p>
-        </div>
+        }
     }
 }
