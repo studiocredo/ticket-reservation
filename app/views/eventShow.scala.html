@@ -1,22 +1,24 @@
 @(info: models.entities.ShowAvailability)(implicit request: be.studiocredo.auth.SecureRequest[_])
 
 <div class="row">
-    <dl class="dl-horizontal">
-        <dt>Tijdstip</dt>
-        <dd>@HumanDateTime.formatDateTime(info.show.date)</dd>
-        @if(info.show.isDone) {
-        <dt/>
-        <dd>Deze show is afgelopen</dd>
-        } else {
-        <dt/>Beschikbaarheid</dt>
-        <dd>@AvailabilityFormat.format(info)</dd>
-        }
-        <dt>Locatie</dt>
-        <dd>@info.show.venueName</dd>
-    </dl>
+    <div class="span-12">
+        <dl class="dl-horizontal">
+            <dt>Tijdstip</dt>
+            <dd>@HumanDateTime.formatDateTime(info.show.date)</dd>
+            @if(info.show.isDone) {
+            <dt/>
+            <dd>Deze show is afgelopen</dd>
+            } else {
+            <dt/>Beschikbaarheid</dt>
+            <dd>@AvailabilityFormat.format(info)</dd>
+            }
+            <dt>Locatie</dt>
+            <dd>@info.show.venueName</dd>
+        </dl>
+    </div>
 </div>
 <div class="row">
-    <div class="col-xs-12">
+    <div class="span-12">
         <div data-availability-floorplan data-show="@info.show.id"></div>
     </div>
 </div>

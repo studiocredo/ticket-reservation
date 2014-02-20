@@ -126,6 +126,7 @@ Floorplan.directive 'floorplan', () ->
             </div>
         </div>
     </div>
+    <p class="text-center">Podium</p>
 </div>
 """
     scope:

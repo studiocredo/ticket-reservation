@@ -3,12 +3,12 @@
 @base(info.event.name)(userContext) {
 
     <div class="row ">
-        <div class="col-xs-12 col-sm-9">
+        <div class="col-xs-12 col-md-9">
             <div class="page-header">
                 <h1>@info.event.name </h1>
             </div>
         </div>
-        <div class="col-xs-6 col-sm-3" >
+        <div class="visible-md visible-lg col-md-3" >
             @if(info.event.reservationAllowed) {
             @defining(if (info.event.preReservationAllowed && hasQuota) "26px" else "46px") { marginTop =>
                 <a href="@routes.Orders.start(Some(info.id), show.map(_.show.id))" class="btn btn-success btn-block btn-lg" style="margin-top: @marginTop;">Kaarten bestellen</a>
@@ -22,20 +22,25 @@
             }
             }
         </div>
+        <div class="visible-xs visible-sm col-xs-12" >
+            @if(info.event.reservationAllowed) {
+            @defining(if (info.event.preReservationAllowed && hasQuota) "0px" else "10px") { marginBottom =>
+                <a href="@routes.Orders.start(Some(info.id), show.map(_.show.id))" class="btn btn-success btn-block btn-lg" style="margin-bottom: @marginBottom;">Kaarten bestellen</a>
+            }
+            }
+            @if(info.event.preReservationAllowed && hasQuota) {
+            <a href="@routes.Prereservations.start(info.id)" class="btn btn-success btn-block btn-lg" style="margin-top: 10px; margin-bottom: 10px">Pre-reservaties</a>
+            }
+        </div>
     </div>
 
-    <div class="row row-offcanvas row-offcanvas-right">
-        <div class="col-xs-12 col-sm-9">
-            <p class="pull-right visible-xs">
-                <button type="button" class="btn btn-primary btn-xs" data-toggle="offcanvas">Navigatie aan/uit</button>
-            </p>
-            <div class="row">
-                @show.map(eventShow(_))
-            </div>
+    <div class="row">
+        <div class="col-xs-12 col-md-3 col-md-push-9" id="sidebar" role="navigation">
+            @eventNav(info, show.map(_.show.id))
         </div>
 
-        <div class="col-xs-6 col-sm-3 sidebar-offcanvas" id="sidebar" role="navigation">
-        @eventNav(info, show.map(_.show.id))
+        <div class="col-xs-12 col-md-9 col-md-pull-3">
+            @show.map(eventShow(_))
         </div>
     </div>
 
