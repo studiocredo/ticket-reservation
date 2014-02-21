@@ -178,15 +178,3 @@ CounterInput.controller "CounterInputCtrl", ($scope, $http) ->
 
     $scope.isMaxQuotaSatisfied = ->
         $scope.totalUsed() <= $scope.maxQuota
-
-CounterInput.directive 'digitsOnly', () ->
-    restrict: 'A',
-    require: '?ngModel',
-    link: (scope, element, attrs, ngModel) ->
-        return if (!ngModel)
-        ngModel.$parsers.unshift((inputValue) ->
-            digits = inputValue.split('').filter((s) -> (!isNaN(s) && s != ' ')).join('')
-            ngModel.$viewValue = digits;
-            ngModel.$render();
-            digits
-        )

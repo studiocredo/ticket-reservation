@@ -30,13 +30,13 @@
                 <fieldset data-ng-controller="CounterInputCtrl" data-ng-init="maxQuota = @info.totalQuota">
 
                     @if(!info.users.isEmpty) {
-                        @formControlStatic("Gekoppelde gebruikers", 6, 6) {
+                        @formControlStatic("Gekoppelde gebruikers", "col-lg-6 col-xs-6", "col-lg-6 col-xs-6") {
                             @info.users.map { user =>
                                 <a href="#" class="btn btn-default btn-xs" role="button">@user.name</a>
                             }
                         }
 
-                        @formControlStatic("Gebruikte pre-reservaties", 6, 6) {
+                        @formControlStatic("Gebruikte pre-reservaties", "col-lg-6 col-xs-6", "col-lg-6 col-xs-6") {
                             <span data-ng-show="preresForm.$valid && isMaxQuotaSatisfied()">{{totalUsed()}} / @info.totalQuota</span>
                             <span class="text-warning" data-ng-show="preresForm.$invalid || !isMaxQuotaSatisfied()">Ongeldige waarde</span>
                         }
@@ -44,7 +44,7 @@
 
 
                     @for(((venue, show), index) <- venueShows.zipWithIndex) {
-                        @counterInput(prereservationForm(s"preres[$index].quantity"), '_label -> showVenueLabel(show, venue),  '_labelcol -> 6, '_inputcol -> 3, 'ngModelIndex -> show.id, 'max -> info.totalQuota, 'class -> "form-control")
+                        @counterInput(prereservationForm(s"preres[$index].quantity"), '_label -> showVenueLabel(show, venue),  '_labelclass -> "col-lg-6 col-xs-6 quantity-label", '_inputclass -> "col-lg-6 col-xs-6 quantity-input", 'ngModelIndex -> show.id, 'max -> info.totalQuota, 'class -> "form-control")
                         @hiddenInput(prereservationForm(s"preres[$index].show"))
                     }
                 </fieldset>

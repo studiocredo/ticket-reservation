@@ -2,20 +2,17 @@
 
 @min = @{ args.toMap.get('min).getOrElse(0) }
 @max = @{ args.toMap.get('max).getOrElse(9) }
-@maxLength = @{ args.toMap.get('maxLength).getOrElse(2) }
 @ngModelIndex = @{ args.toMap.get('ngModelIndex).getOrElse("") }
 
 @helper.input(field, '_showConstraints -> false :: args.toList:_*) { (id, name, value, htmlArgs) =>
-    <div class="row amount-input">
-        <div class="col-xs-6 col-xs-offset-5">
-            <input id="@id" type="number" digits-only maxlength="@maxLength" minlength="1" name="@name" min="@min" max="@max" data-ng-pattern="/[0-9]+/" data-ng-minlength="1" data-ng-maxlength="@maxLength" data-ng-required="true" class="form-control input-xl text-right" data-ng-model="values[@ngModelIndex]" data-ng-init="values[@ngModelIndex] = @value">
-        </div>
-
-        <div class="col-xs-1 pull-middle">
-            <div class="btn-group-vertical text-left">
-                <button type="button" class="btn btn-primary btn-xs" data-ng-click="increment(@ngModelIndex, @max)">+</button>
-                <button type="button" class="btn btn-primary btn-xs" data-ng-click="decrement(@ngModelIndex, @min)">-</button>
+<input id="@id" name="@name" type="hidden" value="{{values[@ngModelIndex]}}" data-ng-init="values[@ngModelIndex] = @value">
+            <p class="quantity bg-primary">{{values[@ngModelIndex]}}</p>
+            <div class="btn-group-vertical">
+                <button type="button" class="btn btn-primary btn-sm" data-ng-click="increment(@ngModelIndex, @max)"><span class="glyphicon glyphicon-plus"></span>
+                </button>
+                <button type="button" class="btn btn-primary btn-sm" data-ng-click="decrement(@ngModelIndex, @min)"><span class="glyphicon glyphicon-minus"></span>
+                </button>
             </div>
-        </div>
-    </div>
+
+
 }

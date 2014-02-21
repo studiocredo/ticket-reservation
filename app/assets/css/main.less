@@ -61,20 +61,6 @@ footer p {
     color: #999;
 }
 
-.amount-input {
-    .input-xl {
-        border-radius: 12px;
-        font-size: 54px;
-        height: 90px;
-        line-height: 4;
-        padding: 6px 12px;
-    }
-
-    div {
-        padding: 0px;
-    }
-}
-
 .badge-important{background-color:#b94a48;}
 
 .clickable{cursor: pointer}
@@ -95,4 +81,31 @@ div.amount-input ~ .help-block {
 
 .upcoming-button {
     .gradient(#d8f0ff, #d8f0ff, #f9fcff);
+}
+
+.quantity-label {
+    h1, h2, h3, h4, h5 ,h6 {
+        margin-top: 5px;
+        margin-bottom: 5px;
+    }
+}
+.quantity-input {
+.columns(100px, 0, 10px, #EEE, none, 1px);
+    .quantity {
+        font-size: 275%;
+        padding: 0.2em;
+        margin-top: 5px;
+        width: 100px;
+        text-align: right;
+        .rounded(10px);
+        border: 1px solid gray;
+
+
+
+    }
+
+    .btn-group-vertical {
+        margin-top: 10px;
+        display: inline-block;
+    }
 }
