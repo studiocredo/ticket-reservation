@@ -90,6 +90,10 @@ class EventService @Inject()(showService: ShowService, preResevationService: Pre
     get(id).map{(event) => EventPrereservationsDetail(event, userService.findUsers(users), showService.listForEvent(event.id), preResevationService.preReservationsByUsers(users), preResevationService.quotaByUsers(users))}
   }
 
+  def eventReservationDetails(id: EventId, users: List[UserId])(implicit s: Session): Option[EventReservationsDetail] = {
+    get(id).map{(event) => EventReservationsDetail(EventDetail(event, showService.listForEvent(event.id), getPricing(id)), userService.findUsers(users), showService.listForEvent(event.id), preResevationService.pendingPrereservationsByUsersAndEvent(users, event.id))}
+  }
+
   private def byId(id: ids.EventId)=  EventsQ.where(_.id === id)
   private def editById(id: ids.EventId) = byId(id).map(_.edit)
 

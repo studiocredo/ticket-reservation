@@ -17,7 +17,7 @@
                              <a href="@routes.Prereservations.start(event.id)" class="btn btn-primary btn-lg">Pre-reservaties &raquo;</a>
                         }
                         @events.filter(_.reservationAllowed).headOption.map { event =>
-                            <a href="@routes.Orders.start(Some(event.id), None)" class="btn btn-primary btn-lg">Bestellen &raquo;</a>
+                            <a href="@routes.Orders.start(event.id, None)" class="btn btn-primary btn-lg">Bestellen &raquo;</a>
                         }
                     </p>
                 } else {

@@ -66,7 +66,8 @@ GET         /admin/event/:id/show/:show             @controllers.admin.EventDeta
 POST        /admin/event/:id/show/:show             @controllers.admin.EventDetails.updateShow(id:EventId, show:ShowId)
 POST        /admin/event/:id/show/:show/delete      @controllers.admin.EventDetails.deleteShow(id:EventId, show:ShowId)
 
-GET         /order                                  @controllers.Orders.start(event:Option[EventId], show:Option[ShowId])
+GET         /order/:id                              @controllers.Orders.start(id:EventId, show:Option[ShowId])
+POST        /order/:id                              @controllers.Orders.save(id:EventId)
 GET         /preorder/:id                           @controllers.Prereservations.start(id:EventId)
 POST        /preorder/:id                           @controllers.Prereservations.save(id:EventId)
 GET         /events/                                @controllers.Events.list(p:Int ?= 0)

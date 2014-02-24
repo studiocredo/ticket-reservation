@@ -8,6 +8,7 @@
                 <tr>
                     <th>Naam</th>
                     <th>Beschrijving</th>
+                    <th/>
                 </tr>
             </thead>
             <tbody>
@@ -15,6 +16,7 @@
                 <tr>
                     <td><a href="@routes.Events.view(event.id)">@event.name</a></td>
                     <td>@event.description</td>
+                    <td><a class="btn btn-default btn-xs" href="@routes.Orders.start(event.id, None)">Bestellen</a></td>
                 </tr>
             }
             </tbody>

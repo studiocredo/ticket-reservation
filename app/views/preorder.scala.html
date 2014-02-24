@@ -3,11 +3,6 @@
 @import views.Bootstrap._
 @import play.api.libs.json._
 
-@showVenueLabel(show: models.entities.Show, venue: models.entities.Venue) = {
-<h3 class="text-info form-control-static">@HumanDateTime.formatDateTime(show.date)</h3>
-<h4 class="text-muted">@venue.name</h4>
-}
-
 @base("Pre-reservatie " + info.event.name)(userContext) {
 
     <div class="page-header">

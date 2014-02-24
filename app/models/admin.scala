@@ -54,6 +54,8 @@ object admin {
 
   case class EventDetail(event: Event, shows: List[VenueShows], pricing: Option[EventPricing]) {
     def id = event.id
+    def name = event.name
+    def reservationAllowed = event.reservationAllowed
   }
 
   case class EventPrereservationsDetail(event: Event, users: List[User], shows: List[VenueShows], prereservations: List[ShowPrereservationDetail], reservationQuota: List[ReservationQuotumDetail]) {
@@ -66,6 +68,12 @@ object admin {
     def prereservationsByShow(showId: ShowId): Int = {
       prereservations.collect{case sprd if sprd.show.id == showId => sprd.quantity}.sum
     }
+  }
+
+  case class EventReservationsDetail(event: EventDetail, users: List[User], shows: List[VenueShows], pendingPrereservationsByShow: Map[ShowId, Int]) {
+    def id = event.id
+
+    def totalQuota = 10*users.length
   }
 
   case class ShowEdit(venueId: VenueId, date: DateTime)

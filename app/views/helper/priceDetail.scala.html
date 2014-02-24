@@ -1,0 +1,2 @@
+@(price: models.entities.EventPrice)(implicit lang: Lang)
+@Messages(price.category, lang) <strong>@CurrencyFormat.format(price.price)</strong>
