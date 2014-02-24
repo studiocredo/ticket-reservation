@@ -1,4 +1,8 @@
-@(info: models.entities.ShowAvailability)(implicit request: be.studiocredo.auth.SecureRequest[_])
+@(event: models.admin.EventDetail, info: models.entities.ShowAvailability)(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
+
+@priceDetail(price: models.entities.EventPrice) = {
+@Messages(price.category, lang) <strong>@CurrencyFormat.format(price.price)</strong>
+}
 
 <div class="row">
     <div class="span-12">
@@ -14,6 +18,33 @@
             }
             <dt>Locatie</dt>
             <dd>@info.show.venueName</dd>
+            @event.pricing match {
+                case None => {}
+                case Some(pricing) => {
+                    <dt>Prijs</dt>
+                    <dd>
+                    @pricing.prices match {
+                        case price :: Nil => { @CurrencyFormat.format(price.price) }
+                        case prices => {
+                            @defining(prices match { case head :: tail => (Some(head), tail); case _ => (None, Nil) }) { tuple =>
+                            @defining(tuple._1) { head =>
+                            @defining(tuple._2) { tail =>
+                            @head match {
+                            case Some(head) => { @priceDetail(head) }
+                            case None => { }
+                            }
+                            @tail.map { price =>
+                                <br/>
+                                @priceDetail(price)
+                            }
+                            }
+                            }
+                            }
+                        }
+                    }
+                    </dd>
+                }
+            }
         </dl>
     </div>
 </div>

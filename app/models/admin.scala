@@ -52,7 +52,7 @@ object admin {
   case class UserFormData(name: String, username: String, email: Option[String], address: Option[String], phone: Option[String], active: Boolean)
 
 
-  case class EventDetail(event: Event, shows: List[VenueShows]) {
+  case class EventDetail(event: Event, shows: List[VenueShows], pricing: Option[EventPricing]) {
     def id = event.id
   }
 

@@ -58,6 +58,8 @@ object entities {
   }
   case class EventEdit(         name: String, description: String, preReservationStart: Option[DateTime], preReservationEnd: Option[DateTime], reservationStart: Option[DateTime], reservationEnd: Option[DateTime], archived: Boolean)
 
+  case class EventPrice(id: EventId, category: String, price: Money)
+  case class EventPricing(id: EventId, prices: List[EventPrice])
 
   object SeatType extends Enumeration {
     type SeatType = Value

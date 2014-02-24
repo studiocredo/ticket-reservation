@@ -1,6 +1,3 @@
-# --- Created by Slick DDL
-# To stop Slick DDL generation, remove this comment and start using Evolutions
-
 # --- !Ups
 
 create table "auth_tokens" ("id" VARCHAR(254) NOT NULL PRIMARY KEY,"user_id" BIGINT NOT NULL,"creation" TIMESTAMP NOT NULL,"last_used" TIMESTAMP NOT NULL,"expiration" TIMESTAMP NOT NULL);

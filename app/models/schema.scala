@@ -20,6 +20,7 @@ object schema {
     val Venues = new Venues
     val Shows = new Shows
     val Dvds = new Dvds
+    val EventPrices = new EventPrices
 
     val Orders = new Orders
     val TicketOrders = new TicketOrders
@@ -100,6 +101,18 @@ object schema {
     def * = id ~ name ~ description ~ preReservationStart ~ preReservationEnd ~ reservationStart ~ reservationEnd ~ archived <>(Event.apply _, Event.unapply _)
     def edit = name ~ description ~ preReservationStart ~ preReservationEnd ~ reservationStart ~ reservationEnd ~ archived <>(EventEdit.apply _, EventEdit.unapply _)
     def autoInc = edit returning id
+  }
+
+  class EventPrices extends Table[EventPrice]("event_pricing") {
+    def eventId = column[EventId]("id")
+    def priceCategory = column[String]("category", O.DBType("TEXT"))
+    def price = column[Money]("price")
+
+    def * = eventId ~ priceCategory ~ price <>(EventPrice.apply _, EventPrice.unapply _)
+
+    def event = foreignKey("event_fk", eventId, Events)(_.id)
+
+    def unique = index("idx_event_category", eventId ~ priceCategory, unique = true)
   }
 
   class Venues extends Table[Venue]("venue") with Archiveable {

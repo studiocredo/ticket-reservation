@@ -14,6 +14,7 @@ class EventService @Inject()(showService: ShowService, preResevationService: Pre
   import models.schema.tables._
 
   val EventsQ = Query(Events)
+  val EventPricesQ = Query(EventPrices)
 
   val active = EventsQ.filter(_.archived === false)
 
@@ -34,12 +35,37 @@ class EventService @Inject()(showService: ShowService, preResevationService: Pre
       success => Right(Events.autoInc.insert(event))
     )
   }
+
   def update(id: EventId, event: EventEdit)(implicit s: Session): Either[ServiceFailure, ServiceSuccess] = {
     validateEvent(event).fold(
       error => Left(error),
       success => {
         editById(id).update(event)
         Right(serviceSuccess("event.save.success"))
+      }
+    )
+  }
+
+  def addPrice(pricing: EventPrice)(implicit s: Session): Either[ServiceFailure, ServiceSuccess] = {
+    validateEventPrice(pricing).fold(
+      error => Left(error),
+      success => {
+        EventPrices.*.insert(pricing)
+        Right(serviceSuccess("eventprice.save.success"))
+      }
+    )
+  }
+
+  def updatePrice(pricing: EventPrice)(implicit s: Session): Either[ServiceFailure, ServiceSuccess] = {
+    validateEventPrice(pricing).fold(
+      error => Left(error),
+      success => {
+        (for {
+          ep <- EventPricesQ
+          if ep.eventId === pricing.id
+          if ep.priceCategory === pricing.category
+        } yield (ep.price)).update(pricing.price)
+        Right(serviceSuccess("eventprice.save.success"))
       }
     )
   }
@@ -52,7 +78,12 @@ class EventService @Inject()(showService: ShowService, preResevationService: Pre
   def delete(id: EventId)(implicit s: Session) = (for (v <- EventsQ if v.id === id) yield v.archived).update(true)
 
   def eventDetails(id: EventId)(implicit s: Session): Option[EventDetail] = {
-    get(id).map{(event) => EventDetail(event, showService.listForEvent(event.id))}
+    get(id).map{(event) => EventDetail(event, showService.listForEvent(event.id), getPricing(id))}
+  }
+
+  def getPricing(id: EventId)(implicit s: Session): Option[EventPricing] = {
+    val prices = EventPricesQ.where(_.eventId === id).list
+    if (prices.isEmpty) None else Some(EventPricing(id, prices))
   }
 
   def eventPrereservationDetails(id: EventId, users: List[UserId])(implicit s: Session): Option[EventPrereservationsDetail] = {
@@ -83,5 +114,12 @@ class EventService @Inject()(showService: ShowService, preResevationService: Pre
       return Left(serviceFailure(s"event.save.$key.both"))
     }
     return Right(serviceSuccess(s"event.save.$key.success"))
+  }
+
+  private def validateEventPrice(pricing: EventPrice): Either[ServiceFailure, ServiceSuccess] = {
+    pricing.price match {
+      case price if price.amount < 0 => Left(serviceFailure("eventprice.save.positive"))
+      case _ => Right(serviceSuccess("eventprice.save.success"))
+    }
   }
 }

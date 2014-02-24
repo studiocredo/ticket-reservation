@@ -62,6 +62,8 @@ event.save.res.before=Start reservaties moet vóór einde reservaties zijn
 event.save.preres.before=Start pre-reservaties moet vóór einde pre-reservaties zijn
 event.save.res.both=Start en einde reservaties moeten beide wel óf beide niet ingevuld zijn
 event.save.preres.both=Start en einde pre-reservaties moeten beide wel óf beide niet ingevuld zijn
+#eventprice.save.success
+eventprice.save.positive=Prijs moet positief zijn
 
 # --- Users
 #user.update.success
@@ -75,3 +77,6 @@ floorplan.invalid.type=Zaalplan bevat ongeldig stoeltype
 floorplan.invalid.notunique=Zaalplan bevat niet-unieke plaatsen: {0}
 floorplan.invalid.preference.notpositive=Waarde voor voorkeur van opvullen moet strikt positief zijn
 #floorplan.save.success
+
+# --- Pricing
+pricing.standard=Standaard Ticket
