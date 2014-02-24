@@ -69,8 +69,8 @@ class Prereservations @Inject()(eventService: EventService, showService: ShowSer
         form match {
           case Some(form) => status(views.html.preorder(event, form , userContext))
           case _ => {
-            val showPreresevations = event.shows.map{_.shows.map{_.id}}.flatten.map{id => ShowPrereservationForm(id, event.prereservationsByShow(id))}
-            status(views.html.preorder(event, prereservationForm.fill(PrereservationForm(showPreresevations)), userContext))
+            val showPrereservations = event.shows.map{_.shows.map{_.id}}.flatten.map{id => ShowPrereservationForm(id, event.prereservationsByShow(id))}
+            status(views.html.preorder(event, prereservationForm.fill(PrereservationForm(showPrereservations)), userContext))
           }
         }
       }
