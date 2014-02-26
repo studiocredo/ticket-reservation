@@ -120,6 +120,9 @@ object entities {
     def seat(seatId: SeatId): Option[Seat] = {
       rows.map{_.content}.flatten.collect{case seat:Seat => seat}.find{_.id == seatId}
     }
+    def seatsWithStatus: List[SeatWithStatus] = {
+      rows.map{_.content}.flatten.collect{case seat:SeatWithStatus => seat}
+    }
   }
 
   object FloorPlanJson {
