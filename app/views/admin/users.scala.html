@@ -23,10 +23,15 @@
             @currentPage.items.map { user =>
                 <tr>
                     <td>@user.id</td>
-                    <td><a href="@{routes.UserDetails.view(user.id)}">@user.name</a></td>
+                    <td><a href="@{routes.UserDetails.view(user.id)}" class="@if(!user.active){text-warning}">@user.name</a></td>
                     <td>@address(user.addressLines)</td>
                     <td>@user.phone</td>
-                    <td><a class="btn btn-default btn-xs" href="@{routes.Users.edit(user.id)}">Bewerken</a></td>
+                    <td>
+                        <a class="btn btn-default btn-xs" href="@{routes.Users.edit(user.id)}">Bewerken</a>
+                        @if(!user.active) {
+                            <a class="btn btn-default btn-xs" href="@{routes.Users.activate(user.username)}">Activeren</a>
+                        }
+                    </td>
                 </tr>
             }
             </tbody>

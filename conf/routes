@@ -26,7 +26,8 @@ POST        /reset                                  @controllers.auth.PasswordRe
 POST        /activate/:username                     @controllers.auth.PasswordReset.handleStartActivateProfile(username: String)
 GET         /reset/:token/:username                 @controllers.auth.PasswordReset.resetPassword(token:String, username: String)
 POST        /reset/:token/:username                 @controllers.auth.PasswordReset.handleResetPassword(token:String, username: String)
-GET         /activate/:token/:username              @controllers.auth.PasswordReset.handleActivateProfile(token:String, username: String)
+GET         /activate/:token/:username              @controllers.auth.PasswordReset.activateProfile(token:String, username: String)
+POST        /activate/:token/:username              @controllers.auth.PasswordReset.handleActivateProfile(token:String, username: String)
 GET         /password                               @controllers.auth.PasswordChange.page
 POST        /password                               @controllers.auth.PasswordChange.handlePasswordChange
 GET         /profile                                @controllers.Profile.edit
@@ -39,6 +40,7 @@ GET         /admin/users/new                        @controllers.admin.Users.cre
 POST        /admin/users                            @controllers.admin.Users.save
 GET         /admin/users/:id                        @controllers.admin.Users.edit(id:UserId)
 POST        /admin/users/:id                        @controllers.admin.Users.update(id:UserId)
+GET         /admin/users/activate/:name             @controllers.admin.Users.activate(name:String)
 
 GET         /admin/user/:id                         @controllers.admin.UserDetails.view(id:UserId)
 

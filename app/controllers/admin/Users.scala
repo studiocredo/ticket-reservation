@@ -9,6 +9,7 @@ import be.studiocredo.auth.AuthenticatorService
 import be.studiocredo.util.ServiceReturnValues._
 
 import models.admin._
+import controllers.auth.Mailer
 
 class Users @Inject()(val userService: UserService, val authService: AuthenticatorService, val notificationService: NotificationService) extends AdminController with UserContextSupport {
   val ListPage = Redirect(routes.Users.list())
@@ -49,6 +50,17 @@ class Users @Inject()(val userService: UserService, val authService: Authenticat
       case Some(user) => Ok(views.html.admin.usersEditForm(id, userForm.fillAndValidate(user), userContext))
     }
   }
+
+  def activate(userName: String) = AuthDBAction { implicit rs =>
+    userService.findByUserName(userName) match {
+      case None => ListPage.flashing("error" -> s"Gebruiker '$userName' niet gevonden")
+      case Some(user) => {
+        Mailer.sendProfileCreatedEmail(user)
+        ListPage.flashing("error" -> "Activatie email verzonden")
+      }
+    }
+  }
+
   def update(id: UserId) = AuthDBAction { implicit rs =>
     val bindedForm = userForm.bindFromRequest
     bindedForm.fold(

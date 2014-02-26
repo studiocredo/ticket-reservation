@@ -2,12 +2,12 @@
 @import helper._
 @import views.Bootstrap._
 
-@base("Wachtwoord opnieuw instellen")(userContext) {
+@base(if (firstTime) "Wachtwoord instellen" else "Wachtwoord opnieuw instellen")(userContext) {
     <div class="page-header">
         <h1>@if(firstTime) { Wachtwoord instellen } else { Wachtwoord opnieuw instellen }</h1>
     </div>
 
-    @form(action = controllers.auth.routes.PasswordReset.handleResetPassword(token, user), 'class -> "form form-horizontal") {
+    @form(action = if (firstTime) controllers.auth.routes.PasswordReset.handleActivateProfile(token, user) else controllers.auth.routes.PasswordReset.handleResetPassword(token, user), 'class -> "form form-horizontal") {
         @globalFormErrors(resetForm)
         <fieldset>
             @helper.inputPassword(
