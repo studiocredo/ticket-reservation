@@ -1,4 +1,4 @@
-@(info: models.admin.EventReservationsDetail, prereservationForm: Form[controllers.ReservationForm], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
+@(info: models.admin.EventReservationsDetail, reservationForm: Form[controllers.ReservationForm], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
 @import helper._
 @import views.Bootstrap._
 
@@ -23,7 +23,7 @@
 
             @form(action = controllers.routes.Orders.save(info.event.id), 'class -> "form form-horizontal", 'name -> "resForm") {
 
-                @globalFormErrors(prereservationForm)
+                @globalFormErrors(reservationForm)
 
                 @defining(info.shows.map{ vs => vs.shows.map{(vs.venue, _)}}.flatten) { venueShows =>
                 <fieldset data-ng-controller="CounterInputCtrl" data-ng-init="maxQuota = @info.totalQuota">
@@ -63,8 +63,8 @@
                     }
 
                     @for(((venue, show), index) <- venueShows.zipWithIndex) {
-                    @counterInput(prereservationForm(s"res[$index].quantity"), '_label -> showVenueLabel(show, venue),  '_labelclass -> "col-lg-6 col-xs-6 quantity-label", '_inputclass -> "col-lg-6 col-xs-6 quantity-input", 'ngModelIndex -> show.id, 'max -> info.totalQuota, 'min -> info.prereservationsByShow(show.id), 'class -> "form-control")
-                    @hiddenInput(prereservationForm(s"res[$index].show"))
+                    @counterInput(reservationForm(s"res[$index].quantity"), '_label -> showVenueLabel(show, venue),  '_labelclass -> "col-lg-6 col-xs-6 quantity-label", '_inputclass -> "col-lg-6 col-xs-6 quantity-input", 'ngModelIndex -> show.id, 'max -> info.totalQuota, 'min -> info.pendingPrereservationsByShow(show.id), 'class -> "form-control")
+                    @hiddenInput(reservationForm(s"res[$index].show"))
                     }
 
                     @formControlStatic("Totaal", "col-lg-6 col-xs-6", "col-lg-6 col-xs-6") {
