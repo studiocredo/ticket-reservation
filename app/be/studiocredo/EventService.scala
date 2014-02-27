@@ -10,7 +10,7 @@ import be.studiocredo.util.ServiceReturnValues._
 import org.joda.time.DateTime
 import be.studiocredo.util.Joda._
 
-class EventService @Inject()(showService: ShowService, preResevationService: PreReservationService, userService: UserService) {
+class EventService @Inject()(showService: ShowService, preReservationService: PreReservationService, userService: UserService) {
   import models.queries._
   import models.schema.tables._
 
@@ -98,11 +98,11 @@ class EventService @Inject()(showService: ShowService, preResevationService: Pre
   }
 
   def eventPrereservationDetails(id: EventId, users: List[UserId])(implicit s: Session): Option[EventPrereservationsDetail] = {
-    get(id).map{(event) => EventPrereservationsDetail(event, userService.findUsers(users), showService.listForEvent(event.id), preResevationService.preReservationsByUsersAndEvent(users, event.id), preResevationService.totalQuotaByUsersAndEvent(users, event.id))}
+    get(id).map{(event) => EventPrereservationsDetail(event, userService.findUsers(users), showService.listForEvent(event.id), preReservationService.preReservationsByUsersAndEvent(users, event.id), preReservationService.totalQuotaByUsersAndEvent(users, event.id))}
   }
 
   def eventReservationDetails(id: EventId, users: List[UserId])(implicit s: Session): Option[EventReservationsDetail] = {
-    get(id).map{(event) => EventReservationsDetail(EventDetail(event, showService.listForEvent(event.id), getPricing(id)), userService.findUsers(users), showService.listForEvent(event.id), preResevationService.pendingPrereservationsByUsersAndEvent(users, event.id))}
+    get(id).map{(event) => EventReservationsDetail(EventDetail(event, showService.listForEvent(event.id), getPricing(id)), userService.findUsers(users), showService.listForEvent(event.id), preReservationService.pendingPrereservationsByUsersAndEvent(users, event.id))}
   }
 
   private def byId(id: ids.EventId)=  EventsQ.where(_.id === id)
