@@ -11,7 +11,7 @@ class Application @Inject()(showService: ShowService, eventService: EventService
   val defaultAuthorization = None
 
   def index = AuthAwareDBAction { implicit request =>
-    Ok(views.html.index(showService.nextShows(4), eventService.list, userContext))
+    Ok(views.html.index(showService.nextShows(4), eventService.listUpcoming, userContext))
   }
 
 

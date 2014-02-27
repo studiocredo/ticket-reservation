@@ -8,6 +8,7 @@ import com.google.inject.Inject
 import models.admin._
 import be.studiocredo.util.ServiceReturnValues._
 import org.joda.time.DateTime
+import be.studiocredo.util.Joda._
 
 class EventService @Inject()(showService: ShowService, preResevationService: PreReservationService, userService: UserService) {
   import models.queries._
@@ -70,7 +71,17 @@ class EventService @Inject()(showService: ShowService, preResevationService: Pre
     )
   }
 
-  def list()(implicit s: Session) = active.list
+  def list()(implicit s: Session): List[Event] = active.list
+
+  def listUpcoming()(implicit s: Session): List[Event] = {
+    val query = for {
+      s <- Query(Shows)
+      if s.archived === false
+      e <- s.event
+      if e.archived === false
+    } yield (e, s.date)
+    query.list.sortBy(_._2).collect{case (e, d) if d.isAfterNow => e}.distinct
+  }
 
   def get(id: EventId)(implicit s: Session): Option[Event] = byId(id).firstOption
   def getEdit(id: EventId)(implicit s: Session): Option[EventEdit] = editById(id).firstOption

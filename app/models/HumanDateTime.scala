@@ -13,6 +13,14 @@ object HumanDateTime {
   val FORMATTER_DATE = DateTimeFormat.forPattern("EEEE d MMMM yyyy").withLocale(LOCALE)
   val FORMATTER_DATE_COMPACT = DateTimeFormat.forPattern("dd/MM/yyyy").withLocale(LOCALE)
 
+  def formatDateOrDateTime(date: DateTime): String = {
+    if (date.isEqual(date.toDateMidnight)) {
+      formatDate(date)
+    } else {
+      formatDateTime(date)
+    }
+  }
+
   def formatDateTime(date: DateTime): String = FORMATTER_DATE_TIME.print(date)
 
   def formatDate(date: DateTime): String = FORMATTER_DATE.print(date)
