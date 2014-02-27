@@ -11,6 +11,8 @@ import be.studiocredo.util.ServiceReturnValues._
 import models.admin._
 import controllers.auth.Mailer
 
+case class UserSearchFormData(search: String, active: Option[String])
+
 class Users @Inject()(val userService: UserService, val authService: AuthenticatorService, val notificationService: NotificationService) extends AdminController with UserContextSupport {
   val ListPage = Redirect(routes.Users.list())
 
@@ -25,9 +27,25 @@ class Users @Inject()(val userService: UserService, val authService: Authenticat
     )(UserFormData.apply)(UserFormData.unapply)
   )
 
+  val userSearchForm = Form(
+    mapping(
+      "search" -> nonEmptyText(3),
+      "active" -> optional(nonEmptyText)
+    )(UserSearchFormData.apply)(UserSearchFormData.unapply)
+  )
+
   def list(page: Int) = AuthDBAction { implicit rs =>
-    val list = userService.page(page)
-    Ok(views.html.admin.users(list, userContext))
+    val bindedForm = userSearchForm.bindFromRequest
+    bindedForm.fold(
+      formWithErrors => {
+        val list = userService.page(page)
+        Ok(views.html.admin.users(list, formWithErrors, userContext))
+      },
+      userFormData => {
+        val list = userService.page(page, 10, 1, Some(userFormData.search))
+        Ok(views.html.admin.users(list, bindedForm, userContext))
+      }
+    )
   }
 
   def create() = AuthDBAction { implicit request =>

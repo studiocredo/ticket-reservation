@@ -36,17 +36,15 @@ class UserService @Inject()() {
     (ud) => RichUser(ud._1, ud._2)
   }
 
-
   def page(page: Int = 0, pageSize: Int = 10, orderBy: Int = 1, filter: Option[String] = None)(implicit s: Session): Page[RichUser] = {
     import models.queries._
 
     val offset = pageSize * page
-    val total = UDQ.length.run
-    val values = filter.foldLeft {
-      paginate(UDQ, page, pageSize)
-    } {
-      (query, filter) => query.filter(q => iLike(q._1.name, filter)) // should replace with lucene
-    }.run map richUser
+    val query = filter.foldLeft(UDQ){
+      (query, filter) => query.filter(q => iLike(q._1.name, s"%${filter}%")) // should replace with lucene
+    }
+    val total = query.length.run
+    val values = paginate(query, page, pageSize).run map richUser
     Page(values, page, pageSize, offset, total)
   }
 
