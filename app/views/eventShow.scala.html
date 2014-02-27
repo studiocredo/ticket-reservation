@@ -18,7 +18,7 @@
             @event.pricing match {
                 case None => {}
                 case Some(pricing) => {
-                    <dt>Prijs</dt>
+                    <dt>Tarief</dt>
                     <dd>
                     @pricing.prices match {
                         case price :: Nil => { @CurrencyFormat.format(price.price) }

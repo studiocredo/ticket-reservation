@@ -63,7 +63,7 @@ event.save.preres.before=Start pre-reservaties moet vóór einde pre-reservaties
 event.save.res.both=Start en einde reservaties moeten beide wel óf beide niet ingevuld zijn
 event.save.preres.both=Start en einde pre-reservaties moeten beide wel óf beide niet ingevuld zijn
 #eventprice.save.success
-eventprice.save.positive=Prijs moet positief zijn
+eventprice.save.positive=Bedrag moet positief zijn
 
 # --- Users
 #user.update.success

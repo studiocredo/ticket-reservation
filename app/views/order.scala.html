@@ -38,7 +38,7 @@
                     @info.event.pricing match {
                         case None => {}
                         case Some(pricing) => {
-                            @formControlStatic("Prijs", "col-lg-6 col-xs-6", "col-lg-6 col-xs-6") {
+                            @formControlStatic("Tarief", "col-lg-6 col-xs-6", "col-lg-6 col-xs-6") {
                                 @pricing.prices match {
                                     case price :: Nil => { @CurrencyFormat.format(price.price) }
                                     case prices => {
