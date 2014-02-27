@@ -50,6 +50,9 @@ class UserService @Inject()() {
     Page(values, page, pageSize, offset, total)
   }
 
+  def listInactive(implicit s: Session): List[RichUser] = {
+    UDQ.filter(q => q._1.active === false).list.map(richUser)
+  }
 
   def find(id: UserId)(implicit s: Session): Option[RichUser] = {
     UDQ.filter(q => q._1.id === id).firstOption.map(richUser)
