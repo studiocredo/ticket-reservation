@@ -23,8 +23,8 @@ class NotificationService @Inject()(prs: PreReservationService, os: OrderService
 
     List(
       pr.total match {
-        case 1 => Some(Notification("1 ongebruikte reservatie", prEntries))
-        case p: Int if p > 1 => Some(Notification(s"$p ongebruikte reservaties", prEntries))
+        case 1 => Some(Notification("1 geregistreerde pre-reservatie", prEntries))
+        case p: Int if p > 1 => Some(Notification(s"$p geregistreerde pre-reservaties", prEntries))
         case _ => None
       },
       uq.total match {
