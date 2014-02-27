@@ -61,10 +61,19 @@
                 }
             }
             @event.reservationStart match {
-                case None => { }
+                case None => { <p><a href="@routes.Orders.start(event.id, None)">Reserveer</a> je tickets.</p> }
                 case Some(date) => {
                     @if(date.isAfterNow) {
                         <p>De reservaties gaan van start op @HumanDateTime.formatDateOrDateTime(date).</p>
+                    } else {
+                        @event.reservationEnd match {
+                            case None => { }
+                            case Some(date) => {
+                                @if(date.isAfterNow) {
+                                    <p><a href="@routes.Orders.start(event.id, None)">Reserveer</a> je tickets.</p>
+                                }
+                            }
+                        }
                     }
                 }
             }
