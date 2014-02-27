@@ -160,14 +160,14 @@ class PreReservationService @Inject()(orderService: OrderService) {
   }
 
   private def fillPrereservations(event: EventId, showPrereservations: List[ShowPrereservationUpdate], users: List[UserId])(implicit s: Session): Either[ServiceFailure, ServiceSuccess] = {
-    val userMap = mutable.Map(users.map{userId => (userId, totalQuotaByUsersAndEvent(List(userId), event))}.toSeq: _*)
+    val userMap = mutable.Map(users.map{userId => (userId, totalQuotaByUsersAndEvent(List(userId), event).getOrElse(0))}.toSeq: _*)
     showPrereservations.foreach { showPrereservationUpdate =>
       var quantity = showPrereservationUpdate.quantity
       users.foreach { user =>
-        val quantityByUser = Math.min(quantity, userMap(user).getOrElse(0))
+        val quantityByUser = Math.min(quantity, userMap.get(user).getOrElse(0))
         quantity -= quantityByUser
         if (userMap.contains(user)) {
-          userMap.put(user, Some(userMap(user).get - quantityByUser))
+          userMap.put(user, userMap(user) - quantityByUser)
         }
         updateQuantity(ShowPrereservation(showPrereservationUpdate.showId, user, quantityByUser))
       }
@@ -190,7 +190,7 @@ class PreReservationService @Inject()(orderService: OrderService) {
     showMap.keys.foreach { showId: ShowId => showMap(showId) -= orderService.capacity(eventShowMap(showId), users).byType(SeatType.Normal) }
 
     showMap.view.filter{ case (showId: ShowId, overCapacity: Int) => overCapacity > 0 }.map{case (showId: ShowId, overCapacity: Int) => (eventShowMap(showId), overCapacity)}.headOption match {
-      case Some((show, overCapacity)) => Left(serviceFailure("prereservations.capacity.exceeded", List(overCapacity, show.name, HumanDateTime.formatDateTimeCompact(show.date))))
+      case Some((show, overCapacity)) => Left(serviceFailure("prereservations.capacity.exceeded", List(show.name, HumanDateTime.formatDateTimeCompact(show.date), overCapacity)))
       case None => Right(serviceSuccess("prereservations.capacity.success"))
     }
   }
