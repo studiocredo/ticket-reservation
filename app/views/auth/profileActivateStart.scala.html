@@ -4,12 +4,15 @@
 
 @base("Gebruikersprofiel activeren")(userContext) {
     <div class="page-header">
-        <h1>Gebruikersprofiel activeren</h1>
+        <h1>Gebruikersprofiel @user.name activeren</h1>
     </div>
 
     @form(action = controllers.auth.routes.PasswordReset.handleStartActivateProfile(user.username), 'class -> "form form-horizontal") {
         @twFormActions {
-            <p>Gelieve de activatie van het profiel voor @user.name (@user.username) te bevestigen.</p>
+            <div class="alert alert-info">
+                <p><strong>Gelieve de activatie van je profiel te bevestigen.</strong></p>
+                <p>Na bevestiging ontvang je een e-mail waarmee je je wachtwoord kan instellen.</p>
+            </div>
         }
 
         @twFormActions {
