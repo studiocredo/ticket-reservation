@@ -19,6 +19,8 @@ import models.entities.SeatWithStatus
 import models.entities.Row
 import models.entities.Venue
 import models.entities.Spacer
+import models.entities.SeatType.SeatType
+import models.entities.SeatType
 
 class VenueService @Inject()() {
 
@@ -78,24 +80,20 @@ class VenueService @Inject()() {
 
   }
 
-  def fillFloorplan(fp: FloorPlan, tickets: List[TicketSeatOrder], users: List[UserId] = List()): FloorPlan = {
+  def fillFloorplan(fp: FloorPlan, tickets: List[TicketSeatOrder], users: List[UserId] = List(), availableTypes: List[SeatType] = List(SeatType.Normal)): FloorPlan = {
    val (mine, notmine) = tickets.partition(ticket => ticket.userId match { case Some(userId) => users.contains(userId); case None => false})
-   FloorPlan(fp.rows.map{row => Row(row.content.map{ case seat: Seat => SeatWithStatus(seat.id, seat.kind, getSeatStatus(seat, mine.map{_.seat}, notmine.map{_.seat}, users), seat.preference); case seat:SeatWithStatus => seat; case spacer:Spacer => spacer }, row.vspace) })
+   FloorPlan(fp.rows.map{row => Row(row.content.map{ case seat: Seat => SeatWithStatus(seat.id, seat.kind, getSeatStatus(seat, mine.map{_.seat}, notmine.map{_.seat}, users, availableTypes), seat.preference); case seat:SeatWithStatus => seat; case spacer:Spacer => spacer }, row.vspace) })
   }
 
-  private def getSeatStatus(seat: Seat, mine: List[SeatId], notmine: List[SeatId], users: List[UserId]): SeatStatus = {
+  private def getSeatStatus(seat: Seat, mine: List[SeatId], notmine: List[SeatId], users: List[UserId], availableTypes: List[SeatType]): SeatStatus = {
     if (mine.contains(seat.id)) {
       SeatStatus.Mine
+    } else if (!availableTypes.contains(seat.kind)) {
+      SeatStatus.Unavailable
     } else if (notmine.contains(seat.id)) {
-      seat.kind match {
-        case SeatType.Normal => SeatStatus.Reserved
-        case _ => SeatStatus.Unavailable
-      }
+      SeatStatus.Reserved
     } else {
-      seat.kind match {
-        case SeatType.Normal => SeatStatus.Free
-        case _ => SeatStatus.Unavailable
-      }
+      SeatStatus.Free
     }
   }
 
