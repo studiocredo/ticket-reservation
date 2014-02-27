@@ -56,6 +56,7 @@ object admin {
     def id = event.id
     def name = event.name
     def reservationAllowed = event.reservationAllowed
+    def preReservationAllowed = event.preReservationAllowed
   }
 
   case class EventPrereservationsDetail(event: Event, users: List[User], shows: List[VenueShows], prereservations: List[ShowPrereservationDetail], reservationQuota: Option[Int]) {

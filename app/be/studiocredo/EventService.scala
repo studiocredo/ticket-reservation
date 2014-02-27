@@ -73,14 +73,14 @@ class EventService @Inject()(showService: ShowService, preReservationService: Pr
 
   def list()(implicit s: Session): List[Event] = active.list
 
-  def listUpcoming()(implicit s: Session): List[Event] = {
+  def listUpcoming()(implicit s: Session): List[EventDetail] = {
     val query = for {
       s <- Query(Shows)
       if s.archived === false
       e <- s.event
       if e.archived === false
-    } yield (e, s.date)
-    query.list.sortBy(_._2).collect{case (e, d) if d.isAfterNow => e}.distinct
+    } yield (e.id, s.date)
+    query.list.sortBy(_._2).collect{case (eid, d) if d.isAfterNow => eid}.distinct.map{eventDetails(_).get}
   }
 
   def get(id: EventId)(implicit s: Session): Option[Event] = byId(id).firstOption

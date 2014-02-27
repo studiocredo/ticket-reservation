@@ -1,5 +1,6 @@
-@(nextShows: List[entities.ShowAvailability], events: List[entities.Event], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
+@(nextShows: List[entities.ShowAvailability], events: List[models.admin.EventDetail], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
 @import controllers.auth
+@import helper._
 
 @base("Studio Credo Ticket Reservatie")(userContext) {
 
@@ -41,15 +42,15 @@
 
             <h3>Informatie @event.name</h3>
 
-            <p>@event.description</p>
+            <p>@event.event.description</p>
 
-            @event.preReservationStart match {
+            @event.event.preReservationStart match {
                 case None => { }
                 case Some(date) => {
                     @if(date.isAfterNow) {
                         <p>De pre-reservaties gaan van start op @HumanDateTime.formatDateOrDateTime(date).</p>
                     } else {
-                        @event.preReservationEnd match {
+                        @event.event.preReservationEnd match {
                             case None => { }
                             case Some(date) => {
                                 @if(date.isAfterNow) {
@@ -60,19 +61,35 @@
                     }
                 }
             }
-            @event.reservationStart match {
+            @event.event.reservationStart match {
                 case None => { <p><a href="@routes.Orders.start(event.id, None)">Reserveer</a> je tickets.</p> }
                 case Some(date) => {
                     @if(date.isAfterNow) {
                         <p>De reservaties gaan van start op @HumanDateTime.formatDateOrDateTime(date).</p>
                     } else {
-                        @event.reservationEnd match {
+                        @event.event.reservationEnd match {
                             case None => { }
                             case Some(date) => {
                                 @if(date.isAfterNow) {
-                                    <p><a href="@routes.Orders.start(event.id, None)">Reserveer</a> je tickets.</p>
+                                    <p>Je kan op dit moment tickets <a href="@routes.Orders.start(event.id, None)">reserveren</a>.</p>
                                 }
                             }
+                        }
+                    }
+                }
+            }
+            @event.pricing match {
+                case None => {}
+                case Some(pricing) => {
+                    @pricing.prices match {
+                        case price :: Nil => {
+                            <p>Tickets zijn verkrijgbaar aan <strong>@CurrencyFormat.format(price.price)</strong>.</p>
+                        }
+                        case prices => {
+                            <p><strong>Tickets</strong></p>
+                            <ul>
+                                @prices.map { price => <li>@priceDetail(price)</li> }
+                            </ul>
                         }
                     }
                 }
