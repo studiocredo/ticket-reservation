@@ -45,14 +45,14 @@
                                         @defining(prices match { case head :: tail => (Some(head), tail); case _ => (None, Nil) }) { tuple =>
                                         @defining(tuple._1) { head =>
                                         @defining(tuple._2) { tail =>
-                                        @head match {
-                                            case Some(head) => { @priceDetail(head) }
-                                            case None => { }
-                                        }
-                                        @tail.map { price =>
-                                            <br/>
-                                            @priceDetail(price)
-                                        }
+                                            @head match {
+                                                case Some(head) => { @priceDetail(head) }
+                                                case None => { }
+                                            }
+                                            @tail.map { price =>
+                                                <br/>
+                                                @priceDetail(price)
+                                            }
                                         }
                                         }
                                         }
