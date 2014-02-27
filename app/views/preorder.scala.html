@@ -11,53 +11,64 @@
 
     @if(info.event.preReservationAllowed) {
 
-        @request.flash.get("error").map { msg =>
-            <div class="alert alert-danger">
-                @msg
+        @if(info.reservationQuota.getOrElse(0) == 0) {
+
+            <div class="alert alert-warning">
+                Je kan hebt geen recht op pre-reservaties invoeren voor dit evenement.
             </div>
-        }
 
-        @if(!info.shows.isEmpty) {
-            @form(action = controllers.routes.Prereservations.save(info.event.id), 'class -> "form form-horizontal", 'name -> "preresForm") {
+        } else {
+            @request.flash.get("error").map { msg =>
+                <div class="alert alert-danger">
+                    @msg
+                </div>
+            }
 
-                @globalFormErrors(prereservationForm)
-                @defining(info.shows.map{ vs => vs.shows.map{(vs.venue, _)}}.flatten) { venueShows =>
-                <fieldset data-ng-controller="CounterInputCtrl" data-ng-init="maxQuota = @info.totalQuota">
+            @if(!info.shows.isEmpty) {
+                @form(action = controllers.routes.Prereservations.save(info.event.id), 'class -> "form form-horizontal", 'name -> "preresForm") {
 
-                    @if(!info.users.isEmpty) {
-                        @formControlStatic("Gekoppelde gebruikers", "col-lg-6 col-xs-6", "col-lg-6 col-xs-6") {
-                            @info.users.map { user =>
-                                <a href="#" class="btn btn-default btn-xs" role="button">@user.name</a>
+                    @globalFormErrors(prereservationForm)
+                    @defining(info.shows.map{ vs => vs.shows.map{(vs.venue, _)}}.flatten) { venueShows =>
+                    @defining(info.reservationQuota.get) { totalQuota =>
+
+                    <fieldset data-ng-controller="CounterInputCtrl" data-ng-init="maxQuota = @totalQuota">
+
+                        @if(!info.users.isEmpty) {
+                            @formControlStatic("Gekoppelde gebruikers", "col-lg-6 col-xs-6", "col-lg-6 col-xs-6") {
+                                @info.users.map { user =>
+                                    <a href="#" class="btn btn-default btn-xs" role="button">@user.name</a>
+                                }
+                            }
+
+                            @formControlStatic("Gebruikte pre-reservaties", "col-lg-6 col-xs-6", "col-lg-6 col-xs-6") {
+                                <span data-ng-show="preresForm.$valid && isMaxQuotaSatisfied()">{{totalUsed()}} / @totalQuota</span>
+                                <span class="text-warning" data-ng-show="preresForm.$invalid || !isMaxQuotaSatisfied()">Ongeldige waarde</span>
                             }
                         }
 
-                        @formControlStatic("Gebruikte pre-reservaties", "col-lg-6 col-xs-6", "col-lg-6 col-xs-6") {
-                            <span data-ng-show="preresForm.$valid && isMaxQuotaSatisfied()">{{totalUsed()}} / @info.totalQuota</span>
-                            <span class="text-warning" data-ng-show="preresForm.$invalid || !isMaxQuotaSatisfied()">Ongeldige waarde</span>
+
+                        @for(((venue, show), index) <- venueShows.zipWithIndex) {
+                            @counterInput(prereservationForm(s"preres[$index].quantity"), '_label -> showVenueLabel(show, venue),  '_labelclass -> "col-lg-6 col-xs-6 quantity-label", '_inputclass -> "col-lg-6 col-xs-6 quantity-input", 'ngModelIndex -> show.id, 'max -> totalQuota, 'class -> "form-control")
+                            @hiddenInput(prereservationForm(s"preres[$index].show"))
                         }
+                    </fieldset>
+                    }
                     }
 
-
-                    @for(((venue, show), index) <- venueShows.zipWithIndex) {
-                        @counterInput(prereservationForm(s"preres[$index].quantity"), '_label -> showVenueLabel(show, venue),  '_labelclass -> "col-lg-6 col-xs-6 quantity-label", '_inputclass -> "col-lg-6 col-xs-6 quantity-input", 'ngModelIndex -> show.id, 'max -> info.totalQuota, 'class -> "form-control")
-                        @hiddenInput(prereservationForm(s"preres[$index].show"))
+                    @twFormActions {
+                        <button type="submit" class="btn btn-primary" data-ng-disabled="preresForm.$invalid">Bewaren</button>
+                        <a class="btn btn-warning" href="@controllers.routes.Application.index">Annuleren</a>
                     }
-                </fieldset>
                 }
 
-                @twFormActions {
-                    <button type="submit" class="btn btn-primary" data-ng-disabled="preresForm.$invalid">Bewaren</button>
-                    <a class="btn btn-warning" href="@controllers.routes.Application.index">Annuleren</a>
-                }
+            } else {
+                <div class="well">
+                    <p><em>Geen voorstellingen gevonden voor dit evenement.</em></p>
+                    @form(routes.Application.index) {
+                    <input type="submit" value="Annuleren" class="btn btn-warning">
+                    }
+                </div>
             }
-
-        } else {
-            <div class="well">
-                <p><em>Geen voorstellingen gevonden voor dit evenement.</em></p>
-                @form(routes.Application.index) {
-                <input type="submit" value="Annuleren" class="btn btn-warning">
-                }
-            </div>
         }
 
     } else {

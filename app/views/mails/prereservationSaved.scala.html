@@ -26,7 +26,7 @@
         }
         </ul>
 
-        @defining(preres.totalQuota) { total =>
+        @defining(preres.reservationQuota.get) { total =>
         @defining(preres.prereservations.map{_.quantity}.sum) { used => @used match {
             case i if (i == total) => { <p>Je hebt alle @total plaatsen gebruikt.</p> }
             case _ => { <p>Je hebt @used van de @total plaatsen gebruikt.</p> }

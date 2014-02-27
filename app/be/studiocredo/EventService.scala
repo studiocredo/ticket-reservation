@@ -98,7 +98,7 @@ class EventService @Inject()(showService: ShowService, preResevationService: Pre
   }
 
   def eventPrereservationDetails(id: EventId, users: List[UserId])(implicit s: Session): Option[EventPrereservationsDetail] = {
-    get(id).map{(event) => EventPrereservationsDetail(event, userService.findUsers(users), showService.listForEvent(event.id), preResevationService.preReservationsByUsers(users), preResevationService.quotaByUsers(users))}
+    get(id).map{(event) => EventPrereservationsDetail(event, userService.findUsers(users), showService.listForEvent(event.id), preResevationService.preReservationsByUsersAndEvent(users, event.id), preResevationService.totalQuotaByUsersAndEvent(users, event.id))}
   }
 
   def eventReservationDetails(id: EventId, users: List[UserId])(implicit s: Session): Option[EventReservationsDetail] = {
