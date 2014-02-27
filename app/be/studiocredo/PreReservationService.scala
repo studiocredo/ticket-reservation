@@ -7,8 +7,25 @@ import models.entities._
 import scala.collection.mutable
 import models.{HumanDateTime, ids}
 import be.studiocredo.util.ServiceReturnValues._
+import models.entities.SeatType._
+import models.entities.SeatType
+import models.entities.ReservationQuotumDetail
+import scala.Some
+import models.entities.ShowPrereservation
+import models.entities.User
+import models.entities.PendingPrereservationDisplay
+import models.entities.ReservationQuotum
+import models.entities.Show
+import models.entities.ShowPrereservationUpdate
+import models.entities.UnusedQuotaDisplay
+import models.entities.ShowPrereservationDetail
+import models.entities.Event
+import models.entities.Venue
+import models.entities.EventShow
+import models.entities.ShowAvailability
+import models.entities.TicketSeatOrderDetail
 
-class PreReservationService @Inject()(orderService: OrderService) {
+class PreReservationService @Inject()(orderService: OrderService, venueService: VenueService) {
   import models.schema.tables._
 
   val SPRQ = Query(ShowPrereservations)
@@ -46,6 +63,16 @@ class PreReservationService @Inject()(orderService: OrderService) {
       case None => query.list
     }
     list.map{ case (spr: ShowPrereservation, s: Show, e: Event, u: User, v: Venue) => ShowPrereservationDetail(EventShow(s.id, e.id, e.name, s.venueId, v.name, s.date, s.archived), u, spr.quantity)}
+  }
+
+  def preReservationsByShow(show: ShowId, excludedUsers: List[UserId] = List())(implicit s: Session): Map[UserId, Int] = {
+    val userMap = mutable.Map[UserId, Int]().withDefaultValue(0)
+    val query = for {
+      spr <- SPRQ
+      if spr.showId === show
+    } yield (spr.userId, spr.quantity)
+    query.list.collect{ case (userId, quantity) if !excludedUsers.contains(userId) => userMap(userId) = quantity}
+    userMap.toMap.withDefaultValue(0)
   }
 
   def totalQuotaByUsersAndEvent(users: List[UserId], event: EventId)(implicit s: Session): Option[Int] = {
@@ -187,7 +214,7 @@ class PreReservationService @Inject()(orderService: OrderService) {
     val showMap = mutable.Map[ShowId, Int]().withDefaultValue(0)
     showPrereservations.foreach { pr: ShowPrereservationUpdate => showMap(pr.showId) += pr.quantity }
     val eventShowMap = Shows.leftJoin(Events).on(_.eventId === _.id).where(_._1.id inSet showMap.keys).list.map{ case (s: Show, e: Event) => (s.id, EventShow(s.id, s.eventId, e.name, s.venueId, "dummy", s.date, s.archived))}.toMap
-    showMap.keys.foreach { showId: ShowId => showMap(showId) -= orderService.capacity(eventShowMap(showId), users).byType(SeatType.Normal) }
+    showMap.keys.foreach { showId: ShowId => showMap(showId) -= capacity(eventShowMap(showId), users).byType(SeatType.Normal) }
 
     showMap.view.filter{ case (showId: ShowId, overCapacity: Int) => overCapacity > 0 }.map{case (showId: ShowId, overCapacity: Int) => (eventShowMap(showId), overCapacity)}.headOption match {
       case Some((show, overCapacity)) => Left(serviceFailure("prereservations.capacity.exceeded", List(show.name, HumanDateTime.formatDateTimeCompact(show.date), overCapacity)))
@@ -196,4 +223,18 @@ class PreReservationService @Inject()(orderService: OrderService) {
   }
 
   private def findPreReservation(p: ShowPrereservation)= SPRQ.where(_.showId === p.showId).where(_.userId === p.userId)
+
+  def capacity(show: EventShow, excludedUsers: List[UserId] = List())(implicit s: Session): ShowAvailability = {
+    val venue = venueService.get(show.venueId).get
+    val ticketSeatOrders = orderService.byShowId(show.id, excludedUsers)
+    val floorplan = venue.floorplan.get
+
+    val seatTypeMap = mutable.Map[SeatType, Int]()
+    SeatType.values.foreach { st => seatTypeMap(st) = venue.capacityByType(st) }
+    ticketSeatOrders.foreach { tso => floorplan.seat(tso.seat) match { case Some(seat) => seatTypeMap(seat.kind) -= 1; case None => }}
+    preReservationsByShow(show.id, excludedUsers).foreach { case (userId, quantity) =>
+      seatTypeMap(SeatType.Normal) -= (quantity - ticketSeatOrders.filter(tso => tso.userId == Some(userId)).length)
+    }
+    ShowAvailability(show, seatTypeMap.toMap)
+  }
 }

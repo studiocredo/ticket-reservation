@@ -119,17 +119,5 @@ class OrderService @Inject()(venueService: VenueService) {
     }
   }
 
-  def capacity(show: EventShow, excludedUsers: List[UserId] = List())(implicit s: Session): ShowAvailability = {
-    val venue = venueService.get(show.venueId).get
-    val ticketSeatOrders = byShowId(show.id, excludedUsers)
-    val floorplan = venue.floorplan.get
-
-    val seatTypeMap = mutable.Map[SeatType, Int]()
-    SeatType.values.foreach { st => seatTypeMap(st) = venue.capacityByType(st) }
-
-    ticketSeatOrders.foreach { tso => floorplan.seat(tso.seat) match { case Some(seat) => seatTypeMap(seat.kind) -= 1; case None => }}
-    ShowAvailability(show, seatTypeMap.toMap)
-  }
-
   private def byId(id: ids.OrderId)= OQ.where(_.id === id)
 }

@@ -13,7 +13,7 @@ import scala.collection.mutable.Builder
 import com.google.inject.Inject
 import models.entities.SeatType.SeatType
 
-class ShowService @Inject()(venueService: VenueService, orderService: OrderService, preResevationService: PreReservationService) {
+class ShowService @Inject()(venueService: VenueService, preReservationService: PreReservationService) {
   import models.queries._
   import models.schema.tables._
 
@@ -51,7 +51,7 @@ class ShowService @Inject()(venueService: VenueService, orderService: OrderServi
     val list = (for (s <- next; e <- s.event; v <- s.venue) yield (s, e, v)).sortBy(_._1.date).take(limit).list
 
     list map {
-      case (show, event, venue) => orderService.capacity(EventShow(show.id, event.id, event.name, show.venueId, venue.name, show.date, show.archived))
+      case (show, event, venue) => preReservationService.capacity(EventShow(show.id, event.id, event.name, show.venueId, venue.name, show.date, show.archived))
     }
   }
 
