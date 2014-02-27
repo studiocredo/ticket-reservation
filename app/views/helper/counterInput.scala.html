@@ -6,8 +6,8 @@
 
 @helper.input(field, '_showConstraints -> false :: args.toList:_*) { (id, name, value, htmlArgs) =>
 <input id="@id" name="@name" type="hidden" value="{{values[@ngModelIndex]}}" data-ng-init="values[@ngModelIndex] = @value">
-            <p class="quantity bg-primary">{{values[@ngModelIndex]}}</p>
-            <div class="btn-group-vertical">
+            <div class="quantity">{{values[@ngModelIndex]}}</div>
+            <div class="btn-group-vertical inline">
                 <button type="button" class="btn btn-primary btn-sm" data-ng-click="increment(@ngModelIndex, @max)"><span class="glyphicon glyphicon-plus"></span>
                 </button>
                 <button type="button" class="btn btn-primary btn-sm" data-ng-click="decrement(@ngModelIndex, @min)"><span class="glyphicon glyphicon-minus"></span>
