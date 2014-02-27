@@ -49,7 +49,7 @@ error.pattern=Waarde moet voldoen aan {0}
 prereservations.success=Pre-reservaties bewaard
 prereservations.quota.exceeded=Maximaal aantal pre-reservaties overschreden
 #prereservations.quota.success
-prereservations.capacity.exceeded=Er is niet voldoende plaats meer voor {0} op {1}, gelieve {2} pre-reservatie(s) te verwijderen.
+prereservations.capacity.exceeded=Er zijn onvoldoende vrije plaatsen voor het evenement {0} op {1}, gelieve {2} pre-reservatie(s) te verwijderen.
 #prereservations.capacity.success
 
 # --- Reservations
