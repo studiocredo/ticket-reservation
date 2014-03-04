@@ -12,6 +12,7 @@ import play.api.mvc.SimpleResult
 import play.api.data.validation.{Constraint, Valid, Invalid}
 import models.entities.{UserDetailEdit, UserEdit}
 import be.studiocredo.util.DBSupport
+import models.admin.RichUser
 
 case class PasswordSet(newPassword: String, confirmation: String)
 case class RegistrationInfo(name:String, username: String, password: PasswordSet)
@@ -36,11 +37,13 @@ class SignUp @Inject()(val userService: UserService, val authService: Authentica
     startForm.bindFromRequest.fold({
       errors => BadRequest(views.html.auth.signUpStart(errors, userContext))
     }, {
-      email =>
-        if (userService.findByEmail(email).isEmpty) {
-          doSignUp(email)
-        } else {
-          Ok(views.html.auth.signUpExistingAccounts(startForm.fill(email), email, userContext))
+      email => {
+        val users: List[RichUser] = userService.findByEmail(email)
+        if (users.isEmpty) {
+            doSignUp(email)
+          } else {
+            Ok(views.html.auth.signUpExistingAccounts(startForm.fill(email), email, users, userContext))
+          }
         }
     })
   }

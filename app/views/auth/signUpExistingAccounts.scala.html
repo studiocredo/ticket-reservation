@@ -1,4 +1,4 @@
-@(startForm: Form[String], email: String, userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
+@(startForm: Form[String], email: String, users: List[models.admin.RichUser], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
 @import helper._
 @import views.Bootstrap._
 
@@ -12,7 +12,11 @@
 
         <p>Er bestaan reeds één of meerdere gebruikers met e-mail adres '@email'. Wat wil je doen?</p>
         <ul>
-            <li>Ik ben mijn wachtwoord vergeten en wil het <a href="@controllers.auth.routes.PasswordReset.startResetPassword()">opnieuw instellen</a></li>
+            @if(users.exists(!_.active)) {
+                <li>Ik ben Studio Credo lid en wens het gebruikersprofiel dat voor mij op dit e-mail adres werd aangemaakt te <a href="@controllers.auth.routes.PasswordReset.startActivateProfile(users.find(!_.active).get.username)">activeren</a>.</li>
+            } else {
+                <li>Ik ben mijn wachtwoord vergeten en wil het <a href="@controllers.auth.routes.PasswordReset.startResetPassword()">opnieuw instellen</a></li>
+            }
             <li>Ik wil <em>toch</em> <a href="@controllers.auth.routes.SignUp.forceHandleStartSignUp(email)">een nieuwe gebruiker aanmaken</a> met hetzelfde e-mail adres.</li>
         </ul>
     </div>
