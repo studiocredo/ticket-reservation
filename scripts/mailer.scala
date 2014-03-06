@@ -6,6 +6,5 @@ def notifyProfileCreated(users: List[RichUser] = us.listInactive) = {
 	users.zipWithIndex.foreach{ case (user,index) =>
 		Mailer.sendProfileCreatedEmail(user)
 		println(s"Processed ${user.name} (${index+1} out of $length)")
-		Thread.sleep(1000)
 	}
 }
