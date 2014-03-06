@@ -116,9 +116,8 @@ class PasswordReset @Inject()(val userService: UserService, val authService: Aut
         BadRequest(views.html.auth.pwResetForm(errors, token.id, username, true, userContext))
       }, {
         info => {
-          if (userService.changePassword(token.email, username, Passwords.hash(info.newPassword))) {
+          if (userService.changePasswordAndActivate(token.email, username, Passwords.hash(info.newPassword))) {
             userService.find(token.email, username) map (user => Mailer.sendPasswordChangedNotification(token.email, user))
-            userService.activate(username)
             Redirect(routes.LoginPage.login()).flashing("success" -> "Wachtwoord gewijzigd")
           } else {
             BadRequest(views.html.auth.pwResetForm(changePasswordForm.fill(info).withGlobalError("Er is een interne fout opgetreden. Het wachtwoord werd niet gewijzigd."), token.id, username, true, userContext))

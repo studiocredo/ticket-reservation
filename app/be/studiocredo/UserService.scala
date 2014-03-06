@@ -84,6 +84,13 @@ class UserService @Inject()() {
     }
   }
 
+  def changePasswordAndActivate(email: String, username: String, password: Password)(implicit s: Session): Boolean = {
+    s.withTransaction {
+      activate(username)
+      changePassword(email, username, password)
+    }
+  }
+
   def changePassword(email: String, username: String, password: Password)(implicit s: Session): Boolean = {
     s.withTransaction {
       find(email, username) match {
