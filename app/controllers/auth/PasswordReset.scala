@@ -104,9 +104,9 @@ class PasswordReset @Inject()(val userService: UserService, val authService: Aut
     })
   }
 
-  def activateProfile(token: String, user: String) = AuthAwareDBAction { implicit request =>
-    executeForToken(token, routes.PasswordReset.startResetPassword(), token => {
-      Ok(views.html.auth.pwResetForm(changePasswordForm, token.id, user, true, userContext))
+  def activateProfile(token: String, username: String) = AuthAwareDBAction { implicit request =>
+    executeForToken(token, routes.PasswordReset.startActivateProfile(username), token => {
+      Ok(views.html.auth.pwResetForm(changePasswordForm, token.id, username, true, userContext))
     })
   }
 
