@@ -1,14 +1,141 @@
 package be.studiocredo.reservations
 
-import models.entities.{SeatWithStatus, SeatStatus, FloorPlan}
-import models.entities.SeatStatus.SeatStatus
+import models.entities._
+import models.entities.SeatStatus
+import models.entities.SeatId
+import models.entities.SeatWithStatus
+import models.entities.FloorPlan
+import scala.collection.mutable
+
+object SeatScore {
+  def fromRowContent(rc: RowContent): SeatScore = rc match {
+    case seat: Seat => SeatScore(seat.id, seat.preference)
+    case seat: SeatWithStatus => SeatScore(seat.id, seat.preference)
+    case _ => SeatScore(SeatId("none"), -1)
+  }
+}
+case class SeatScore(seat: SeatId, score: Int)
+
+
+case class PartialSeatSuggestion(seats: List[SeatScore]) {
+  def size: Int = seats.length
+  def score: Int = seats.map(_.score).sum
+  def seatIds: List[SeatId] = seats.map(_.seat)
+}
+
+case class SeatSuggestion(partials: List[PartialSeatSuggestion]) {
+  val SeparationPenalty = 20
+  val OrphanSeatPenalty = 5
+
+  def size: Int = partials.map(_.size).sum
+  def score: Int = partials.map(_.score).sum + partials.length * SeparationPenalty // TODO + partials.slide(3).collect{seats.isOrphanSeat(_) => 1}.sum * OrphanSeatPenalty
+  def seatIds: List[SeatId] = partials.map(_.seatIds).flatten
+}
+
+case class AvailableSeats(fp: FloorPlan) {
+  def get: List[RowContent] = fp.rows.foldLeft(Nil: List[RowContent])(_ ++ List(Spacer(100)) ++ _.content )
+  
+  def isAvailable(rc: RowContent): Boolean = rc match {
+    case seat: Seat => true
+    case seat: SeatWithStatus if seat.status == SeatStatus.Free => true
+    case _ => false
+  }
+
+  def isSeat(rc: RowContent): Boolean = rc match {
+    case seat: Seat => true
+    case seat: SeatWithStatus => true
+    case _ => false
+  }
+
+  def isOrphanSeat(left: RowContent, middle: RowContent, right: RowContent): Boolean = (left, middle, right) match {
+    case (l, m, r) if isSeat(l) && !isAvailable(l) && isSeat(m) && isAvailable(m) && isSeat(r) && !isAvailable(r) => true
+    case _ => false
+  }
+
+  def totalAvailable: Int = get.count(isAvailable(_))
+
+  def takeBest(quantity: Int): List[SeatId] = {
+    get.filter(isAvailable(_)).map(SeatScore.fromRowContent(_)).sortBy(_.score).take(quantity).map(_.seat)
+  }
+}
 
 object ReservationEngine {
-  def suggestSeats(quantity: Int, floorplan: FloorPlan, includes: List[SeatStatus] = List(SeatStatus.Free)): Either[String, List[SeatWithStatus]] = {
-    val elegibleSeats = floorplan.seatsWithStatus.filter(seat => includes.contains(seat.status))
-    elegibleSeats.length match {
-      case l:Int if l > quantity => Right(elegibleSeats.take(quantity))
+  def suggestSeats(quantity: Int, floorplan: FloorPlan): Either[String, List[SeatId]] = {    //TODO extra param number of pre-res
+    val seats = AvailableSeats(floorplan)
+    seats.totalAvailable match {
+      case l: Int if l >= quantity => {
+        val groupSizesList = groupSizes(quantity)
+        val adjacentSolutionsBySize = calculateAllAdjacentSuggestions(seats, groupSizesList.flatten.distinct.sorted.reverse)
+
+        calculateBestSuggestion(groupSizesList.head.map(adjacentSolutionsBySize.getOrElse(_, mutable.Set()).toSet)) match {
+          //if the first element produces a solution, then this is always considered the best (all on one row and next to each other)
+          case Some(solution) => Right(solution.seatIds)
+          case None => {
+            groupSizesList.drop(1).map(sizes => calculateBestSuggestion(sizes.map(adjacentSolutionsBySize.getOrElse(_, mutable.Set()).toSet))).flatten match {
+              //nevermind, just take individual best seats
+              case Nil => Right(seats.takeBest(quantity))
+              case solutions => Right(solutions.minBy(_.score).seatIds)
+            }
+          }
+        }
+      }
       case _ => Left("re.capacity.insufficient")
+    }
+  }
+
+  private def groupSizes(size: Int): List[List[Int]] = {
+    var result = List(List(size))
+    if (size == 2) result = List(1, 1) :: result
+    if (size > 8) result = List(size / 2, size - size / 2) :: result
+    List(4, 3, 2).foreach(i => if (size > i) result = (size % i :: List.fill(size / i)(i)).reverse.filterNot(_ == 0) :: result)
+    result.reverse
+  }
+
+  private def calculateBestSuggestion(solutions: List[Set[PartialSeatSuggestion]]): Option[SeatSuggestion] = solutions match {
+    case Nil => None
+    case head :: tail => tail.foldLeft(toSeatSuggestion(calculateBestAdjacentSuggestion(head), None))((sg, psg) =>
+      sg match {
+        case None => None
+        case Some(suggestion) => toSeatSuggestion(calculateBestAdjacentSuggestion(psg, suggestion.partials.map(_.seatIds).flatten), sg)
+      }
+
+    )
+  }
+
+  private def toSeatSuggestion(psg: Option[PartialSeatSuggestion], sg: Option[SeatSuggestion]): Option[SeatSuggestion] = psg match {
+    case None => None
+    case Some(psg) => {
+      sg match {
+        case None => Some(SeatSuggestion(List(psg)))
+        case Some(sg) => Some(SeatSuggestion(psg :: sg.partials))
+      }
+    }
+  }
+
+  private def calculateBestAdjacentSuggestion(suggestions: Set[PartialSeatSuggestion], taken: List[SeatId] = Nil): Option[PartialSeatSuggestion] = suggestions.toSeq match {
+    case Seq() => None
+    case _ => {
+      suggestions.filter(x => taken.intersect(x.seatIds).isEmpty).toSeq match {
+        case Seq() => None
+        case suggestions => Some(suggestions.minBy(_.score))
+      }
+    }
+  }
+
+  //TODO this can be done faster with two pointer looping over the list
+  private def calculateAllAdjacentSuggestions(seats: AvailableSeats, sizes: List[Int]): mutable.MultiMap[Int, PartialSeatSuggestion] = sizes match {
+    case Nil => new mutable.HashMap[Int, mutable.Set[PartialSeatSuggestion]] with mutable.MultiMap[Int, PartialSeatSuggestion]
+    case _ => {
+      val map = new mutable.HashMap[Int, mutable.Set[PartialSeatSuggestion]] with mutable.MultiMap[Int, PartialSeatSuggestion]
+      val maxSize = sizes.max
+      seats.get.sliding(maxSize).foreach {
+        rowPart =>
+          val maxAdjacentAvailableCount = rowPart.takeWhile(seats.isAvailable(_)).length
+          sizes.collect {
+            case size if size <= maxAdjacentAvailableCount => map.addBinding(size, PartialSeatSuggestion(rowPart.take(size).map(SeatScore.fromRowContent(_))))
+          }
+      }
+      map
     }
   }
 }
@@ -16,111 +143,3 @@ object ReservationEngine {
 class ReservationEngine {
 
 }
-/*
-  @@min_preference = @@fill_preference.values.map{|h| h.values}.flatten.inject(@@fill_preference.values.first.values.first){|min,x| min = x if x < min; min}
-  @@max_preference = @@fill_preference.values.map{|h| h.values}.flatten.inject(@@fill_preference.values.first.values.first){|max,x| max = x if x > max; max}
-
-
-  def self.total_seats
-    @@row_size.inject(0){|sum,x| sum+x}
-  end
-
-  def suggest_seats(number, already_occupied = [])
-    possible_seats = seat_data.inject([]) do |result,row_data|
-      row = row_data[:row_number]
-      if row_data[:seat_numbers].length-number < 0
-        result
-      else
-        availability = row_data.values_at(*row_data[:seat_numbers]).map{|s| s == :free }
-        possible_seats_on_row = (0..(row_data[:seat_numbers].length-number)).map do |index|
-          if availability[index..(index+number-1)].all?{|seat_ok| seat_ok}
-            (index..(index+number-1)).to_a
-          else
-            nil
-          end
-        end.compact
-        result + possible_seats_on_row.map do |seat_indices|
-          seats = row_data[:seat_numbers].values_at(*seat_indices)
-          [ seats.map{|seat| "#{row}#{seat}"}, seats.inject(0){|sum, seat| sum += score(row,seat)}+heuristic(row,seat_indices, already_occupied)]
-        end        
-      end
-    end
-    possible_seats = possible_seats.sort_by{|possible_seat| possible_seat.last}
-    raise "Could not find #{number} free seats on the same row." if possible_seats.empty?
-    possible_seats.first.first
-  end
-  
-  def suggest_seats_simple(number, already_occupied = [])
-    result = []
-    seat_data.each do |row_data|
-      next if result.length >= number
-      row_data[:seat_numbers].each do |seat_number|
-        next if result.length >= number
-        seat = "#{row_data[:row_number]}#{seat_number}"
-        result <<  seat if row_data[seat_number] == :free
-      end
-    end
-    result
-  end
-  
-  private
-  
-  def score(row,seat)
-    ( @@fill_preference[row] && @@fill_preference[row][seat] ) ? @@fill_preference[row][seat] : nil
-  end
-  
-  def heuristic(row,seat_indices, already_occupied = [])
-    result = 0
-    # leaving one free seat to the left or right is punished with 5 points
-    row_data = seat_data.find{|r| r[:row_number] == row}
-    return 0 if row_data.nil?
-    min_index = seat_indices.inject(seat_indices.first){|min, i| i < min ? i : min }
-    max_index = seat_indices.inject(seat_indices.first){|max, i| i > max ? i : max }
-    case min_index
-      when 0 then result +=0
-      when 1 then result +=5 if row_data[row_data[:seat_numbers][0]] == :free
-      else result += 5 if row_data[row_data[:seat_numbers][min_index-1]] == :free && row_data[row_data[:seat_numbers][min_index-2]] != :free
-    end
-    case max_index
-      when row_data[:seat_numbers].length-1 then result +=0
-      when row_data[:seat_numbers].length-2 then result +=5 if row_data[row_data[:seat_numbers][row_data[:seat_numbers].length-1]] == :free
-      else result += 5 if row_data[row_data[:seat_numbers][max_index+1]] == :free && row_data[row_data[:seat_numbers][max_index+2]] != :free
-    end
-    if !already_occupied.empty?
-      #have seats next to already occupied seats is awarded
-      #in other words, if already_occupied is not empty, all
-      #combinations that are not next to an already occupied seed are
-      #punished by adding max_prerence*length points, so
-      #that any combination that has seats next to alread occupied
-      #seats is preferred
-      already_occupied_seats_in_row = already_occupied.map{|x| x =~ /([A-Za-z]+)(\d+)/; ($1 == row)? $2.to_i : nil}.compact 
-      already_occupied_indices_in_row = already_occupied_seats_in_row.map{|x| row_data[:seat_numbers].index(x)}
-      if already_occupied_indices_in_row.include?(min_index-1) || already_occupied_indices_in_row.include?(max_index+1)
-        #they are neighbours
-        result += 0
-      else
-        #punish!
-        result += seat_indices.length * (@@max_preference+1)
-      end
-    end
-    result
-  end  
-
-
-  def seat_numbers(size)
-    if size % 2 == 0
-      odd_last = size-1
-      even_last = size
-    else
-      odd_last = size
-      even_last = size-1
-    end
-    odd_numbers = []
-    (1..odd_last).step(2){|x| odd_numbers << x }
-    even_numbers = []
-    (2..even_last).step(2){|x| even_numbers << x }
-    odd_numbers + even_numbers.reverse
-  end
-  
-*/
-
