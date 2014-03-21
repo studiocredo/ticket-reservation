@@ -118,7 +118,7 @@ object entities {
   case class Row(content: List[RowContent], vspace: Int)
   case class FloorPlan(rows: List[Row]) {
     def seat(seatId: SeatId): Option[Seat] = {
-      rows.map{_.content}.flatten.collect{case seat:Seat => seat}.find{_.id == seatId}
+      rows.map{_.content}.flatten.collectFirst{case seat:Seat if seat.id == seatId => seat}
     }
     def seatsWithStatus: List[SeatWithStatus] = {
       rows.map{_.content}.flatten.collect{case seat:SeatWithStatus => seat}
