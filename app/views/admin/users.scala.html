@@ -23,9 +23,9 @@
             <thead>
                 <tr>
                     <th>Id</th>
+                    <th>Gebruikersnaam</th>
                     <th>Naam</th>
-                    <th>Adres</th>
-                    <th>Telefoon</th>
+                    <th>Email</th>
                     <th></th>
                 </tr>
             </thead>
@@ -33,9 +33,9 @@
             @currentPage.items.map { user =>
                 <tr>
                     <td>@user.id</td>
+                    <td>@user.username</td>
                     <td><a href="@{routes.UserDetails.view(user.id)}" class="@if(!user.active){text-warning}">@user.name</a></td>
-                    <td>@address(user.addressLines)</td>
-                    <td>@user.phone</td>
+                    <td>@user.email</td>
                     <td>
                         <a class="btn btn-default btn-xs" href="@{routes.Users.edit(user.id)}">Bewerken</a>
                         @if(!user.active) {

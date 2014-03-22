@@ -40,7 +40,7 @@ class UserService @Inject()() {
     import models.queries._
 
     val offset = pageSize * page
-    val query = filter.foldLeft(UDQ){
+    val query = filter.foldLeft(UDQ.sortBy(_._1.id)){
       (query, filter) => query.filter(q => iLike(q._1.name, s"%${filter}%")) // should replace with lucene
     }
     val total = query.length.run
