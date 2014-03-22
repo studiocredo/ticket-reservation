@@ -163,7 +163,7 @@ class PreReservationService @Inject()(orderService: OrderService, venueService: 
   //TODO: validate prereservation should not exceed user quotum for show and total should not exceed show capacity
   def insert(showPrereservation: ShowPrereservation)(implicit s: Session) = ShowPrereservations.*.insert(showPrereservation)
 
-  private def updateQuantity(showPrereservation: ShowPrereservation)(implicit s: Session) = {
+  def updateQuantity(showPrereservation: ShowPrereservation)(implicit s: Session) = {
     showPrereservation.quantity match {
       case 0 => if (hasPreReservation(showPrereservation)) delete(showPrereservation)
       case _ => if (hasPreReservation(showPrereservation)) findPreReservation(showPrereservation).map(_.quantity).update(showPrereservation.quantity) else ShowPrereservations.*.insert(showPrereservation)
@@ -214,7 +214,7 @@ class PreReservationService @Inject()(orderService: OrderService, venueService: 
     val showMap = mutable.Map[ShowId, Int]().withDefaultValue(0)
     showPrereservations.foreach { pr: ShowPrereservationUpdate => showMap(pr.showId) += pr.quantity }
     val eventShowMap = Shows.leftJoin(Events).on(_.eventId === _.id).where(_._1.id inSet showMap.keys).list.map{ case (s: Show, e: Event) => (s.id, EventShow(s.id, s.eventId, e.name, s.venueId, "dummy", s.date, s.archived))}.toMap
-    showMap.keys.foreach { showId: ShowId => showMap(showId) -= capacity(eventShowMap(showId), users).byType(SeatType.Normal) }
+    showMap.keys.foreach { showId: ShowId => showMap(showId) -= availability(eventShowMap(showId), users).byType(SeatType.Normal) }
 
     showMap.view.filter{ case (showId: ShowId, overCapacity: Int) => overCapacity > 0 }.map{case (showId: ShowId, overCapacity: Int) => (eventShowMap(showId), overCapacity)}.headOption match {
       case Some((show, overCapacity)) => Left(serviceFailure("prereservations.capacity.exceeded", List(show.name, HumanDateTime.formatDateTimeCompact(show.date), overCapacity)))
@@ -224,7 +224,9 @@ class PreReservationService @Inject()(orderService: OrderService, venueService: 
 
   private def findPreReservation(p: ShowPrereservation)= SPRQ.where(_.showId === p.showId).where(_.userId === p.userId)
 
-  def capacity(show: EventShow, excludedUsers: List[UserId] = List())(implicit s: Session): ShowAvailability = {
+  def findByShowAndUser(showId: ShowId, userId: UserId)(implicit s: Session): Option[ShowPrereservation] = findPreReservation(ShowPrereservation(showId, userId, 0)).firstOption
+
+  def availability(show: EventShow, excludedUsers: List[UserId] = List())(implicit s: Session): ShowAvailability = {
     val venue = venueService.get(show.venueId).get
     val ticketSeatOrders = orderService.byShowId(show.id, excludedUsers)
     val floorplan = venue.floorplan.get
@@ -233,7 +235,7 @@ class PreReservationService @Inject()(orderService: OrderService, venueService: 
     SeatType.values.foreach { st => seatTypeMap(st) = venue.capacityByType(st) }
     ticketSeatOrders.foreach { tso => floorplan.seat(tso.seat) match { case Some(seat) => seatTypeMap(seat.kind) -= 1; case None => }}
     preReservationsByShow(show.id, excludedUsers).foreach { case (userId, quantity) =>
-      seatTypeMap(SeatType.Normal) -= (quantity - ticketSeatOrders.filter(tso => tso.userId == Some(userId)).length)
+      seatTypeMap(SeatType.Normal) -= Math.max(0, quantity - ticketSeatOrders.filter(tso => tso.userId == Some(userId)).length)
     }
     ShowAvailability(show, seatTypeMap.toMap)
   }

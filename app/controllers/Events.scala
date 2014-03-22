@@ -34,7 +34,7 @@ class Events @Inject()(venueService: VenueService, eventService: EventService, s
       case Some(details) => {
         val currentUserContext = userContext
         val show = details.shows.flatMap(_.shows).find(_.id == showId)
-        val showAvailability = show.map{ s => preReservationService.capacity(showService.getEventShow(s.id))}
+        val showAvailability = show.map{ s => preReservationService.availability(showService.getEventShow(s.id))}
         Ok(views.html.event(details, showAvailability, hasQuota(eventId, currentUserContext), currentUserContext))
       }
     }

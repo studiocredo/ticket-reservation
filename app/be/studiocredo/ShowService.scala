@@ -51,7 +51,7 @@ class ShowService @Inject()(venueService: VenueService, preReservationService: P
     val list = (for (s <- next; e <- s.event; v <- s.venue) yield (s, e, v)).sortBy(_._1.date).take(limit).list
 
     list map {
-      case (show, event, venue) => preReservationService.capacity(EventShow(show.id, event.id, event.name, show.venueId, venue.name, show.date, show.archived))
+      case (show, event, venue) => preReservationService.availability(EventShow(show.id, event.id, event.name, show.venueId, venue.name, show.date, show.archived))
     }
   }
 
