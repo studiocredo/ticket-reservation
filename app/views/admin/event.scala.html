@@ -28,7 +28,10 @@
                     <td>@show.id</td>
                     <td>@vs.venue.name</td>
                     <td>@HumanDateTime.formatDateTime(show.date)</td>
-                    <td><a class="btn btn-default btn-xs" href="@routes.EventDetails.editShow(info.id, show.id)">Bewerken</a></td>
+                    <td>
+                        <a class="btn btn-default btn-xs" href="@routes.EventDetails.editShow(info.id, show.id)">Bewerken</a>
+                        <td><a class="btn btn-default btn-xs" href="@{routes.Orders.show(show.id)}">Bestellingen</a></td>
+                    </td>
                 </tr>
                 }
             }

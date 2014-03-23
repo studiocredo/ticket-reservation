@@ -1,7 +1,7 @@
 "use strict"
 App = angular.module("credo", ["floorplan", "counterInput"])
 
-Floorplan = angular.module("floorplan", ["ngDragDrop", "ui.sortable", "ng"])
+Floorplan = angular.module("floorplan", ["ngDragDrop", "ui.sortable", "ng", "ui.bootstrap"])
 
 Floorplan.controller "FloorPlanEditCtrl", ($scope, $http) ->
     # -------
@@ -172,7 +172,7 @@ Floorplan.directive 'orderAdminFloorplan', () ->
             <div class="content" data-ng-repeat="content in row.content">
                 <div class="spacer spacer-{{content.width}}" data-ng-if="content.ct == 'spacer'"></div>
                 <div class="seat seat-{{content.kind}}" data-ng-if="content.ct == 'seat'">{{content.id.name}}</div>
-                <div class="seat seat-status-{{content.status}}" data-ng-if="content.ct == 'seat-status'">{{content.id.name}}</div>
+                <div class="seat seat-status-{{content.status}}" data-ng-if="content.ct == 'seat-status'" data-tooltip-placement="top" data-tooltip="{{content.comment}}" data-tooltip-trigger="mouseenter">{{content.id.name}}</div>
             </div>
         </div>
     </div>

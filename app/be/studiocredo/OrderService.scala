@@ -30,6 +30,18 @@ class OrderService @Inject()(venueService: VenueService) {
     }
   }
 
+  def detailsByShowId(id: ShowId, excludedUsers: List[UserId] = List())(implicit s: Session): List[TicketSeatOrderDetail] = {
+    val query = for {
+      ((((ticketSeatOrder, show), event), user), venue) <- TicketSeatOrders.where(_.showId === id).leftJoin(Shows).on(_.showId === _.id).leftJoin(Events).on(_._2.eventId === _.id).leftJoin(Users).on(_._1._1.userId === _.id).leftJoin(Venues).on(_._1._1._2.venueId === _.id)
+    } yield (ticketSeatOrder, show, event, user, venue)
+    query.list.filter{ x =>
+      x._1.userId match {
+        case Some(userId) => !excludedUsers.contains(userId)
+        case None => true
+      }
+    }.map{ case (tso: TicketSeatOrder, s: Show, e: Event, u: User, v: Venue) => TicketSeatOrderDetail(tso, EventShow(s.id, e.id, e.name, s.venueId, v.name, s.date, s.archived), Some(u)) }
+  }
+
   private def orderDetail(implicit s: Session): (Order) => OrderDetail = {
     (order) => {
       val query = for {

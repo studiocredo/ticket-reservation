@@ -98,7 +98,7 @@ class Events @Inject()(venueService: VenueService, eventService: EventService, s
     plan match {
       case None => BadRequest(s"Zaalplan voor show $id niet gevonden")
       case Some(plan) => {
-        Ok(Json.toJson(venueService.fillFloorplan(plan, orderService.byShowId(id), Nil, SeatType.values.toList)))
+        Ok(Json.toJson(venueService.fillFloorplanDetailed(plan, orderService.detailsByShowId(id), Nil, SeatType.values.toList)))
       }
     }
   }
