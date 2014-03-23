@@ -5,9 +5,10 @@ import models.ids._
 import com.google.inject.Inject
 import models.entities._
 import scala.collection.mutable
-import models.{HumanDateTime, ids}
+import models.{Page, HumanDateTime, ids}
 import be.studiocredo.util.ServiceReturnValues._
 import models.entities.SeatType._
+import scala.Some
 import models.entities.SeatType
 import models.entities.ReservationQuotumDetail
 import scala.Some
@@ -16,13 +17,19 @@ import models.entities.User
 import models.entities.PendingPrereservationDisplay
 import models.entities.ReservationQuotum
 import models.entities.Show
+import models.entities.TicketOrderDetail
+import models.entities.TicketSeatOrder
 import models.entities.ShowPrereservationUpdate
+import models.entities.OrderDetail
+import models.Page
 import models.entities.UnusedQuotaDisplay
 import models.entities.ShowPrereservationDetail
 import models.entities.Event
 import models.entities.Venue
+import models.entities.TicketOrder
 import models.entities.EventShow
 import models.entities.ShowAvailability
+import models.entities.Order
 import models.entities.TicketSeatOrderDetail
 
 class PreReservationService @Inject()(orderService: OrderService, venueService: VenueService) {
@@ -130,6 +137,20 @@ class PreReservationService @Inject()(orderService: OrderService, venueService: 
       x.foreach { t => eventMap(t._1) -= t._2}
 
     UnusedQuotaDisplay(eventMap.filter(_._2 > 0).toMap)
+  }
+
+  def page(page: Int = 0, pageSize: Int = 10, orderBy: Int = 1)(implicit s: Session): Page[ShowPrereservationDetail] = {
+    import models.queries._
+
+    val offset = pageSize * page
+
+    val query = for {
+      ((((showPreres, show), event), user), venue) <- ShowPrereservations.leftJoin(Shows).on(_.showId === _.id).leftJoin(Events).on(_._2.eventId === _.id).leftJoin(Users).on(_._1._1.userId === _.id).leftJoin(Venues).on(_._1._1._2.venueId === _.id)
+    } yield (showPreres, show, event, user, venue)
+
+    val total = query.length.run
+    val values = paginate(query, page, pageSize).run map { case (spr: ShowPrereservation, s: Show, e: Event, u: User, v: Venue) => ShowPrereservationDetail(EventShow(s.id, e.id, e.name, s.venueId, v.name, s.date, s.archived), u, spr.quantity)}
+    Page(values, page, pageSize, offset, total)
   }
 
   //TODO: validate should be >= 0

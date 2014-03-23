@@ -1,0 +1,39 @@
+@(currentPage: Page[models.entities.ShowPrereservationDetail], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
+
+@import controllers.admin.routes
+@import helper._
+@import views.Bootstrap._
+@import be.studiocredo.util.Money
+
+@base("Administratie: Pre-reservaties")(userContext) {
+
+    @if(!currentPage.isEmpty) {
+        <table class="table table-hover table-striped">
+            <thead>
+                <tr>
+                    <th>Naam</th>
+                    <th>Show</th>
+                    <th>Aantal</th>
+                </tr>
+            </thead>
+            <tbody>
+            @currentPage.items.map { preres =>
+                <tr>
+                    <td><a href="@{routes.UserDetails.view(preres.user.id)}">@preres.user.name</a></td>
+                    <td>@helper.showName(preres.show)</td>
+                    <td>@preres.quantity</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+
+        @helper.paging(currentPage, (page:Int) => routes.Prereservations.list(page))
+    } else {
+        <div class="well">
+            <em>Geen pre-reservaties gevonden.</em>
+        </div>
+
+    }
+
+}
+
