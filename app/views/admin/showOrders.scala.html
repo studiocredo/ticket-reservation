@@ -1,0 +1,80 @@
+@(event: models.admin.EventDetail, show: models.entities.ShowAvailability, userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
+
+@import helper._
+
+@base(event.event.name)(userContext) {
+
+    <div class="row ">
+        <div class="col-xs-12 col-md-9">
+            <div class="page-header">
+                <h1>@event.event.name </h1>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xs-12 col-md-3 col-md-push-9" id="sidebar" role="navigation">
+            <div class="panel panel-default">
+                <div class="panel-heading">Legende</div>
+                <div class="panel-body fp fp-fancy-legend">
+                   <div class="text-info legend-label legend-label-free">Beschikbaar</div>
+                    <div class="text-info legend-label legend-label-reserved">Gereserveerd</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xs-12 col-md-9 col-md-pull-3">
+            <div class="row">
+                <div class="span-12">
+                    <dl class="dl-horizontal">
+                        <dt>Tijdstip</dt>
+                        <dd>@HumanDateTime.formatDateTime(show.show.date)</dd>
+                        @if(show.show.isDone) {
+                        <dt/>
+                        <dd>Deze show is afgelopen</dd>
+                        } else {
+                        <dt/>Beschikbaarheid</dt>
+                        <dd>@AvailabilityFormat.format(show)</dd>
+                        }
+                        <dt>Locatie</dt>
+                        <dd>@show.show.venueName</dd>
+                        @event.pricing match {
+                        case None => {}
+                        case Some(pricing) => {
+                        <dt>Tarief</dt>
+                        <dd>
+                            @pricing.prices match {
+                            case price :: Nil => { @CurrencyFormat.format(price.price) }
+                            case prices => {
+                            @defining(prices match { case head :: tail => (Some(head), tail); case _ => (None, Nil) }) { tuple =>
+                            @defining(tuple._1) { head =>
+                            @defining(tuple._2) { tail =>
+                            @head match {
+                            case Some(head) => { @priceDetail(head) }
+                            case None => { }
+                            }
+                            @tail.map { price =>
+                            <br/>
+                            @priceDetail(price)
+                            }
+                            }
+                            }
+                            }
+                            }
+                            }
+                        </dd>
+                        }
+                        }
+                    </dl>
+                </div>
+            </div>
+            <div class="row">
+                <div class="span-12">
+                    <div data-order-admin-floorplan data-show="@show.show.id"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+}

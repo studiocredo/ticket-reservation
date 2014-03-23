@@ -7,7 +7,7 @@
     <td>@user.name</td>
     <td>@showName(ticketOrder.show)</td>
     <td>@ticketOrder.ticketSeatOrders.map(_.ticketSeatOrder.seat.name).sorted.mkString(", ") (@ticketOrder.ticketSeatOrders.length)</td>
-    <td>@CurrencyFormat.format(ticketOrder.ticketSeatOrders.foldLeft(Money(0))((total, tsod) => total.plus(tsod.ticketSeatOrder.price)))</td>
+    <td>@CurrencyFormat.format(ticketOrder.price)</td>
     <td></td>
 }
 

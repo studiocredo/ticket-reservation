@@ -30,6 +30,49 @@ class OrderService @Inject()(venueService: VenueService) {
     }
   }
 
+  private def orderDetail(implicit s: Session): (Order) => OrderDetail = {
+    (order) => {
+      val query = for {
+        ((((((order, ticketOrder), ticketSeatOrder), show), event), user), venue) <- Orders.where(_.id === order.id).leftJoin(TicketOrders).on(_.id === _.orderId).leftJoin(TicketSeatOrders).on(_._2.id === _.ticketOrderId).leftJoin(Shows).on(_._2.showId === _.id).leftJoin(Events).on(_._2.eventId === _.id).leftJoin(Users).on(_._1._1._1._1.userId === _.id).leftJoin(Venues).on(_._1._1._2.venueId === _.id)
+      } yield (order, ticketOrder, ticketSeatOrder, show, event, user, venue)
+      val ticketOrderMap = new mutable.HashMap[TicketOrder, mutable.Set[TicketSeatOrder]]() with mutable.MultiMap[TicketOrder, TicketSeatOrder]
+      val showMap = mutable.Map[ShowId, EventShow]()
+      val userMap = mutable.Map[UserId, User]()
+
+      query.sortBy(_._1.date).list.foreach {
+        case (order, ticketOrder, ticketSeatOrder, show, event, user, venue) =>
+          ticketOrderMap.addBinding(ticketOrder, ticketSeatOrder)
+          showMap.put(show.id, EventShow(show.id, event.id, event.name, show.venueId, venue.name, show.date, show.archived))
+          userMap.put(user.id, user)
+      }
+
+          val ticketOrders = ticketOrderMap.keys.map {
+            ticketOrder =>
+              val ticketSeatOrders = ticketOrderMap(ticketOrder).toList.map {
+                ticketSeatOrder => TicketSeatOrderDetail(ticketSeatOrder, showMap(ticketSeatOrder.showId), ticketSeatOrder.userId match {
+                  case Some(userId) => Some(userMap(userId));
+                  case _ => None
+                })
+              }
+              TicketOrderDetail(ticketOrder, order, showMap(ticketOrder.showId), ticketSeatOrders)
+          }
+          OrderDetail(order, userMap(order.userId), ticketOrders.toList)
+    }
+  }
+
+  def page(page: Int = 0, pageSize: Int = 10, orderBy: Int = 1, filter: Option[String] = None)(implicit s: Session): Page[OrderDetail] = {
+    import models.queries._
+
+    val offset = pageSize * page
+
+    val query = filter.foldLeft(OQ.sortBy(_.date.desc)){
+      (query, filter) => query.filter(q => iLike(q.billingName, s"%${filter}%")) // should replace with lucene
+    }
+    val total = query.length.run
+    val values = paginate(query, page, pageSize).run map orderDetail
+    Page(values, page, pageSize, offset, total)
+  }
+
   def seatsByUser(id: UserId)(implicit s: Session): List[TicketSeatOrderDetail] = {
     seatsByUsers(List(id))
   }

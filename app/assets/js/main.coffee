@@ -158,6 +158,31 @@ Floorplan.directive 'availabilityFloorplan', () ->
         show: '='
     controller: 'ShowAvailabilityCtrl'
 
+Floorplan.controller "OrderAdminFloorpanCtrl", ($scope, $http) ->
+     $http.get(jsRoutes.controllers.Events.ajaxOrderAdminFloorplan($scope.show).url).success (plan) ->
+             $scope.plan = plan
+             $scope.rows = plan.rows
+
+Floorplan.directive 'orderAdminFloorplan', () ->
+    restrict: 'EA'
+    template: """
+<div class="fp fp-fancy">
+    <div class="row seat-row vspacer-{{row.vspace}}" data-ng-repeat="row in rows">
+        <div data-ng-model="row.content" class="span-12">
+            <div class="content" data-ng-repeat="content in row.content">
+                <div class="spacer spacer-{{content.width}}" data-ng-if="content.ct == 'spacer'"></div>
+                <div class="seat seat-{{content.kind}}" data-ng-if="content.ct == 'seat'">{{content.id.name}}</div>
+                <div class="seat seat-status-{{content.status}}" data-ng-if="content.ct == 'seat-status'">{{content.id.name}}</div>
+            </div>
+        </div>
+    </div>
+    <p class="text-center">Podium</p>
+</div>
+"""
+    scope:
+        show: '='
+    controller: 'OrderAdminFloorpanCtrl'
+
 CounterInput = angular.module("counterInput", [])
 
 CounterInput.controller "CounterInputCtrl", ($scope, $http) ->

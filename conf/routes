@@ -41,9 +41,11 @@ POST        /admin/users                            @controllers.admin.Users.sav
 GET         /admin/users/:id                        @controllers.admin.Users.edit(id:UserId)
 POST        /admin/users/:id                        @controllers.admin.Users.update(id:UserId)
 GET         /admin/users/activate/:name             @controllers.admin.Users.activate(name:String)
-
 GET         /admin/user/:id                         @controllers.admin.UserDetails.view(id:UserId)
 
+GET         /admin/orders                           @controllers.admin.Orders.list(p:Int ?= 0)
+GET         /admin/orders/show/:show                @controllers.admin.Orders.show(show: ShowId)
+GET         /admin/orders/availability/:id          @controllers.Events.ajaxOrderAdminFloorplan(id:ShowId)
 
 GET         /admin/venues                           @controllers.admin.Venues.list(p:Int ?= 0)
 GET         /admin/venues/new                       @controllers.admin.Venues.create
@@ -82,3 +84,7 @@ GET         /events/availability/:id                @controllers.Events.ajaxAvai
 GET         /assets/javascripts/routes              @controllers.Application.javascriptRoutes
 GET         /assets/*file                           controllers.Assets.at(path="/public", file)
 GET         /webjars/*file                          controllers.WebJarAssets.at(file)
+
+GET /suggest  @controllers.admin.Test.suggest(quantity:Option[Int], showId:Option[ShowId])
+GET /reserve  @controllers.admin.Test.reserve(quantity:Option[Int], showId:Option[ShowId])
+GET /prereserve  @controllers.admin.Test.prereserve(quantity:Option[Int], showId:Option[ShowId])

@@ -169,13 +169,19 @@ object entities {
 
   case class Order(id: OrderId, userId: UserId, date: DateTime, billingName: String, billingAddress: String)
   case class OrderEdit(         userId: UserId, date: DateTime, billingName: String, billingAddress: String)
-  case class OrderDetail(order: Order, user: User, ticketOrders: List[TicketOrderDetail])
+  case class OrderDetail(order: Order, user: User, ticketOrders: List[TicketOrderDetail]) {
+    def price = ticketOrders.map(_.price).foldLeft(Money(0))((total, amount) => total.plus(amount))
+  }
 
   case class TicketOrder(id: TicketOrderId, orderId: OrderId, showId: ShowId)
-  case class TicketOrderDetail(ticketOrder: TicketOrder, order: Order, show: EventShow, ticketSeatOrders: List[TicketSeatOrderDetail])
+  case class TicketOrderDetail(ticketOrder: TicketOrder, order: Order, show: EventShow, ticketSeatOrders: List[TicketSeatOrderDetail]) {
+    def price = ticketSeatOrders.map(_.price).foldLeft(Money(0))((total, amount) => total.plus(amount))
+  }
 
   case class TicketSeatOrder(ticketOrderId: TicketOrderId, showId: ShowId, userId: Option[UserId], seat: SeatId, price: Money)
-  case class TicketSeatOrderDetail(ticketSeatOrder: TicketSeatOrder, show: EventShow, user: Option[User])
+  case class TicketSeatOrderDetail(ticketSeatOrder: TicketSeatOrder, show: EventShow, user: Option[User]) {
+    def price = ticketSeatOrder.price
+  }
 
   case class ReservationQuotum(eventId: EventId, userId: UserId, quota: Int)
   case class ReservationQuotumDetail(event: Event, user: User, quota: Int)
