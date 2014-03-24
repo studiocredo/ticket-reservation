@@ -55,6 +55,16 @@ class ShowService @Inject()(venueService: VenueService, preReservationService: P
     }
   }
 
+  def listReservable(implicit s: Session): List[ShowId] = {
+    val q = for (
+      s <- active;
+      e <- s.event;
+      v <- s.venue
+      if v.floorplan.isNotNull
+    ) yield (s.id, e.reservationStart, e.reservationEnd)
+    q.list.collect{ case (sid: ShowId, rStart: Option[DateTime], rEnd: Option[DateTime]) if (rStart.isEmpty || (rStart.get.minusHours(1).isBeforeNow() && rEnd.get.plusHours(1).isAfterNow()))=> sid}
+  }
+
   def getEventShow(id: ShowId)(implicit s: Session): EventShow = {
     val q = for (s <- byId(id); e <- s.event; v <- s.venue) yield (s.id, e.id, e.name, s.venueId, v.name, s.date, s.archived)
     (EventShow.apply _) tupled q.first

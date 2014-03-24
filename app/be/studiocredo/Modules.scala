@@ -2,6 +2,8 @@ package be.studiocredo
 
 import com.google.inject.{AbstractModule, Singleton}
 import net.codingwell.scalaguice.{ScalaMultibinder, ScalaModule}
+import be.studiocredo.auth.AuthTokenExpireService
+import be.studiocredo.reservations.ReservationEngineMonitorService
 
 object Modules {
 
@@ -36,6 +38,7 @@ object Modules {
       // todo replace with method that doesn't suck
       val multi = ScalaMultibinder.newSetBinder[Service](binder)
       multi.addBinding().to[AuthTokenExpireService]
+      multi.addBinding().to[ReservationEngineMonitorService]
 
       bind[controllers.auth.Auth].in[Singleton]
       bind[controllers.auth.LoginPage].in[Singleton]

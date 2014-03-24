@@ -5,6 +5,13 @@ import models.entities.SeatStatus
 import scala.collection.mutable
 import models.entities.SeatType._
 import models.entities.SeatType
+import com.google.inject.Inject
+import be.studiocredo.{ShowService, Service}
+import akka.actor.Cancellable
+import play.api.libs.concurrent.Akka
+import play.api.Logger
+import models.ids.ShowId
+import play.api.db.slick._
 import models.entities.FloorPlan
 import models.entities.SeatId
 import scala.Some
@@ -152,6 +159,39 @@ object ReservationEngine {
   }
 }
 
-class ReservationEngine {
+case class ReservationEngine(show: ShowId) {
 
+}
+
+class ReservationEngineMonitorService @Inject()(showService: ShowService) extends Service {
+
+  var cancellable: Option[Cancellable] = None
+  val engines: mutable.Map[ShowId, ReservationEngine] = mutable.Map()
+
+  def byShow(show: ShowId): Option[ReservationEngine] = engines.get(show)
+
+  override def onStop() {
+    cancellable.map(_.cancel())
+  }
+
+  override def onStart() {
+    import play.api.Play.current
+    import scala.concurrent.duration._
+    import play.api.libs.concurrent.Execution.Implicits._
+
+    cancellable = Some(
+      Akka.system.scheduler.schedule(0.seconds, 30.minutes) {
+        val reservables = DB.withSession { implicit session: Session => showService.listReservable }
+        (engines.keys.toSet -- reservables).foreach { sid =>
+          engines.remove(sid)
+        }
+        (reservables.toSet -- engines.keys.toSet).foreach { sid =>
+          engines.put(sid, ReservationEngine(sid))
+        }
+        if (Logger.isDebugEnabled) {
+          Logger.debug(s"Registered reservation engines for show ids: ${engines.keys.mkString(",")}")
+        }
+      }
+    )
+  }
 }
