@@ -13,7 +13,7 @@ import be.studiocredo.auth.SecuredDBRequest
 case class ShowReservationForm(showId: ShowId, quantity: Int)
 case class ReservationForm(showReservations: List[ShowReservationForm])
 
-class Orders @Inject()(eventService: EventService, orderService: OrderService, val authService: AuthenticatorService, val notificationService: NotificationService, val userService: UserService) extends Controller with Secure with UserContextSupport {
+class Orders @Inject()(eventService: EventService, orderService: OrderService, showService: ShowService, preReservationService: PreReservationService, val authService: AuthenticatorService, val notificationService: NotificationService, val userService: UserService) extends Controller with Secure with UserContextSupport {
 
   val defaultAuthorization = Some(Authorization.ANY)
 
@@ -30,6 +30,21 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, v
 
   def start(id: EventId, show: Option[ShowId]) = AuthDBAction { implicit rs =>
     page(id)
+  }
+
+  def reservations(show: ShowId) = AuthDBAction { implicit rs =>
+    showService.get(show) match {
+      case None => BadRequest("Voorstelling $show niet gevonden")
+      case Some(showDetail) => {
+        val details = eventService.eventDetails(showDetail.eventId).get
+        val currentUserContext = userContext
+        val venueShow = details.shows.flatMap(_.shows).find(_.id == show)
+        val showAvailability = venueShow.map {
+          s => preReservationService.availability(showService.getEventShow(s.id))
+        }
+        Ok(views.html.reservationFloorplan(details, showAvailability.get, currentUserContext))
+      }
+    }
   }
 
   def save(id: EventId) = AuthDBAction { implicit rs =>

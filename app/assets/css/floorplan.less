@@ -147,6 +147,12 @@
         padding-top: @seat-size*0.1;
     }
 
+    .seat[ng-click],
+    .seat[data-ng-click],
+    .seat[x-ng-click] {
+        cursor: pointer;
+    }
+
     .seat-normal {
         .seat("normal");
     }

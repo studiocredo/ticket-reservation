@@ -23,6 +23,7 @@ class Application @Inject()(showService: ShowService, eventService: EventService
         mr.Events.ajaxFloorplan,
         mr.Events.ajaxAvailabilityFloorplan,
         mr.Events.ajaxOrderAdminFloorplan,
+        mr.Events.ajaxReservationFloorplan,
         ar.Floorplans.ajaxSaveFloorPlan,
         ar.Floorplans.ajaxFloorPlan
       )).as("text/javascript")

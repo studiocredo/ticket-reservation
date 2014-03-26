@@ -183,6 +183,41 @@ Floorplan.directive 'orderAdminFloorplan', () ->
         show: '='
     controller: 'OrderAdminFloorpanCtrl'
 
+Floorplan.controller "ReservationFloorpanCtrl", ($scope, $http) ->
+     $http.get(jsRoutes.controllers.Events.ajaxReservationFloorplan($scope.show).url).success (plan) ->
+             $scope.plan = plan
+             $scope.rows = plan.rows
+             $scope.claim = (seat) ->
+                     console.log('claim '+seat)
+             $scope.release = (show, seat) ->
+                     console.log('release '+seat)
+             $scope.suggest = (show, quantity) ->
+                     console.log('suggest '+quantity)
+             $scope.cancel = () ->
+                     console.log('cancel')
+
+Floorplan.directive 'reservationFloorplan', () ->
+    restrict: 'EA'
+    template: """
+<div class="fp fp-fancy">
+    <div class="row seat-row vspacer-{{row.vspace}}" data-ng-repeat="row in rows">
+        <div data-ng-model="row.content" class="span-12">
+            <div class="content" data-ng-repeat="content in row.content">
+                <div class="spacer spacer-{{content.width}}" data-ng-if="content.ct == 'spacer'"></div>
+                <div class="seat seat-{{content.kind}}" data-ng-if="content.ct == 'seat'">{{content.id.name}}</div>
+                <div class="seat seat-status-{{content.status}}" data-ng-if="content.ct == 'seat-status' && content.status == 'free'" data-ng-click="claim(content.id.name)">{{content.id.name}}</div>
+                <div class="seat seat-status-{{content.status}}" data-ng-if="content.ct == 'seat-status' && content.status == 'mine'" data-ng-click="release(content.id.name)">{{content.id.name}}</div>
+                <div class="seat seat-status-{{content.status}}" data-ng-if="content.ct == 'seat-status' && content.status != 'free' && content.status != 'mine'">{{content.id.name}}</div>
+            </div>
+        </div>
+    </div>
+    <p class="text-center">Podium</p>
+</div>
+"""
+    scope:
+        show: '='
+    controller: 'ReservationFloorpanCtrl'
+
 CounterInput = angular.module("counterInput", [])
 
 CounterInput.controller "CounterInputCtrl", ($scope, $http) ->

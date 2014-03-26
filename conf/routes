@@ -74,6 +74,8 @@ POST        /admin/event/:id/show/:show/delete      @controllers.admin.EventDeta
 
 GET         /order/:id                              @controllers.Orders.start(id:EventId, show:Option[ShowId])
 POST        /order/:id                              @controllers.Orders.save(id:EventId)
+GET         /order/reservations/:show               @controllers.Orders.reservations(show:ShowId)
+GET         /order/reservations/floorplan/:id       @controllers.Events.ajaxReservationFloorplan(id:ShowId)
 GET         /preorder/:id                           @controllers.Prereservations.start(id:EventId)
 POST        /preorder/:id                           @controllers.Prereservations.save(id:EventId)
 GET         /events/                                @controllers.Events.list(p:Int ?= 0)

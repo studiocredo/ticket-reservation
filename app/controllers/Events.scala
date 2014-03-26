@@ -102,4 +102,19 @@ class Events @Inject()(venueService: VenueService, eventService: EventService, s
       }
     }
   }
+
+  def ajaxReservationFloorplan(id: ShowId) = AuthAwareDBAction { implicit rs =>
+    val plan = for {
+      show <- showService.get(id)
+      venue <- venueService.get(show.venueId)
+      fp <- venue.floorplan
+    } yield (fp)
+
+    plan match {
+      case None => BadRequest(s"Zaalplan voor show $id niet gevonden")
+      case Some(plan) => {
+        Ok(Json.toJson(venueService.fillFloorplanReservations(plan, orderService.byShowId(id), Nil)))
+      }
+    }
+  }
 }
