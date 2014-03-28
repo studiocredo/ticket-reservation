@@ -4,10 +4,16 @@ import com.google.inject.Inject
 import be.studiocredo._
 import be.studiocredo.auth._
 import play.api.mvc.Controller
-import models.ids.{ShowId, EventId}
+import models.ids.{TicketOrderId, OrderId, ShowId, EventId}
 import play.api.data.Form
 import play.api.data.Forms._
 import scala.Some
+import be.studiocredo.auth.SecuredDBRequest
+import controllers.auth.Mailer
+import be.studiocredo.util.ServiceReturnValues._
+import controllers.ReservationForm
+import scala.Some
+import controllers.ShowReservationForm
 import be.studiocredo.auth.SecuredDBRequest
 
 case class ShowReservationForm(showId: ShowId, quantity: Int)
@@ -34,7 +40,7 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
 
   def reservations(show: ShowId) = AuthDBAction { implicit rs =>
     showService.get(show) match {
-      case None => BadRequest("Voorstelling $show niet gevonden")
+      case None => BadRequest(s"Voorstelling $show niet gevonden")
       case Some(showDetail) => {
         val details = eventService.eventDetails(showDetail.eventId).get
         val currentUserContext = userContext
@@ -45,6 +51,38 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
         Ok(views.html.reservationFloorplan(details, showAvailability.get, currentUserContext))
       }
     }
+  }
+
+  def confirmation(id: OrderId) = AuthDBAction { implicit rs =>
+    orderService.get(id) match {
+      case None => BadRequest(s"Bestelling $id niet gevonden")
+      case Some(order)  => {
+        Ok(views.html.orderConfirmation(order, userContext))
+      }
+    }
+  }
+
+  def cancel(id: OrderId) = AuthDBAction { implicit rs =>
+    ???
+  }
+
+  def confirm(id: OrderId) = AuthDBAction { implicit rs =>
+    orderService.get(id) match {
+      case None => BadRequest(s"Bestelling $id niet gevonden")
+      case Some(order)  => {
+        val currentUser = rs.currentUser.get
+        Mailer.sendOrderConfirmationEmail(currentUser.user, order)
+        Redirect(routes.Application.index).flashing("success" -> "Bedankt voor je bestelling. Je ontvangt binnenkort een e-mail met de betalingsgegevens.")
+      }
+    }
+  }
+
+  def remove(id: TicketOrderId) = AuthDBAction { implicit rs =>
+    ???
+  }
+
+  def edit(id: TicketOrderId) = AuthDBAction { implicit rs =>
+    ???
   }
 
   def save(id: EventId) = AuthDBAction { implicit rs =>

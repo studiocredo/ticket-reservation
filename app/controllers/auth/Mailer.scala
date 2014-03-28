@@ -8,6 +8,7 @@ import java.nio.charset.StandardCharsets
 import play.api.mvc.RequestHeader
 import be.studiocredo.auth.EmailToken
 import models.admin.{EventPrereservationsDetail, RichUser}
+import models.entities.OrderDetail
 
 object Mailer {
   val fromAddress = current.configuration.getString("smtp.from").get
@@ -67,6 +68,16 @@ object Mailer {
   def sendProfileActivationEmail(to: String, user: RichUser, token: EmailToken)(implicit request: RequestHeader) {
     val txtAndHtml = (None, Some(views.html.mails.profileActivation(user, token.id)))
     sendEmail(s"$subjectPrefix Instructies om je wachtwoord in te stellen", to, txtAndHtml)
+  }
+
+  def sendOrderConfirmationEmail(user: RichUser, order: OrderDetail)(implicit request: RequestHeader) = {
+    user.email match {
+      case Some(email) => {
+        val txtAndHtml = (None, Some(views.html.mails.orderConfirmation(user, order)))
+        sendEmail(s"$subjectPrefix Overzicht bestelling", email, txtAndHtml)
+      }
+      case None => ()
+    }
   }
 
   private def sendEmail(subject: String, recipient: String, body: (Option[Txt], Option[Html])) {

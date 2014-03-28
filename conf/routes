@@ -46,6 +46,7 @@ GET         /admin/user/:id                         @controllers.admin.UserDetai
 GET         /admin/orders                           @controllers.admin.Orders.list(p:Int ?= 0)
 GET         /admin/orders/show/:show                @controllers.admin.Orders.show(show: ShowId)
 GET         /admin/orders/availability/:id          @controllers.Events.ajaxOrderAdminFloorplan(id:ShowId)
+GET         /admin/orders/confirm/:id               @controllers.admin.Orders.confirm(id: OrderId)
 
 GET         /admin/prereservations                  @controllers.admin.Prereservations.list(p:Int ?= 0)
 
@@ -76,6 +77,11 @@ GET         /order/:id                              @controllers.Orders.start(id
 POST        /order/:id                              @controllers.Orders.save(id:EventId)
 GET         /order/reservations/:show               @controllers.Orders.reservations(show:ShowId)
 GET         /order/reservations/floorplan/:id       @controllers.Events.ajaxReservationFloorplan(id:ShowId)
+GET         /order/confirmation/:id                 @controllers.Orders.confirmation(id:OrderId)
+POST        /order/confirm/:id                      @controllers.Orders.confirm(id:OrderId)
+POST        /order/cancel/:id                       @controllers.Orders.cancel(id:OrderId)
+POST        /order/remove/:id                       @controllers.Orders.remove(id:TicketOrderId)
+GET         /order/edit/:id                         @controllers.Orders.edit(id:TicketOrderId)
 GET         /preorder/:id                           @controllers.Prereservations.start(id:EventId)
 POST        /preorder/:id                           @controllers.Prereservations.save(id:EventId)
 GET         /events/                                @controllers.Events.list(p:Int ?= 0)

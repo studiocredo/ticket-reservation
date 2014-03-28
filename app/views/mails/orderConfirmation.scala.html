@@ -1,0 +1,96 @@
+@(user: models.admin.RichUser, order: models.entities.OrderDetail)(implicit request: RequestHeader)
+@import helper._
+@import models.CurrencyFormat
+@import models.OrderFormat
+
+@orderRow(user: models.entities.User, ticketOrder: models.entities.TicketOrderDetail)= {
+<td>@showName(ticketOrder.show)</td>
+<td>
+    @defining(ticketOrder.ticketSeatOrders.map(_.ticketSeatOrder.seat.name).sorted.grouped(5).map(_.mkString(", ")).toSeq) { groupedSeats =>
+    @groupedSeats.tail.foldLeft(Html(groupedSeats.head)) { (result, seat) =>
+    @result<br/>@seat
+    }
+    }
+</td>
+<td>@ticketOrder.ticketSeatOrders.length</td>
+<td>@CurrencyFormat.format(ticketOrder.price)</td>
+}
+
+<html>
+    <body>
+        <p>Beste @user.name,</p>
+
+        <p>Dit is het overzicht van je bestelling.</p>
+
+        <h1>Facturatie gegevens</h1>
+        <p>
+            <strong>@order.order.billingName</strong><br>
+            @order.order.billingAddress
+        </p>
+
+        <h1>Overzicht bestelling</h1>
+        <table cellpadding="3px">
+            <thead>
+            <tr>
+                <th>Datum</th>
+                <th>Voorstelling</th>
+                <th>Plaatsen</th>
+                <th>Aantal</th>
+                <th>Prijs</th>
+            </tr>
+            </thead>
+            <tbody>
+
+            @defining(order.ticketOrders match { case head :: tail => (Some(head), tail); case _ => (None, Nil) }) { tuple =>
+            @defining(tuple._1) { first =>
+            @defining(tuple._2) { tail =>
+            @first match {
+            case Some(first) => {
+            <tr>
+                <td>@HumanDateTime.formatDateCompact(order.order.date)</td>
+                @orderRow(order.user, first)
+            </tr>
+            }
+            case None => { }
+            }
+            @tail.map { ticketOrder =>
+            <tr>
+                <td/>
+                @orderRow(order.user, ticketOrder)
+            </tr>
+            }
+            }
+            }
+            }
+            </tbody>
+            <tfoot>
+            <tr>
+                <td colspan="4"><strong>Totaal</strong></td>
+                <td><strong>@CurrencyFormat.format(order.price)</strong></td>
+            </tr>
+            </tfoot>
+        </table>
+
+        <h1>Betalingsgegevens</h1>
+        <dl>
+            <dt>Bedrag</dt>
+            <dd><strong>@CurrencyFormat.format(order.price)</strong></dd>
+
+            <dt>Rekeningnummer (IBAN):</dt>
+            <dd><strong>IBAN BE27 7512 0260 7273</strong></dd>
+
+            <dt>Bank (BIC):</dt>
+            <dd><strong>AXABBE22</strong></dd>
+
+            <dt>Adres</dt>
+            <dd><strong>Studio Credo vzw<br/>Diksmuidse Heerweg 105<br/>8200 Sint-Andries</strong></dd>
+
+            <dt>Mededeling</dt>
+            <dd><strong>BESTELLING @OrderFormat.format(user, order)<br/>@user.name.toUpperCase</strong></dd>
+        </dl>
+        <p>Gelieve het verschuldigde bedrag ze snel mogelijk over te schrijven op onze rekening.</p>
+
+        <p>Bedankt voor het vertrouwen,</p>
+        @emailFooter()
+    </body>
+</html>

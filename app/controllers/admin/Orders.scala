@@ -8,6 +8,8 @@ import com.google.inject.Inject
 import be.studiocredo.auth.AuthenticatorService
 
 import scala.Some
+import controllers.auth.Mailer
+import controllers.routes
 
 case class OrderSearchFormData(search: String)
 
@@ -45,6 +47,17 @@ class Orders @Inject()(preReservationService: PreReservationService, showService
           s => preReservationService.availability(showService.getEventShow(s.id))
         }
         Ok(views.html.admin.showOrders(details, showAvailability.get, currentUserContext))
+      }
+    }
+  }
+
+  def confirm(id: OrderId) = AuthDBAction { implicit rs =>
+    orderService.get(id) match {
+      case None => BadRequest(s"Bestelling $id niet gevonden")
+      case Some(order)  => {
+        val currentUser = rs.currentUser.get
+        Mailer.sendOrderConfirmationEmail(currentUser.user, order)
+        ListPage.flashing("error" -> "Bevestiging email verzonden")
       }
     }
   }

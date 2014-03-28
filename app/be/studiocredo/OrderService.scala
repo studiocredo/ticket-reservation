@@ -72,6 +72,14 @@ class OrderService @Inject()(venueService: VenueService) {
     }
   }
 
+  def get(id: OrderId)(implicit  s: Session): Option[OrderDetail] = {
+    val q = for {
+      order <- OQ
+      if (order.id === id)
+    } yield (order)
+    q.firstOption.map(orderDetail)
+  }
+
   def page(page: Int = 0, pageSize: Int = 10, orderBy: Int = 1, filter: Option[String] = None)(implicit s: Session): Page[OrderDetail] = {
     import models.queries._
 
