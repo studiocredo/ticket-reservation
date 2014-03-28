@@ -225,6 +225,9 @@ object entities {
   }
 
   case class UserContext(notifications: List[Notification], otherUsers: List[User])
+
+  case class Payment(id: PaymentId, orderId: OrderId, debtor: String, amount: Money, details: Option[String], date: DateTime) extends HasTime
+  case class PaymentEdit(           orderId: OrderId, debtor: String, amount: Money, details: Option[String], date: DateTime) extends HasTime
 }
 
 object ids {
@@ -236,6 +239,7 @@ object ids {
   case class DvdId(id: Long) extends AnyVal with TypedId
   case class OrderId(id: Long) extends AnyVal with TypedId
   case class TicketOrderId(id: Long) extends AnyVal with TypedId
+  case class PaymentId(id: Long) extends AnyVal with TypedId
 
   implicit object UserId extends IdFactory[UserId]
   implicit object AdminId extends IdFactory[AdminId]
@@ -245,6 +249,7 @@ object ids {
   implicit object DvdId extends IdFactory[DvdId]
   implicit object OrderId extends IdFactory[OrderId]
   implicit object TicketOrderId extends IdFactory[TicketOrderId]
+  implicit object PaymentId extends IdFactory[PaymentId]
 
 
   trait TypedId extends Any {

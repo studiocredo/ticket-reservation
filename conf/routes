@@ -43,6 +43,9 @@ POST        /admin/users/:id                        @controllers.admin.Users.upd
 GET         /admin/users/activate/:name             @controllers.admin.Users.activate(name:String)
 GET         /admin/user/:id                         @controllers.admin.UserDetails.view(id:UserId)
 
+GET         /admin/payments                         @controllers.admin.Payments.list(p:Int ?= 0)
+GET         /admin/payments/new                     @controllers.admin.Payments.create
+
 GET         /admin/orders                           @controllers.admin.Orders.list(p:Int ?= 0)
 GET         /admin/orders/show/:show                @controllers.admin.Orders.show(show: ShowId)
 GET         /admin/orders/availability/:id          @controllers.Events.ajaxOrderAdminFloorplan(id:ShowId)

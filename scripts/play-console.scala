@@ -23,5 +23,6 @@ val ss = new ShowService(vs, prs)
 val es = new EventService(ss, prs, us)
 val us = new UserService()
 val is = new IdentityService(us)
+val ps = new PaymentService()
 
 implicit val session = DB.createSession()

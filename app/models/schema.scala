@@ -25,6 +25,7 @@ object schema {
     val Orders = new Orders
     val TicketOrders = new TicketOrders
     val TicketSeatOrders = new TicketSeatOrders
+    val Payments = new Payments
 
     val ReservationQuota = new ReservationQuota
     val ShowPrereservations = new ShowPrereservations
@@ -241,6 +242,22 @@ object schema {
     def uniqueShowUser = index("idx_showuser", showId ~ userId, unique = true)
   }
 
+  class Payments extends Table[Payment]("payment") {
+    def id = column[PaymentId]("id", O.PrimaryKey, O.AutoInc)
+    def orderId = column[OrderId]("order_id")
+    def debtor = column[String]("debtor", O.DBType("TEXT"))
+    def amount = column[Money]("amount")
+    def details = column[Option[String]]("details", O.DBType("TEXT"))
+    def date = column[DateTime]("date")
+
+    def * = id ~ orderId ~ debtor ~ amount ~ details ~ date <> (Payment.apply _, Payment.unapply _)
+
+    def autoInc = orderId ~ debtor ~ amount ~ details ~ date <>(PaymentEdit.apply _, PaymentEdit.unapply _) returning id
+
+    def pk = foreignKey("order_fk", orderId, Orders)(_.id)
+
+  }
+
   //////////////////////////////////
 
   class AuthTokens extends Table[AuthToken]("auth_tokens") {
@@ -273,6 +290,7 @@ object schema {
   implicit val dvdIdType = MappedTypeMapper.base[DvdId, Long](_.id, new DvdId(_))
   implicit val orderIdType = MappedTypeMapper.base[OrderId, Long](_.id, new OrderId(_))
   implicit val ticketOrderIdType = MappedTypeMapper.base[TicketOrderId, Long](_.id, new TicketOrderId(_))
+  implicit val paymentIdType = MappedTypeMapper.base[PaymentId, Long](_.id, new PaymentId(_))
 
   implicit val moneyType = MappedTypeMapper.base[Money, BigDecimal](_.amount, Money(_))
   implicit val seatIdType = MappedTypeMapper.base[SeatId, String](_.name, SeatId(_))
