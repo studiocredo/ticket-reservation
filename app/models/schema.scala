@@ -166,10 +166,11 @@ object schema {
     def date = column[DateTime]("date")
     def billingName = column[String]("billing-name", O.DBType("TEXT"))
     def billingAddress = column[String]("billing-address", O.DBType("TEXT"))
+    def processed = column[Boolean]("processed")
 
-    def * = id ~ userId ~ date ~ billingName ~ billingAddress <>(Order.apply _, Order.unapply _)
+    def * = id ~ userId ~ date ~ billingName ~ billingAddress ~ processed <>(Order.apply _, Order.unapply _)
 
-    def edit = userId ~ date ~ billingName ~ billingAddress <>(OrderEdit.apply _, OrderEdit.unapply _)
+    def edit = userId ~ date ~ billingName ~ billingAddress ~ processed <>(OrderEdit.apply _, OrderEdit.unapply _)
     def autoInc = edit returning id
 
     def billingEdit = billingName ~ billingAddress

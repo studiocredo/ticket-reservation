@@ -16,8 +16,8 @@
 <td>@ticketOrder.ticketSeatOrders.length</td>
 <td>@CurrencyFormat.format(ticketOrder.price)</td>
 <td>
-    <a class="btn btn-primary btn-sm" href="@routes.Orders.reservations(ticketOrder.show.id)">Wijzigen</a>
-    <a class="btn btn-danger btn-sm" href="@routes.Orders.remove(ticketOrder.ticketOrder.id)">Verwijderen</a>
+    <a class="btn btn-primary btn-sm" href="@routes.Orders.viewShow(ticketOrder.show.id)">Wijzigen</a>
+    <a class="btn btn-danger btn-sm" href="@routes.Orders.cancelShow(ticketOrder.show.id)">Verwijderen</a>
 </td>
 }
 

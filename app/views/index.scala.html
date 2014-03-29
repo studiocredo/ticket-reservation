@@ -18,7 +18,7 @@
                              <a href="@routes.Prereservations.start(event.id)" class="btn btn-primary btn-lg">Pre-reservaties &raquo;</a>
                         }
                         @events.filter(_.reservationAllowed).headOption.map { event =>
-                            <a href="@routes.Orders.start(event.id, None)" class="btn btn-primary btn-lg">Bestellen &raquo;</a>
+                            <a href="@routes.Orders.start(event.id)" class="btn btn-primary btn-lg">Bestellen &raquo;</a>
                         }
                     </p>
                 } else {
@@ -62,7 +62,7 @@
                 }
             }
             @event.event.reservationStart match {
-                case None => { <p><a href="@routes.Orders.start(event.id, None)">Reserveer</a> je tickets.</p> }
+                case None => { <p><a href="@routes.Orders.start(event.id)">Reserveer</a> je tickets.</p> }
                 case Some(date) => {
                     @if(date.isAfterNow) {
                         <p>De reservaties gaan van start op @HumanDateTime.formatDateOrDateTime(date).</p>
@@ -71,7 +71,7 @@
                             case None => { }
                             case Some(date) => {
                                 @if(date.isAfterNow) {
-                                    <p>Je kan op dit moment tickets <a href="@routes.Orders.start(event.id, None)">reserveren</a>.</p>
+                                    <p>Je kan op dit moment tickets <a href="@routes.Orders.start(event.id)">reserveren</a>.</p>
                                 }
                             }
                         }

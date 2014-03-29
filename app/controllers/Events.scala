@@ -4,10 +4,9 @@ import com.google.inject.Inject
 import be.studiocredo._
 import be.studiocredo.auth.{Authorization, Secure, AuthenticatorService}
 import play.api.mvc.Controller
-import models.ids.{UserId, VenueId, ShowId, EventId}
+import models.ids.{VenueId, ShowId, EventId}
 import models.entities._
 import play.api.libs.json.Json
-import scala.Some
 import be.studiocredo.util.DBSupport._
 import scala.Some
 import models.entities.UserContext
@@ -84,36 +83,6 @@ class Events @Inject()(venueService: VenueService, eventService: EventService, s
           case Some(identity) => identity.id :: identity.otherUsers.map{_.id}
         }
         Ok(Json.toJson(venueService.fillFloorplan(plan, orderService.byShowId(id), users)))
-      }
-    }
-  }
-
-  def ajaxOrderAdminFloorplan(id: ShowId) = AuthAwareDBAction { implicit rs =>
-    val plan = for {
-      show <- showService.get(id)
-      venue <- venueService.get(show.venueId)
-      fp <- venue.floorplan
-    } yield (fp)
-
-    plan match {
-      case None => BadRequest(s"Zaalplan voor show $id niet gevonden")
-      case Some(plan) => {
-        Ok(Json.toJson(venueService.fillFloorplanDetailed(plan, orderService.detailsByShowId(id), Nil, SeatType.values.toList)))
-      }
-    }
-  }
-
-  def ajaxReservationFloorplan(id: ShowId) = AuthAwareDBAction { implicit rs =>
-    val plan = for {
-      show <- showService.get(id)
-      venue <- venueService.get(show.venueId)
-      fp <- venue.floorplan
-    } yield (fp)
-
-    plan match {
-      case None => BadRequest(s"Zaalplan voor show $id niet gevonden")
-      case Some(plan) => {
-        Ok(Json.toJson(venueService.fillFloorplanReservations(plan, orderService.byShowId(id), Nil)))
       }
     }
   }

@@ -55,7 +55,7 @@ class Test @Inject()(es: EventService, ss: ShowService, vs: VenueService, os: Or
     val random =  Random.shuffle(seats.get.filter(seats.isAvailable(_))).take(quantity.getOrElse(1)).collect{case seat:SeatWithStatus => seat.id}
 
     val u = us.find(users.head).get
-    val orderId = os.insert(OrderEdit(u.id, org.joda.time.DateTime.now, u.name, u.address.getOrElse("n/a")))
+    val orderId = os.insert(OrderEdit(u.id, org.joda.time.DateTime.now, u.name, u.address.getOrElse("n/a"), true))
     val ticketOrderId = os.insert(orderId, show.id)
     os.insert(random.map{ seat => TicketSeatOrder(ticketOrderId, show.id, Some(u.id), seat, Money(12.5)) })
 

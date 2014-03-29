@@ -159,7 +159,7 @@ Floorplan.directive 'availabilityFloorplan', () ->
     controller: 'ShowAvailabilityCtrl'
 
 Floorplan.controller "OrderAdminFloorpanCtrl", ($scope, $http) ->
-     $http.get(jsRoutes.controllers.Events.ajaxOrderAdminFloorplan($scope.show).url).success (plan) ->
+     $http.get(jsRoutes.controllers.admin.Orders.ajaxFloorplan($scope.show).url).success (plan) ->
              $scope.plan = plan
              $scope.rows = plan.rows
 
@@ -184,7 +184,7 @@ Floorplan.directive 'orderAdminFloorplan', () ->
     controller: 'OrderAdminFloorpanCtrl'
 
 Floorplan.controller "ReservationFloorpanCtrl", ($scope, $http) ->
-     $http.get(jsRoutes.controllers.Events.ajaxReservationFloorplan($scope.show).url).success (plan) ->
+     $http.get(jsRoutes.controllers.Orders.ajaxFloorplan($scope.show).url).success (plan) ->
              $scope.plan = plan
              $scope.rows = plan.rows
              $scope.claim = (seat) ->

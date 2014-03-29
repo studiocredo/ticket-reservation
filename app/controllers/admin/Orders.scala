@@ -4,16 +4,18 @@ import be.studiocredo._
 import play.api.data.Form
 import play.api.data.Forms._
 import models.ids._
+import models.entities.FloorPlanJson._
 import com.google.inject.Inject
 import be.studiocredo.auth.AuthenticatorService
 
 import scala.Some
 import controllers.auth.Mailer
-import controllers.routes
+import play.api.libs.json.Json
+import models.entities.SeatType
 
 case class OrderSearchFormData(search: String)
 
-class Orders @Inject()(preReservationService: PreReservationService, showService: ShowService, eventService: EventService, orderService: OrderService, val userService: UserService, val authService: AuthenticatorService, val notificationService: NotificationService) extends AdminController with UserContextSupport {
+class Orders @Inject()(preReservationService: PreReservationService, showService: ShowService, eventService: EventService, orderService: OrderService, venueService: VenueService, val userService: UserService, val authService: AuthenticatorService, val notificationService: NotificationService) extends AdminController with UserContextSupport {
   val ListPage = Redirect(routes.Orders.list())
 
   val orderSearchForm = Form(
@@ -61,4 +63,20 @@ class Orders @Inject()(preReservationService: PreReservationService, showService
       }
     }
   }
+
+  def ajaxFloorplan(id: ShowId) = AuthAwareDBAction { implicit rs =>
+    val plan = for {
+      show <- showService.get(id)
+      venue <- venueService.get(show.venueId)
+      fp <- venue.floorplan
+    } yield (fp)
+
+    plan match {
+      case None => BadRequest(s"Zaalplan voor show $id niet gevonden")
+      case Some(plan) => {
+        Ok(Json.toJson(venueService.fillFloorplanDetailed(plan, orderService.detailsByShowId(id), Nil, SeatType.values.toList)))
+      }
+    }
+  }
+
 }

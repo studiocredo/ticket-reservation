@@ -21,7 +21,7 @@
 
         @if(!info.shows.isEmpty) {
 
-            @form(action = controllers.routes.Orders.save(info.event.id), 'class -> "form form-horizontal", 'name -> "resForm") {
+            @form(action = controllers.routes.Orders.saveShow(info.shows.head.shows.head.id), 'class -> "form form-horizontal", 'name -> "resForm") {
 
                 @globalFormErrors(reservationForm)
 

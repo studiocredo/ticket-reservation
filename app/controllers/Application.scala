@@ -22,8 +22,8 @@ class Application @Inject()(showService: ShowService, eventService: EventService
       Routes.javascriptRouter("jsRoutes")(
         mr.Events.ajaxFloorplan,
         mr.Events.ajaxAvailabilityFloorplan,
-        mr.Events.ajaxOrderAdminFloorplan,
-        mr.Events.ajaxReservationFloorplan,
+        mr.Orders.ajaxFloorplan,
+        ar.Orders.ajaxFloorplan,
         ar.Floorplans.ajaxSaveFloorPlan,
         ar.Floorplans.ajaxFloorPlan
       )).as("text/javascript")
