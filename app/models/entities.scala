@@ -167,7 +167,14 @@ object entities {
     implicit val floorPlanFmt = Json.format[FloorPlan]
   }
 
-  case class Order(id: OrderId, userId: UserId, date: DateTime, billingName: String, billingAddress: String)
+  case class Order(id: OrderId, userId: UserId, date: DateTime, billingName: String, billingAddress: String) {
+    def reference: String = {
+      val userString = s"${userId}".toInt
+      val orderString = s"${id}".toInt
+      val remainder = (orderString*10000 + userString) % 997
+      s"+++${"%03d".format(remainder)}/${"%04d".format(userString)}/${"%05d".format(orderString)}+++"
+    }
+  }
   case class OrderEdit(         userId: UserId, date: DateTime, billingName: String, billingAddress: String)
   case class OrderDetail(order: Order, user: User, ticketOrders: List[TicketOrderDetail]) {
     def price = ticketOrders.map(_.price).foldLeft(Money(0))((total, amount) => total.plus(amount))

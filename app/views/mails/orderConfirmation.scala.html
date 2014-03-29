@@ -1,7 +1,6 @@
 @(user: models.admin.RichUser, order: models.entities.OrderDetail)(implicit request: RequestHeader)
 @import helper._
 @import models.CurrencyFormat
-@import models.OrderFormat
 
 @orderRow(user: models.entities.User, ticketOrder: models.entities.TicketOrderDetail)= {
 <td>@showName(ticketOrder.show)</td>
@@ -85,8 +84,8 @@
             <dt>Adres</dt>
             <dd><strong>Studio Credo vzw<br/>Diksmuidse Heerweg 105<br/>8200 Sint-Andries</strong></dd>
 
-            <dt>Mededeling</dt>
-            <dd><strong>BESTELLING @OrderFormat.format(user, order)<br/>@user.name.toUpperCase</strong></dd>
+            <dt>Gestructureerde mededeling</dt>
+            <dd><strong>@order.order.reference</strong></dd>
         </dl>
         <p>Gelieve het verschuldigde bedrag ze snel mogelijk over te schrijven op onze rekening.</p>
 
