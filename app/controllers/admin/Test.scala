@@ -50,7 +50,7 @@ class Test @Inject()(es: EventService, ss: ShowService, vs: VenueService, os: Or
     val floorplan = vs.fillFloorplan(venueFloorplan, os.byShowId(show.id), users, List(SeatType.Disabled, SeatType.Normal, SeatType.Vip))
 
     val availability = prs.availability(ss.getEventShow(show.id), users)
-    val seats = AvailableSeats(floorplan, availability)
+    val seats = AvailableSeats(floorplan, availability.byType)
 
     val random =  Random.shuffle(seats.get.filter(seats.isAvailable(_))).take(quantity.getOrElse(1)).collect{case seat:SeatWithStatus => seat.id}
 

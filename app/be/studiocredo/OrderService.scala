@@ -19,8 +19,7 @@ class OrderService @Inject()(venueService: VenueService) {
 
   def byShowId(id: ShowId, excludedUsers: List[UserId] = List())(implicit s: Session): List[TicketSeatOrder] = {
     val query = for {
-      tso <- TSOQ
-      if tso.showId === id
+      tso <- TSOQ if tso.showId === id
     } yield (tso)
     query.list.filter{ tso =>
       tso.userId match {
