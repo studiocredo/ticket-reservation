@@ -55,6 +55,17 @@ class ShowService @Inject()(venueService: VenueService, preReservationService: P
     }
   }
 
+
+  def listActive(implicit s: Session): Set[ShowId] = {
+    val q = for (
+      s <- active;
+      e <- s.event if !e.archived;
+      v <- s.venue if v.floorplan.isNotNull
+    ) yield (s.id)
+    q.to[Set]
+  }
+
+
   def listReservable(implicit s: Session): List[ShowId] = {
     val q = for (
       s <- active;

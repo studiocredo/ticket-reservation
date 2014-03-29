@@ -247,6 +247,10 @@ class PreReservationService @Inject()(orderService: OrderService, venueService: 
 
   def findByShowAndUser(showId: ShowId, userId: UserId)(implicit s: Session): Option[ShowPrereservation] = findPreReservation(ShowPrereservation(showId, userId, 0)).firstOption
 
+  def findForUsers(showId: ShowId, userIds: List[UserId])(implicit s: Session): List[ShowPrereservation] = {
+    SPRQ.where(_.showId === showId).where(_.userId inSet userIds).list
+  }
+
   def availability(show: EventShow, excludedUsers: List[UserId] = List())(implicit s: Session): ShowAvailability = {
     val venue = venueService.get(show.venueId).get
     val ticketSeatOrders = orderService.byShowId(show.id, excludedUsers)
@@ -254,10 +258,14 @@ class PreReservationService @Inject()(orderService: OrderService, venueService: 
 
     val seatTypeMap = mutable.Map[SeatType, Int]()
     SeatType.values.foreach { st => seatTypeMap(st) = venue.capacityByType(st) }
+
+
     ticketSeatOrders.foreach { tso => floorplan.seat(tso.seat) match { case Some(seat) => seatTypeMap(seat.kind) -= 1; case None => }}
     preReservationsByShow(show.id, excludedUsers).foreach { case (userId, quantity) =>
       seatTypeMap(SeatType.Normal) -= Math.max(0, quantity - ticketSeatOrders.filter(tso => tso.userId == Some(userId)).length)
     }
     ShowAvailability(show, seatTypeMap.toMap)
   }
+
+
 }
