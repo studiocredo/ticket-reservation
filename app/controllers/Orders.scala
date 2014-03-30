@@ -141,7 +141,7 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
       case Some(event) => {
         orderService.get(id) match {
           case None => BadRequest(s"Bestelling $id niet gevonden")
-          case Some(order) => {
+          case Some(order) if !order.order.processed => {
             form match {
               case Some(forms) => status(views.html.order(event, order, forms.map{ case (show, srf) => (show, reservationForm(show).fill(srf)) }.toMap, userContext))
               case _ => {
@@ -156,6 +156,7 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
               }
             }
           }
+          case _ => BadRequest(s"Bestelling $id is afgesloten")
         }
       }
     }

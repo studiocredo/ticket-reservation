@@ -4,7 +4,7 @@
 @orderRow(ticketOrder: models.entities.TicketOrderDetail)= {
 <tr>
     <td>
-        <p class="text-muted h4">@showName(ticketOrder.show)</p>
+        <p class="h4">@showName(ticketOrder.show)</p>
     </td>
     <td>
         @defining(ticketOrder.ticketSeatOrders.map(_.ticketSeatOrder.seat.name).sorted.grouped(5).map(_.mkString(", ")).toSeq) { groupedSeats =>
@@ -22,7 +22,7 @@
 
 @base("Overzicht bestelling")(userContext) {
 <div class="page-header">
-    <h1>Overzciht bestelling <small>@order.user.name</small></h1>
+    <h1>Overzicht bestelling <small>@order.user.name</small></h1>
 </div>
 
 @request.flash.get("error").map { msg =>
@@ -30,12 +30,43 @@
     @msg
 </div>
 }
+<div class="alert alert-info">
+    <p>Studio Credo bedankt je voor je bestelling. Hieronder vind je een overzicht van de gegevens die naar je e-mail adres werder verstuurd.</p>
+    <p>Gelieve het verschuldigde bedrag zo snel mogelijk over te schrijven op onze rekening.</p>
+</div>
 
 <h2>Factuurgegevens</h2>
 <address>
     <strong>@order.order.billingName</strong><br>
     @order.order.billingAddress
 </address>
+
+<h2>Betalingsgegevens</h2>
+
+<div class="row">
+    <div class="col-md-3">Bedrag</div>
+    <div class="col-md-9"><strong>@CurrencyFormat.format(order.price)</strong></div>
+</div>
+
+<div class="row">
+    <div class="col-md-3">Rekeningnummer (IBAN)</div>
+    <div class="col-md-9"><strong>IBAN BE27 7512 0260 7273</strong></div>
+</div>
+
+<div class="row">
+    <div class="col-md-3">Bank (BIC)</div>
+    <div class="col-md-9"><strong>AXABBE22</strong></div>
+</div>
+
+<div class="row">
+    <div class="col-md-3">Adres</div>
+    <div class="col-md-9"><strong>Studio Credo vzw<br/>Diksmuidse Heerweg 105<br/>8200 Sint-Andries</strong></div>
+</div>
+
+<div class="row">
+    <div class="col-md-3">Gestructureerde mededeling</div>
+    <div class="col-md-9"><strong>@order.order.reference</strong></div>
+</div>
 
 <h2>Bestelling</h2>
 
@@ -58,13 +89,12 @@
     </tbody>
     <tfoot>
     <tr class="success">
-        <th colspan="3" class="h3">Totaal</th>
-        <th class="h3">@CurrencyFormat.format(order.price)</th>
+        <th colspan="3">Totaal</th>
+        <th>@CurrencyFormat.format(order.price)</th>
         <th/>
     </tr>
     </tfoot>
 </table>
 
-<button type="submit" class="btn btn-primary">OK</button>
-
+<a href="@routes.Application.index" class="btn btn-primary">OK</a>
 }

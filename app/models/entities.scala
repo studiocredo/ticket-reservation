@@ -178,6 +178,7 @@ object entities {
   case class OrderEdit(         userId: UserId, date: DateTime, billingName: String, billingAddress: String, processed: Boolean)
   case class OrderDetail(order: Order, user: User, ticketOrders: List[TicketOrderDetail]) {
     def price = ticketOrders.map(_.price).foldLeft(Money(0))((total, amount) => total.plus(amount))
+    val numberOfSeats = ticketOrders.map(_.ticketSeatOrders.length).sum
   }
 
   case class TicketOrder(id: TicketOrderId, orderId: OrderId, showId: ShowId)

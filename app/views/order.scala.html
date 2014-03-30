@@ -35,7 +35,6 @@
         <td>@ticketOrder.ticketSeatOrders.length</td>
         <td>@CurrencyFormat.format(ticketOrder.price)</td>
         <td>
-            <a class="btn btn-primary btn-sm" href="@routes.Orders.viewShow(ticketOrder.show.id)">Wijzigen</a>
             <a class="btn btn-danger btn-sm" href="@routes.Orders.cancelShow(ticketOrder.show.id)">Verwijderen</a>
         </td>
     </tr>
@@ -44,26 +43,23 @@
 @orderRowNew(show: models.entities.Show, venue: models.entities.Venue)= {
     @defining(show.id) { ngModelIndex =>
     @defining(info.totalQuota) { max =>
-    @defining(info.pendingPrereservationsByShow(show.id)) { min =>
-    <tr data-ng-init="values[@ngModelIndex] = 0">
+    @defining(info.pendingPrereservationsByShow(show.id)) { startValue =>
+    <tr data-ng-init="values[@ngModelIndex] = @startValue">
         <td>
             <p class="text-info h4">@HumanDateTime.formatDateTime(show.date)</p>
             <p class="text-muted h5">@venue.name</p>
         </td>
-        <td/>
         <td>
             <div class="quantity">{{values[@ngModelIndex]}}</div>
-            <div class="btn-group-vertical inline">
+            <div class="inline">
                 <button type="button" class="btn btn-primary btn-sm" data-ng-click="increment(@ngModelIndex, @max)"><span class="glyphicon glyphicon-plus"></span>
                 </button>
-                <button type="button" class="btn btn-primary btn-sm" data-ng-click="decrement(@ngModelIndex, @min)"><span class="glyphicon glyphicon-minus"></span>
+                <button type="button" class="btn btn-primary btn-sm" data-ng-click="decrement(@ngModelIndex, 0)"><span class="glyphicon glyphicon-minus"></span>
                 </button>
             </div>
         </td>
-        <td/>
         <td>
-            <a class="btn btn-primary btn-sm" href="@routes.Orders.viewShow(show.id)">Wijzigen</a>
-            <a class="btn btn-danger btn-sm" href="@routes.Orders.cancelShow(show.id)">Verwijderen</a>
+            <a class="btn btn-primary btn-sm" href="@routes.Orders.viewShow(show.id)">Plaatsen kiezen</a>
         </td>
     </tr>
     }
@@ -77,16 +73,13 @@
     </div>
 
     @if(info.event.reservationAllowed) {
+    @if(!order.order.processed) {
 
         @request.flash.get("error").map { msg =>
         <div class="alert alert-danger">
             @msg
         </div>
         }
-        <div class="alert alert-info">
-            <p>Selecteer het aantal tickets per show.</p>
-            <p>Je kan per sessie maximaal 10 tickets per gekoppelde gebruiker bestellen.</p>
-        </div>
 
         @if(!info.shows.isEmpty) {
 
@@ -96,7 +89,9 @@
                 @order.order.billingAddress
             </address>
 
-            <h2>Bestelling</h2>
+            @if(!order.ticketOrders.isEmpty) {
+
+            <h2>Bestaande bestellingen</h2>
 
             <table class="table table-hover table-striped">
                 <thead>
@@ -108,19 +103,13 @@
                     <th></th>
                 </tr>
                 </thead>
-                <tbody data-ng-controller="CounterInputCtrl" data-ng-init="maxQuota = @info.totalQuota">
+                <tbody>
 
-                    @defining(info.shows.map{ vs => vs.shows.map{(vs.venue, _)}}.flatten) { venueShows =>
-                    @for(((venue, show), index) <- venueShows.zipWithIndex) {
-                        @order.ticketOrders.find( _.show.id == show.id) match {
-                            case None => {
-                                @orderRowNew(show, venue)
-                            }
-                            case Some(ticketOrder) => {
-                                @orderRowActive(ticketOrder)
-                            }
+                    @order.ticketOrders.find( _.show.eventId == info.id) match {
+                        case None => { }
+                        case Some(ticketOrder) => {
+                            @orderRowActive(ticketOrder)
                         }
-                    }
                     }
                     @for((ticketOrder) <- order.ticketOrders.filterNot(to => to.show.eventId == info.id)) {
                         @orderRowInactive(ticketOrder)
@@ -129,19 +118,65 @@
                 </tbody>
                 <tfoot>
                 <tr class="success">
-                    <th colspan="2" class="h3">Totaal</th>
-                    <th class="h3">
-                        <span data-ng-show="isMaxQuotaSatisfied()">{{totalUsed()}}</span>
-                        <span class="text-warning" data-ng-show="!isMaxQuotaSatisfied()">Ongeldige waarde</span>
-                    </th>
+                    <th colspan="3" class="h3">Totaal</th>
                     <th class="h3">@CurrencyFormat.format(order.price)</th>
                     <th/>
                 </tr>
                 </tfoot>
             </table>
 
-            @form(action = routes.Orders.confirm(order.order.id), 'class -> "form form-inline form-no-feedback") {
-                <button type="submit" class="btn btn-primary">Bestelling afronden</button>
+            }
+
+            <h2>@if(order.numberOfSeats > 0) { Extra bestellingen } else { Nieuwe bestellingen }</h2>
+
+            <div class="alert alert-info">
+                <p>Selecteer het aantal gewenste tickets per show.</p>
+                @if(info.users.length == 1) {
+                    <p>Je kan per sessie maximaal @info.totalQuota tickets bestellen.</p>
+                } else {
+                    <p>Je kan per sessie maximaal @info.totalQuota tickets bestellen (@info.users.length gekoppelde gebruikers).</p>
+                }
+                @if(order.numberOfSeats > 0) {
+                    <p>Je hebt in deze sessie al @order.numberOfSeats tickets besteld.</p>
+                }
+            </div>
+
+            <table class="table table-hover table-striped" data-ng-controller="CounterInputCtrl" data-ng-init="maxQuota = @info.totalQuota; usedQuota = @order.numberOfSeats">
+                <thead>
+                <tr>
+                    <th>Voorstelling</th>
+                    <th>@if(order.numberOfSeats > 0) { Aantal extra } else { Aantal }</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+
+
+                    @defining(info.shows.map{ vs => vs.shows.map{(vs.venue, _)}}.flatten) { venueShows =>
+                        @for(((venue, show), index) <- venueShows.zipWithIndex) {
+                            @orderRowNew(show, venue)
+                        }
+                    }
+
+                </tbody>
+                <tfoot>
+                <tr class="success">
+                    <th>Totaal aantal plaatsen</th>
+                    <th>
+                        <span data-ng-show="isMaxQuotaSatisfied()">{{totalUsed()}} / @info.totalQuota</span>
+                        <span class="text-danger" data-ng-show="!isMaxQuotaSatisfied()">{{totalUsed()}} / @info.totalQuota</span>
+                    </th>
+                    <th/>
+                </tr>
+                </tfoot>
+            </table>
+
+            @if(order.numberOfSeats > 0) {
+                @form(action = routes.Orders.confirm(order.order.id), 'class -> "form form-inline form-no-feedback") {
+                    <button type="submit" class="btn btn-primary">Bestelling afronden</button>
+                    <button class="btn btn-warning" data-toggle="modal" data-target="#cancelModal">Annuleren</button>
+                }
+            } else {
                 <button class="btn btn-warning" data-toggle="modal" data-target="#cancelModal">Annuleren</button>
             }
 
@@ -165,8 +200,6 @@
                     </div>
                 </div>
             </div>
-
-
 } else {
         <div class="well">
             <p><em>Geen voorstellingen gevonden voor dit evenement.</em></p>
@@ -175,6 +208,13 @@
             }
         </div>
         }
+
+} else {
+<div class="alert alert-warning">
+    Deze bestelling is al afgesloten.
+</div>
+}
+
     } else {
         <div class="alert alert-warning">
             Je kan op dit moment niet reserveren voor dit evenement.

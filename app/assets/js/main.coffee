@@ -223,6 +223,7 @@ CounterInput = angular.module("counterInput", [])
 CounterInput.controller "CounterInputCtrl", ($scope, $http) ->
     $scope.values = { }
     $scope.maxQuota = 0
+    $scope.usedQuota = 0
 
     $scope.increment = (index, max = 9) ->
         if isNaN($scope.totalUsed())
@@ -234,7 +235,8 @@ CounterInput.controller "CounterInputCtrl", ($scope, $http) ->
         $scope.values[index] = Math.max(--$scope.values[index],min) || 0
 
     $scope.totalUsed = ->
-        (value for index,value of $scope.values).reduce (t, s) -> t + s
+        totalSelected = (value for index,value of $scope.values).reduce (t, s) -> t + s
+        totalSelected + $scope.usedQuota
 
     $scope.isMaxQuotaSatisfied = ->
         $scope.totalUsed() <= $scope.maxQuota

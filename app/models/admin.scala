@@ -70,7 +70,7 @@ object admin {
   case class EventReservationsDetail(event: EventDetail, users: List[User], shows: List[VenueShows], pendingPrereservationsByShow: Map[ShowId, Int]) {
     def id = event.id
 
-    def totalQuota = 10*users.length
+    def totalQuota = 10*users.length //TODO: make number of tickets per session configurable
   }
 
   case class ShowEdit(venueId: VenueId, date: DateTime)
