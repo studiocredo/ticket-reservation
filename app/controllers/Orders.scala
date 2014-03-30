@@ -12,32 +12,39 @@ import controllers.auth.Mailer
 import scala.Some
 import be.studiocredo.auth.SecuredDBRequest
 import play.api.libs.json.Json
+import models.entities.OrderEdit
 
 case class ShowReservationForm(showId: ShowId, quantity: Int)
-case class ReservationForm(showReservations: List[ShowReservationForm])
 
 class Orders @Inject()(eventService: EventService, orderService: OrderService, showService: ShowService, preReservationService: PreReservationService, venueService: VenueService, val authService: AuthenticatorService, val notificationService: NotificationService, val userService: UserService) extends Controller with Secure with UserContextSupport {
 
   val defaultAuthorization = Some(Authorization.ANY)
 
-  val reservationForm: Form[ReservationForm] = Form(
+  def reservationForm(showId: ShowId): Form[ShowReservationForm] = Form(
     mapping(
-      "res" -> list[ShowReservationForm] (
-        mapping(
-          "show" -> of[ShowId],
-          "quantity" -> number(min = 0)
-        )(ShowReservationForm.apply)(ShowReservationForm.unapply)
-      )
-    )(ReservationForm.apply)(ReservationForm.unapply)
+      "show" -> ignored(showId),
+      "quantity" -> number(min = 0)
+    )(ShowReservationForm.apply)(ShowReservationForm.unapply)
   )
 
   def start(id: EventId) = AuthDBAction { implicit rs =>
-    ???
-    //TODO lookup open order (take copuled users into account) or start new order & redirect to view page
+    val users = rs.currentUser match {
+      case None => Nil
+      case Some(identity) => identity.id :: identity.otherUsers.map { _.id }
+    }
+    eventService.eventReservationDetails(id, users) match {
+      case Some(event) if event.event.reservationAllowed => {
+        //assume that there is max only one unprocessed order per usergroup
+        //if no order is found, create a new one
+        val order = orderService.unprocessedOrdersByUsers(users).headOption.getOrElse(orderService.create(rs.currentUser.get.user))
+        Redirect(controllers.routes.Orders.view(order, id))
+      }
+      case _ => BadRequest(s"Evenement $id niet gevonden of reservaties niet toegelaten")
+    }
   }
 
-  def view(id: OrderId) = AuthDBAction { implicit rs =>
-    viewPage(id)
+  def view(order: OrderId, event: EventId) = AuthDBAction { implicit rs =>
+    viewPage(order, event)
   }
 
   def confirm(id: OrderId) = AuthDBAction { implicit rs =>
@@ -47,7 +54,16 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
         val currentUser = rs.currentUser.get
         //TODO: set ordered processed -> true in orderservice
         Mailer.sendOrderConfirmationEmail(currentUser.user, order)
-        Redirect(routes.Application.index).flashing("success" -> "Bedankt voor je bestelling. Je ontvangt binnenkort een e-mail met de betalingsgegevens.")
+        Redirect(routes.Orders.overview(id))
+      }
+    }
+  }
+
+  def overview(id: OrderId) = AuthDBAction { implicit rs =>
+    orderService.get(id) match {
+      case None => BadRequest(s"Bestelling $id niet gevonden")
+      case Some(order)  => {
+        Ok(views.html.orderOverview(order, userContext))
       }
     }
   }
@@ -115,20 +131,30 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
     }
   }
 
-  private def viewPage(id: OrderId, form: Option[Form[ReservationForm]] = None, status: Status = Ok)(implicit rs: SecuredDBRequest[_]) = {
+  private def viewPage(id: OrderId, event: EventId, form: Option[Map[ShowId, ShowReservationForm]] = None, status: Status = Ok)(implicit rs: SecuredDBRequest[_]) = {
     val users = rs.currentUser match {
       case None => List()
       case Some(identity) => identity.id :: identity.otherUsers.map { _.id }
     }
-    orderService.get(id) match {
-      case None => BadRequest(s"Bestelling $id niet gevonden")
-      case Some(order) => {
-        form match {
-          case Some(form) => ??? //status(views.html.order(order, form , userContext))
-          case _ => {
-            ???
-            //val showReservations = event.shows.map{_.shows.map{_.id}}.flatten.map{id => ShowReservationForm(id, event.pendingPrereservationsByShow(id))}
-            //status(views.html.order(event, reservationForm.fill(ReservationForm(showReservations)), userContext))
+    eventService.eventReservationDetails(event, users) match {
+      case None => BadRequest(s"Evenement $id niet gevonden")
+      case Some(event) => {
+        orderService.get(id) match {
+          case None => BadRequest(s"Bestelling $id niet gevonden")
+          case Some(order) => {
+            form match {
+              case Some(forms) => status(views.html.order(event, order, forms.map{ case (show, srf) => (show, reservationForm(show).fill(srf)) }.toMap, userContext))
+              case _ => {
+                val showReservations = event.shows.map {
+                  _.shows.map {
+                    _.id
+                  }
+                }.flatten.map {
+                  id => (id, reservationForm(id).fill(ShowReservationForm(id, event.pendingPrereservationsByShow(id))))
+                }.toMap
+                status(views.html.order(event, order, showReservations, userContext))
+              }
+            }
           }
         }
       }

@@ -1,10 +1,79 @@
-@(info: models.admin.EventReservationsDetail, reservationForm: Form[controllers.ReservationForm], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
+@(info: models.admin.EventReservationsDetail, order: models.entities.OrderDetail, reservationForms: Map[models.ids.ShowId, Form[controllers.ShowReservationForm]], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
 @import helper._
-@import views.Bootstrap._
 
-@base("Bestelling voor " + info.event.name)(userContext) {
+@orderRowInactive(ticketOrder: models.entities.TicketOrderDetail)= {
+    <tr class="active">
+        <td>
+            <p class="text-muted h4">@showName(ticketOrder.show)</p>
+        </td>
+        <td>
+            @defining(ticketOrder.ticketSeatOrders.map(_.ticketSeatOrder.seat.name).sorted.grouped(5).map(_.mkString(", ")).toSeq) { groupedSeats =>
+            @groupedSeats.tail.foldLeft(Html(groupedSeats.head)) { (result, seat) =>
+            @result<br/>@seat
+            }
+            }
+        </td>
+        <td>@ticketOrder.ticketSeatOrders.length</td>
+        <td>@CurrencyFormat.format(ticketOrder.price)</td>
+        <td/>
+    </tr>
+}
+
+@orderRowActive(ticketOrder: models.entities.TicketOrderDetail)= {
+    <tr>
+        <td>
+            <p class="text-info h4">@HumanDateTime.formatDateTime(ticketOrder.show.date)</p>
+            <p class="text-muted h5">@ticketOrder.show.venueName</p>
+        </td>
+        <td>
+            @defining(ticketOrder.ticketSeatOrders.map(_.ticketSeatOrder.seat.name).sorted.grouped(5).map(_.mkString(", ")).toSeq) { groupedSeats =>
+            @groupedSeats.tail.foldLeft(Html(groupedSeats.head)) { (result, seat) =>
+            @result<br/>@seat
+            }
+            }
+        </td>
+        <td>@ticketOrder.ticketSeatOrders.length</td>
+        <td>@CurrencyFormat.format(ticketOrder.price)</td>
+        <td>
+            <a class="btn btn-primary btn-sm" href="@routes.Orders.viewShow(ticketOrder.show.id)">Wijzigen</a>
+            <a class="btn btn-danger btn-sm" href="@routes.Orders.cancelShow(ticketOrder.show.id)">Verwijderen</a>
+        </td>
+    </tr>
+}
+
+@orderRowNew(show: models.entities.Show, venue: models.entities.Venue)= {
+    @defining(show.id) { ngModelIndex =>
+    @defining(info.totalQuota) { max =>
+    @defining(info.pendingPrereservationsByShow(show.id)) { min =>
+    <tr data-ng-init="values[@ngModelIndex] = 0">
+        <td>
+            <p class="text-info h4">@HumanDateTime.formatDateTime(show.date)</p>
+            <p class="text-muted h5">@venue.name</p>
+        </td>
+        <td/>
+        <td>
+            <div class="quantity">{{values[@ngModelIndex]}}</div>
+            <div class="btn-group-vertical inline">
+                <button type="button" class="btn btn-primary btn-sm" data-ng-click="increment(@ngModelIndex, @max)"><span class="glyphicon glyphicon-plus"></span>
+                </button>
+                <button type="button" class="btn btn-primary btn-sm" data-ng-click="decrement(@ngModelIndex, @min)"><span class="glyphicon glyphicon-minus"></span>
+                </button>
+            </div>
+        </td>
+        <td/>
+        <td>
+            <a class="btn btn-primary btn-sm" href="@routes.Orders.viewShow(show.id)">Wijzigen</a>
+            <a class="btn btn-danger btn-sm" href="@routes.Orders.cancelShow(show.id)">Verwijderen</a>
+        </td>
+    </tr>
+    }
+    }
+    }
+}
+
+@base("Overzicht bestelling")(userContext) {
     <div class="page-header">
-        <h1>@info.event.name </h1>
+        <h1>Bestelling @info.event.name <small>@order.user.name</small></h1>
     </div>
 
     @if(info.event.reservationAllowed) {
@@ -21,67 +90,84 @@
 
         @if(!info.shows.isEmpty) {
 
-            @form(action = controllers.routes.Orders.saveShow(info.shows.head.shows.head.id), 'class -> "form form-horizontal", 'name -> "resForm") {
+            <h2>Factuurgegevens</h2>
+            <address>
+                <strong>@order.order.billingName</strong><br>
+                @order.order.billingAddress
+            </address>
 
-                @globalFormErrors(reservationForm)
+            <h2>Bestelling</h2>
 
-                @defining(info.shows.map{ vs => vs.shows.map{(vs.venue, _)}}.flatten) { venueShows =>
-                <fieldset data-ng-controller="CounterInputCtrl" data-ng-init="maxQuota = @info.totalQuota">
+            <table class="table table-hover table-striped">
+                <thead>
+                <tr>
+                    <th>Voorstelling</th>
+                    <th>Plaatsen</th>
+                    <th>Aantal</th>
+                    <th>Prijs</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody data-ng-controller="CounterInputCtrl" data-ng-init="maxQuota = @info.totalQuota">
 
-                    @if(!info.users.isEmpty) {
-                    @formControlStatic("Gekoppelde gebruikers", "col-lg-6 col-xs-6", "col-lg-6 col-xs-6") {
-                    @info.users.map { user =>
-                    <a href="#" class="btn btn-default btn-xs" role="button">@user.name</a>
-                    }
-                    }
-
-                    @info.event.pricing match {
-                        case None => {}
-                        case Some(pricing) => {
-                            @formControlStatic("Tarief", "col-lg-6 col-xs-6", "col-lg-6 col-xs-6") {
-                                @pricing.prices match {
-                                    case price :: Nil => { @CurrencyFormat.format(price.price) }
-                                    case prices => {
-                                        @defining(prices match { case head :: tail => (Some(head), tail); case _ => (None, Nil) }) { tuple =>
-                                        @defining(tuple._1) { head =>
-                                        @defining(tuple._2) { tail =>
-                                            @head match {
-                                                case Some(head) => { @priceDetail(head) }
-                                                case None => { }
-                                            }
-                                            @tail.map { price =>
-                                                <br/>
-                                                @priceDetail(price)
-                                            }
-                                        }
-                                        }
-                                        }
-                                    }
-                                }
+                    @defining(info.shows.map{ vs => vs.shows.map{(vs.venue, _)}}.flatten) { venueShows =>
+                    @for(((venue, show), index) <- venueShows.zipWithIndex) {
+                        @order.ticketOrders.find( _.show.id == show.id) match {
+                            case None => {
+                                @orderRowNew(show, venue)
+                            }
+                            case Some(ticketOrder) => {
+                                @orderRowActive(ticketOrder)
                             }
                         }
                     }
-
-                    @for(((venue, show), index) <- venueShows.zipWithIndex) {
-                    @counterInput(reservationForm(s"res[$index].quantity"), '_label -> showVenueLabel(show, venue),  '_labelclass -> "col-lg-6 col-xs-6 quantity-label", '_inputclass -> "col-lg-6 col-xs-6 quantity-input", 'ngModelIndex -> show.id, 'max -> info.totalQuota, 'min -> info.pendingPrereservationsByShow(show.id), 'class -> "form-control")
-                    @hiddenInput(reservationForm(s"res[$index].show"))
+                    }
+                    @for((ticketOrder) <- order.ticketOrders.filterNot(to => to.show.eventId == info.id)) {
+                        @orderRowInactive(ticketOrder)
                     }
 
-                    @formControlStatic("Totaal", "col-lg-6 col-xs-6", "col-lg-6 col-xs-6") {
-                    <span data-ng-show="resForm.$valid && isMaxQuotaSatisfied()">{{totalUsed()}}</span>
-                    <span class="text-warning" data-ng-show="resForm.$invalid || !isMaxQuotaSatisfied()">Ongeldige waarde</span>
-                    }
-                    }
-                </fieldset>
-                }
+                </tbody>
+                <tfoot>
+                <tr class="success">
+                    <th colspan="2" class="h3">Totaal</th>
+                    <th class="h3">
+                        <span data-ng-show="isMaxQuotaSatisfied()">{{totalUsed()}}</span>
+                        <span class="text-warning" data-ng-show="!isMaxQuotaSatisfied()">Ongeldige waarde</span>
+                    </th>
+                    <th class="h3">@CurrencyFormat.format(order.price)</th>
+                    <th/>
+                </tr>
+                </tfoot>
+            </table>
 
-                @twFormActions {
-                    <button type="submit" class="btn btn-primary" data-ng-disabled="resForm.$invalid">Bewaren</button>
-                    <a class="btn btn-warning" href="@controllers.routes.Application.index">Annuleren</a>
-                }
+            @form(action = routes.Orders.confirm(order.order.id), 'class -> "form form-inline form-no-feedback") {
+                <button type="submit" class="btn btn-primary">Bestelling afronden</button>
+                <button class="btn btn-warning" data-toggle="modal" data-target="#cancelModal">Annuleren</button>
             }
 
-        } else {
+            <!-- Modal -->
+            <div class="modal fade" id="cancelModal" tabindex="-1" role="dialog" aria-labelledby="cancelModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                            <h4 class="modal-title" id="cancelModalLabel">Annulatie bestelling</h4>
+                        </div>
+                        <div class="modal-body">
+                            <p>Weet je zeker dat je je bestelling wil annuleren?</p>
+                            <p>Alle aangeduide plaatsen zullen weer worden vrijgegeven. Indien je enkel de plaatsen voor een voorstelling wil wijzigen,
+                                gebruik dan de link 'Wijzigen' op de overzichtspagina.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Nee, terug naar overzicht</button>
+                            <a class="btn btn-primary" href="@routes.Orders.cancel(order.order.id)">Ja, annuleer mijn bestelling</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+} else {
         <div class="well">
             <p><em>Geen voorstellingen gevonden voor dit evenement.</em></p>
             @form(routes.Application.index) {

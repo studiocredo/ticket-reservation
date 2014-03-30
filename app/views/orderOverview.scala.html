@@ -1,0 +1,70 @@
+@(order: models.entities.OrderDetail, userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
+@import helper._
+
+@orderRow(ticketOrder: models.entities.TicketOrderDetail)= {
+<tr>
+    <td>
+        <p class="text-muted h4">@showName(ticketOrder.show)</p>
+    </td>
+    <td>
+        @defining(ticketOrder.ticketSeatOrders.map(_.ticketSeatOrder.seat.name).sorted.grouped(5).map(_.mkString(", ")).toSeq) { groupedSeats =>
+        @groupedSeats.tail.foldLeft(Html(groupedSeats.head)) { (result, seat) =>
+        @result<br/>@seat
+        }
+        }
+    </td>
+    <td>@ticketOrder.ticketSeatOrders.length</td>
+    <td>@CurrencyFormat.format(ticketOrder.price)</td>
+    <td/>
+</tr>
+}
+
+
+@base("Overzicht bestelling")(userContext) {
+<div class="page-header">
+    <h1>Overzciht bestelling <small>@order.user.name</small></h1>
+</div>
+
+@request.flash.get("error").map { msg =>
+<div class="alert alert-danger">
+    @msg
+</div>
+}
+
+<h2>Factuurgegevens</h2>
+<address>
+    <strong>@order.order.billingName</strong><br>
+    @order.order.billingAddress
+</address>
+
+<h2>Bestelling</h2>
+
+<table class="table table-hover table-striped">
+    <thead>
+    <tr>
+        <th>Voorstelling</th>
+        <th>Plaatsen</th>
+        <th>Aantal</th>
+        <th>Prijs</th>
+        <th></th>
+    </tr>
+    </thead>
+    <tbody>
+
+    @for((ticketOrder) <- order.ticketOrders) {
+    @orderRow(ticketOrder)
+    }
+
+    </tbody>
+    <tfoot>
+    <tr class="success">
+        <th colspan="3" class="h3">Totaal</th>
+        <th class="h3">@CurrencyFormat.format(order.price)</th>
+        <th/>
+    </tr>
+    </tfoot>
+</table>
+
+<button type="submit" class="btn btn-primary">OK</button>
+
+}

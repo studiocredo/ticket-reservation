@@ -78,9 +78,10 @@ POST        /admin/event/:id/show/:show             @controllers.admin.EventDeta
 POST        /admin/event/:id/show/:show/delete      @controllers.admin.EventDetails.deleteShow(id:EventId, show:ShowId)
 
 GET         /order/start/:id                        @controllers.Orders.start(id:EventId)
-GET         /order/:id                              @controllers.Orders.view(id:OrderId)
+GET         /order/:order/event/:event              @controllers.Orders.view(order:OrderId, event:EventId)
 POST        /order/:id                              @controllers.Orders.confirm(id:OrderId)
 GET         /order/:id/cancel                       @controllers.Orders.cancel(id:OrderId)
+GET         /order/:id/overview                     @controllers.Orders.overview(id:OrderId)
 
 GET         /order/show/:id                         @controllers.Orders.viewShow(id:ShowId)
 POST        /order/show/:id                         @controllers.Orders.saveShow(id:ShowId)

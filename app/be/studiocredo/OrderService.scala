@@ -9,6 +9,7 @@ import models.entities.SeatType._
 import scala.Some
 import com.google.inject.Inject
 import be.studiocredo.util.ServiceReturnValues._
+import models.admin.RichUser
 
 class OrderService @Inject()(venueService: VenueService) {
   import models.schema.tables._
@@ -44,31 +45,45 @@ class OrderService @Inject()(venueService: VenueService) {
 
   private def orderDetail(implicit s: Session): (Order) => OrderDetail = {
     (order) => {
-      val query = for {
-        ((((((order, ticketOrder), ticketSeatOrder), show), event), user), venue) <- Orders.where(_.id === order.id).leftJoin(TicketOrders).on(_.id === _.orderId).leftJoin(TicketSeatOrders).on(_._2.id === _.ticketOrderId).leftJoin(Shows).on(_._2.showId === _.id).leftJoin(Events).on(_._2.eventId === _.id).leftJoin(Users).on(_._1._1._1._1.userId === _.id).leftJoin(Venues).on(_._1._1._2.venueId === _.id)
-      } yield (order, ticketOrder, ticketSeatOrder, show, event, user, venue)
+      val ticketOrderDetailsQuery = for {
+        ticketOrder <- TicketOrders if ticketOrder.orderId === order.id
+        ticketSeatOrder <- TicketSeatOrders if ticketSeatOrder.ticketOrderId === ticketOrder.id
+        show <- Shows if ticketOrder.showId === show.id
+        event <- Events if show.eventId === event.id
+        venue <- Venues if show.venueId === venue.id
+        user <- Users if ticketSeatOrder.userId === user.id
+      } yield (ticketOrder, ticketSeatOrder, show, event, venue, user)
+
       val ticketOrderMap = new mutable.HashMap[TicketOrder, mutable.Set[TicketSeatOrder]]() with mutable.MultiMap[TicketOrder, TicketSeatOrder]
       val showMap = mutable.Map[ShowId, EventShow]()
       val userMap = mutable.Map[UserId, User]()
 
-      query.sortBy(_._1.date).list.foreach {
-        case (order, ticketOrder, ticketSeatOrder, show, event, user, venue) =>
+      val orderUserQuery = for {
+        dborder <- OQ if dborder.id === order.id
+        user <- Users if dborder.userId === user.id
+      } yield (user)
+      val orderUser = orderUserQuery.first
+      userMap.put(orderUser.id, orderUser)
+
+      ticketOrderDetailsQuery.list.foreach {
+        case (ticketOrder, ticketSeatOrder, show, event, venue, user) =>
           ticketOrderMap.addBinding(ticketOrder, ticketSeatOrder)
           showMap.put(show.id, EventShow(show.id, event.id, event.name, show.venueId, venue.name, show.date, show.archived))
           userMap.put(user.id, user)
       }
 
-          val ticketOrders = ticketOrderMap.keys.map {
-            ticketOrder =>
-              val ticketSeatOrders = ticketOrderMap(ticketOrder).toList.map {
-                ticketSeatOrder => TicketSeatOrderDetail(ticketSeatOrder, showMap(ticketSeatOrder.showId), ticketSeatOrder.userId match {
-                  case Some(userId) => Some(userMap(userId));
-                  case _ => None
-                })
-              }
-              TicketOrderDetail(ticketOrder, order, showMap(ticketOrder.showId), ticketSeatOrders)
+
+      val ticketOrders = ticketOrderMap.keys.map {
+        ticketOrder =>
+          val ticketSeatOrders = ticketOrderMap(ticketOrder).toList.map {
+            ticketSeatOrder => TicketSeatOrderDetail(ticketSeatOrder, showMap(ticketSeatOrder.showId), ticketSeatOrder.userId match {
+              case Some(userId) => Some(userMap(userId));
+              case _ => None
+            })
           }
-          OrderDetail(order, userMap(order.userId), ticketOrders.toList)
+          TicketOrderDetail(ticketOrder, order, showMap(ticketOrder.showId), ticketSeatOrders)
+      }
+      OrderDetail(order, userMap(order.userId), ticketOrders.toList)
     }
   }
 
@@ -120,25 +135,55 @@ class OrderService @Inject()(venueService: VenueService) {
     query.list.filter(tso => tso.seat == seat).headOption.isDefined
   }
 
+  def unprocessedOrdersByUsers(ids: List[UserId])(implicit s: Session): List[OrderId] = {
+    val q = for {
+      order <- OQ
+      if order.processed === false
+    } yield (order.id)
+    q.list
+  }
+
   def detailedOrdersByUsers(ids: List[UserId])(implicit s: Session): List[OrderDetail] = {
-    val query = for {
-      ((((((order, ticketOrder), ticketSeatOrder), show), event), user), venue) <- Orders.leftJoin(TicketOrders).on(_.id === _.orderId).leftJoin(TicketSeatOrders).on(_._2.id === _.ticketOrderId).leftJoin(Shows).on(_._2.showId === _.id).leftJoin(Events).on(_._2.eventId === _.id).leftJoin(Users).on(_._1._1._1._1.userId === _.id).leftJoin(Venues).on(_._1._1._2.venueId === _.id)
+    detailedOrdersByUsersInternal(OQ, ids)
+  }
+
+  private def detailedOrdersByUsersInternal(startQuery: Query[schema.Orders, Order], ids: List[UserId])(implicit s: Session): List[OrderDetail] = {
+    val ordersQuery = for {
+      order <- startQuery
       if order.userId inSet ids
-    } yield (order, ticketOrder, ticketSeatOrder, show, event, user, venue)
-    val orderMap = new mutable.HashMap[Order, mutable.Set[TicketOrder]]() with mutable.MultiMap[Order, TicketOrder]
+      user <- Users
+      if user.id === order.userId
+    } yield(order, user)
+
+    val ordersUsers = ordersQuery.sortBy(_._1.date).list
+    val orders = ordersUsers.map(_._1)
+
+   val ticketOrderQuery = for {
+      ticketOrder <- TicketOrders if ticketOrder.orderId inSet orders.map(_.id)
+      ticketSeatOrder <- TicketSeatOrders if ticketSeatOrder.ticketOrderId === ticketOrder.id
+      show <- Shows if ticketOrder.showId === show.id
+      event <- Events if show.eventId === event.id
+      venue <- Venues if show.venueId === venue.id
+      user <- Users if ticketSeatOrder.userId === user.id
+    } yield (ticketOrder, ticketSeatOrder, show, event, user, venue)
+
+    val orderMap = new mutable.HashMap[OrderId, mutable.Set[TicketOrder]]() with mutable.MultiMap[OrderId, TicketOrder]
     val ticketOrderMap = new mutable.HashMap[TicketOrder, mutable.Set[TicketSeatOrder]]() with mutable.MultiMap[TicketOrder, TicketSeatOrder]
     val showMap = mutable.Map[ShowId, EventShow]()
     val userMap = mutable.Map[UserId, User]()
 
-    query.sortBy(_._1.date).list.foreach { case (order, ticketOrder, ticketSeatOrder, show, event, user, venue) =>
-      orderMap.addBinding(order, ticketOrder)
+    ordersUsers.map(_._2).foreach( u => userMap.put(u.id, u))
+
+    val x = ticketOrderQuery.list
+    x.foreach { case (ticketOrder, ticketSeatOrder, show, event, user, venue) =>
+      orderMap.addBinding(ticketOrder.orderId, ticketOrder)
       ticketOrderMap.addBinding(ticketOrder, ticketSeatOrder)
       showMap.put(show.id, EventShow(show.id, event.id, event.name, show.venueId, venue.name, show.date, show.archived))
       userMap.put(user.id, user)
     }
 
-    orderMap.keys.map { order =>
-      val ticketOrders = orderMap(order).toList.map{ ticketOrder =>
+    orders.map { order =>
+      val ticketOrders = orderMap.get(order.id).getOrElse(Set.empty).toList.map{ ticketOrder =>
         val ticketSeatOrders = ticketOrderMap(ticketOrder).toList.map { ticketSeatOrder => TicketSeatOrderDetail(ticketSeatOrder, showMap(ticketSeatOrder.showId), ticketSeatOrder.userId match { case Some(userId) => Some(userMap(userId)); case _ => None }) }
         TicketOrderDetail(ticketOrder, order, showMap(ticketOrder.showId), ticketSeatOrders)
       }
@@ -146,6 +191,8 @@ class OrderService @Inject()(venueService: VenueService) {
     }.toList
   }
 
+  def createDetailed(user: RichUser)(implicit s:Session): OrderDetail = get(create(user)).get
+  def create(user: RichUser)(implicit s:Session): OrderId = insert(OrderEdit(user.id, org.joda.time.DateTime.now, user.name, user.address.getOrElse("n/a"), false))
   def insert(order: OrderEdit)(implicit s: Session): OrderId = Orders.autoInc.insert(order)
   def update(id: OrderId, billingName: String, billingAddress: String)(implicit s: Session) = byId(id).map(_.billingEdit).update((billingName, billingAddress))
 

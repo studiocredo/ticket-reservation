@@ -42,6 +42,7 @@ case class SeatSuggestion(partials: List[PartialSeatSuggestion]) {
 
   def size: Int = partials.map(_.size).sum
   def score: Int = partials.map(_.score).sum + partials.length * SeparationPenalty // TODO + partials.slide(3).collect{seats.isOrphanSeat(_) => 1}.sum * OrphanSeatPenalty
+  //TODO: if disabled seats are requested -> solutions that don't have this type get a penalty
   def seatIds: List[SeatId] = partials.map(_.seatIds).flatten
 }
 
@@ -82,7 +83,7 @@ case class AvailableSeats(fp: FloorPlan, availability: ShowAvailability) {
 object ReservationEngine {
   def suggestSeats(quantity: Int, floorplan: FloorPlan, showAvailability: ShowAvailability, availableTypes: List[SeatType] = List(SeatType.Normal)): Either[String, List[SeatId]] = {
     val seats = AvailableSeats(floorplan, showAvailability)
-    availableTypes.map(showAvailability.byType.get(_).getOrElse(0)).sum match {
+    (availableTypes.map(showAvailability.byType.get(_).getOrElse(0)).sum) match {
       case total: Int if total >= quantity => {
         val groupSizesList = groupSizes(quantity)
         val adjacentSolutionsBySize = calculateAllAdjacentSuggestions(seats, groupSizesList.flatten.distinct.sorted.reverse)
