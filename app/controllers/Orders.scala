@@ -12,7 +12,7 @@ import controllers.auth.Mailer
 import scala.Some
 import be.studiocredo.auth.SecuredDBRequest
 import play.api.libs.json.{JsError, Json}
-import models.entities.{SeatId, SeatType, OrderEdit}
+import models.entities.{Order, SeatId, SeatType, OrderEdit}
 import be.studiocredo.reservations.{CapacityExceededException, FloorProtocol, ReservationEngineMonitorService}
 import scala.collection.immutable.Set
 import be.studiocredo.util.Money
@@ -23,6 +23,7 @@ import play.api.Play.current
 import scala.concurrent.Future
 import be.studiocredo.reservations.FloorProtocol.{Response, StartOrder}
 import play.api.Logger
+import play.api.cache.Cache
 
 case class StartSeatOrderForm(quantity: Int)
 
@@ -88,41 +89,61 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
     implicit rs =>
       import FloorProtocol._
 
-      val bindedForm = startSeatOrderForm.bindFromRequest
-      bindedForm.fold(
-        formWithErrors => Future.successful(Redirect(routes.Orders.view(order, event))),
-        res => {
+      ensureOrderAccess(id, order) {
+        val bindedForm = startSeatOrderForm.bindFromRequest
+        bindedForm.fold(
+          formWithErrors => Future.successful(Redirect(routes.Orders.view(order, event))),
+          res => {
 
-          val money = Money(10) // todo
-          val avail = Set(SeatType.Normal) // todo
+            val money = Money(10) // todo
+            val avail = Set(SeatType.Normal) // todo
 
-          implicit val timeout = Timeout(30.seconds)
+            implicit val timeout = Timeout(30.seconds)
 
-          // todo: check orderid is for current user
+            // todo: check orderid is for current user
 
-          (orderEngine.floors ? StartOrder(id, order, res.quantity, rs.user.allUsers, money, avail)).map {
-            case status: Response => {
+            (orderEngine.floors ? StartOrder(id, order, res.quantity, rs.user.allUsers, money, avail)).map {
+              case status: Response => {
 
-              Redirect(routes.Orders.viewSeatOrder(id, order))
+                Redirect(routes.Orders.viewSeatOrder(id, order))
+              }
+            }.recover({
+              case ooc: CapacityExceededException =>
+                logger.debug(s"$id $order: Capacity exceeded")
+                InternalServerError("No room sorry :(")
+              case error =>
+                logger.error(s"$id $order: Failed to start seat order", error)
+                InternalServerError
+            })
+          }
+        )
+      }
+  }
+
+  def ensureOrderAccess(showID: ShowId, orderId: OrderId)(action: => Future[SimpleResult])(implicit rs: SecuredDBRequest[_]): Future[SimpleResult] = {
+    Cache.getOrElse[Option[Order]]("order." + orderId.id, 300) {
+      orderService.find(orderId)
+    }.fold({
+      logger.warn(s"$showID $orderId: Order not found")
+      Future.successful(BadRequest(s"Order $orderId niet gevonden"))
+    })(
+          order => {
+            if (order.userId == rs.user.id)
+              action
+            else {
+              logger.warn(s"$showID $order: Order for user ${order.userId} but ${rs.user.id} attempted to use it")
+              Future.successful(BadRequest(s"Geen toegang tot order $order"))
             }
-          }.recover({
-            case ooc: CapacityExceededException =>
-              logger.debug(s"$id $order: Capacity exceeded")
-              InternalServerError("No room sorry :(")
-            case error =>
-              logger.error(s"$id $order: Failed to start seat order", error)
-              InternalServerError
-          })
-        }
-      )
+          }
+        )
   }
 
 
 
-
-  def viewSeatOrder(id: ShowId, order: OrderId) = AuthDBAction { implicit rs =>
-    // todo check orderid for current user
-    Ok(views.html.reservationFloorplan(showService.getEventShow(id), order, userContext))
+  def viewSeatOrder(id: ShowId, order: OrderId) = AuthDBAction.async { implicit rs =>
+    ensureOrderAccess(id, order) {
+      Future.successful(Ok(views.html.reservationFloorplan(showService.getEventShow(id), order, userContext)))
+    }
   }
 
  def cancelSeatOrder(id: ShowId) = AuthDBAction { implicit rs =>
@@ -153,74 +174,77 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
 //    )
   }
 
-  def ajaxFloorplan(id: ShowId, order: OrderId) = AuthAwareDBAction.async { implicit rs =>
+  def ajaxFloorplan(id: ShowId, order: OrderId) = AuthDBAction.async { implicit rs =>
     import FloorProtocol._
 
-  // todo check order current user
+    ensureOrderAccess(id, order) {
 
-    implicit val timeout = Timeout(30.seconds)
+      implicit val timeout = Timeout(30.seconds)
 
-    (orderEngine.floors ? CurrentStatus(id, order)).map {
-      case status: Response => {
-        Ok(Json.toJson(status.floorPlan))
-      }
-    }.recover({
-      case error => {
-        logger.warn(s"$id $order: Failed to retrieve  floorplan", error)
-        InternalServerError
-      }
-    })
+      (orderEngine.floors ? CurrentStatus(id, order)).map {
+        case status: Response => {
+          Ok(Json.toJson(status.floorPlan))
+        }
+      }.recover({
+        case error => {
+          logger.warn(s"$id $order: Failed to retrieve  floorplan", error)
+          InternalServerError
+        }
+      })
+    }
   }
 
   case class AjaxMove(target: SeatId)
   implicit val ajaxMoveFMT = Json.format[AjaxMove]
 
-  def ajaxMove(id: ShowId, order: OrderId) = AuthAwareDBAction.async(parse.json) { implicit rs =>
+  def ajaxMove(id: ShowId, order: OrderId) = AuthDBAction.async(parse.json) { implicit rs =>
     import FloorProtocol._
 
-    // todo check order current user
+    ensureOrderAccess(id, order) {
 
-    implicit val timeout = Timeout(5.seconds)
+      implicit val timeout = Timeout(5.seconds)
 
-    rs.body.validate[AjaxMove].map{
-      case (move) =>  {
-        (orderEngine.floors ? Move(id, order, move.target, None)).map {
-          case status: Response => {
-            // status.messages // todo message in case can't move
+      rs.body.validate[AjaxMove].map {
+        case (move) => {
+          (orderEngine.floors ? Move(id, order, move.target, None)).map {
+            case status: Response => {
+              // status.messages // todo message in case can't move
 
-            Ok(Json.toJson(status.floorPlan))
-          }
-        }.recover({
-          case error => {
-            logger.warn(s"$id $order: Failed to move to seat $move", error)
-            InternalServerError
-          }
-        })
+              Ok(Json.toJson(status.floorPlan))
+            }
+          }.recover({
+            case error => {
+              logger.warn(s"$id $order: Failed to move to seat $move", error)
+              InternalServerError
+            }
+          })
+        }
+      }.recoverTotal {
+        e => Future.successful(BadRequest("Detected error:" + JsError.toFlatJson(e)))
       }
-    }.recoverTotal{
-        e => Future.successful(BadRequest("Detected error:"+ JsError.toFlatJson(e)))
     }
   }
 
 
-  def ajaxMoveBest(id: ShowId, order: OrderId) = AuthAwareDBAction.async { implicit rs =>
+  def ajaxMoveBest(id: ShowId, order: OrderId) = AuthDBAction.async { implicit rs =>
     import FloorProtocol._
 
-    // todo check order current user
+    ensureOrderAccess(id, order) {
 
-    implicit val timeout = Timeout(30.seconds)
+      implicit val timeout = Timeout(30.seconds)
 
-    (orderEngine.floors ? MoveBest(id, order)).map {
-      case status: Response => {
-        // status.messages // todo
-        Ok(Json.toJson(status.floorPlan))
-      }
-    }.recover({
-      case error => {
-        logger.warn(s"Failed to retreive ajax floorplan $id $order", error)
-        InternalServerError
-      }
-    })
+      (orderEngine.floors ? MoveBest(id, order)).map {
+        case status: Response => {
+          // status.messages // todo
+          Ok(Json.toJson(status.floorPlan))
+        }
+      }.recover({
+        case error => {
+          logger.warn(s"Failed to retreive ajax floorplan $id $order", error)
+          InternalServerError
+        }
+      })
+    }
   }
 
 

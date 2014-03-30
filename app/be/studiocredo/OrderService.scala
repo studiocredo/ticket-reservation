@@ -86,6 +86,14 @@ class OrderService @Inject()(venueService: VenueService) {
     }
   }
 
+  def find(id: OrderId)(implicit  s: Session): Option[Order] = {
+    val q = for {
+      order <- OQ if (order.id === id)
+    } yield (order)
+    q.firstOption
+  }
+
+
   def get(id: OrderId)(implicit  s: Session): Option[OrderDetail] = {
     val q = for {
       order <- OQ

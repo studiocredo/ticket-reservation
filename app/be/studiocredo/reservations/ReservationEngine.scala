@@ -87,7 +87,7 @@ case class AvailableSeats(fp: FloorPlan, availabilityByType: Map[SeatType, Int])
 
     suggestion.seatIds.flatMap(sid => fp.seat(sid)).foreach(seat => seatTypeMap(seat.kind) += 1)
 
-    if (SeatType.values.forall(st => seatTypeMap(st) <= availabilityByType(st)))
+    if (SeatType.values.forall(st => seatTypeMap(st) <= availabilityByType.getOrElse(st, 0)))
       Some(suggestion)
     else
       None
