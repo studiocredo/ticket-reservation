@@ -4,10 +4,11 @@
     <logger name="be.studiocredo" level="debug"/>
     <logger name="be.studiocredo.requests" level="info"/>
     <logger name="play" level="INFO" />
+    <logger name="be.studiocredo.maitred" level="debug"/>
 
     <logger name="scala.slick" level="debug"/>
     <logger name="scala.slick.compiler" level="info"/>
-    <logger name="scala.slick.session" level="DEBUG"/>
+    <logger name="scala.slick.session" level="info"/>
 
     <logger name="com.jolbox.bonecp" level="OFF"/>
 

@@ -12,18 +12,20 @@ import controllers.auth.Mailer
 import scala.Some
 import be.studiocredo.auth.SecuredDBRequest
 import play.api.libs.json.{JsError, Json}
-import models.entities.{Order, SeatId, SeatType, OrderEdit}
+import models.entities.{Order, SeatId, SeatType}
 import be.studiocredo.reservations.{CapacityExceededException, FloorProtocol, ReservationEngineMonitorService}
 import scala.collection.immutable.Set
 import be.studiocredo.util.Money
 import scala.concurrent.duration._
 import akka.util.Timeout
-import akka.pattern.{ask, pipe}
+import akka.pattern.ask
 import play.api.Play.current
 import scala.concurrent.Future
-import be.studiocredo.reservations.FloorProtocol.{Response, StartOrder}
+import be.studiocredo.reservations.FloorProtocol.StartOrder
 import play.api.Logger
 import play.api.cache.Cache
+import play.api.db.slick._
+
 
 case class StartSeatOrderForm(quantity: Int)
 
@@ -100,8 +102,6 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
 
             implicit val timeout = Timeout(30.seconds)
 
-            // todo: check orderid is for current user
-
             (orderEngine.floors ? StartOrder(id, order, res.quantity, rs.user.allUsers, money, avail)).map {
               case status: Response => {
 
@@ -118,6 +118,37 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
           }
         )
       }
+  }
+
+  def commitSeatOrder(showId: ShowId, orderId: OrderId) = AuthDBAction.async {
+    implicit rs =>
+      import FloorProtocol._
+
+      ensureOrderAccess(showId, orderId) {
+        implicit val timeout = Timeout(30.seconds)
+
+        val ticketOrderId = DB.withSession { session: Session =>
+             orderService.insert(orderId, showId)(session)
+        }
+
+        (orderEngine.floors ? Commit(showId, orderId, ticketOrderId)).map {
+          case status: Response => {
+
+            Redirect(routes.Orders.view(orderId, toEventId(showId)))
+          }
+        }.recover({
+          case error =>
+            logger.error(s"$showId $orderId: Failed to commit order", error)
+            InternalServerError
+        })
+
+      }
+  }
+
+  def toEventId(showId: ShowId)(implicit rs: SecuredDBRequest[_]): EventId = {
+    Cache.getOrElse[EventId]("show2event." + showId.id, 60 * 60) {
+      showService.get(showId).get.eventId
+    }
   }
 
   def ensureOrderAccess(showID: ShowId, orderId: OrderId)(action: => Future[SimpleResult])(implicit rs: SecuredDBRequest[_]): Future[SimpleResult] = {

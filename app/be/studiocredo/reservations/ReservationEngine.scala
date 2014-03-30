@@ -18,7 +18,6 @@ import scala.concurrent.duration.Duration
 import java.util.concurrent.TimeUnit
 import play.api.Logger
 import be.studiocredo.reservations.FloorProtocol.{ErrorMessage, Message}
-import scala.Some
 import models.entities.SeatId
 import models.entities.SeatWithStatus
 import models.entities.Row
@@ -235,7 +234,7 @@ object FloorProtocol {
 
   case class CurrentStatus(show: ShowId, order: OrderId) extends FloorAction
 
-  case class Commit(show: ShowId, order: OrderId, ticketOrderId: TicketOrderId)
+  case class Commit(show: ShowId, order: OrderId, ticketOrderId: TicketOrderId) extends FloorAction
   case class ReloadState(show: ShowId) extends FloorAction
 
 
@@ -289,7 +288,7 @@ class SeatOrderActor(showService: ShowService, venueService: VenueService, order
     cancellable.map(_.cancel())
   }
 
-  override def receive=  {
+  override def receive = {
     case SetActiveShows(showIds) => {
       logger.info(s"Active shows: $showIds")
       activeShows = showIds
@@ -301,6 +300,8 @@ class SeatOrderActor(showService: ShowService, venueService: VenueService, order
         sender ! Status.Failure(new ShowNotAcceptingOrdersException(action.show))
       getShowRef(action.show).tell(action, sender)
     }
+
+    case other => logger.warn(s"Unhandled message $other")
   }
 
   def getShowRef(showId: ShowId): ActorRef = {
@@ -469,6 +470,7 @@ class MaitreDActor(showId: ShowId, showService: ShowService, venueService: Venue
       }
 
       case Commit(show, order, ticketOrderId) => {
+        logger.debug(s"$show $order: commiting to $ticketOrderId")
         respond(order, info => {
           DB.withTransaction({ implicit session: Session =>
             case class UseablePreReservation(userId: UserId, var quantity: Int)
@@ -477,6 +479,8 @@ class MaitreDActor(showId: ShowId, showService: ShowService, venueService: Venue
               val useable = Math.min(0, pre.quantity - state.countReservedSeats(pre.userId))
               UseablePreReservation(pre.userId, useable)
             }).sortBy(_.quantity)
+
+            logger.debug(s"$show $order $ticketOrderId: useable reservations: $useablePreReservations")
 
             def nextPreReservation(): Option[UserId] = {
               val maybePre = useablePreReservations.find(pre => pre.quantity > 0)
@@ -490,11 +494,17 @@ class MaitreDActor(showId: ShowId, showService: ShowService, venueService: Venue
             }
 
             val seatsWithPreUser = state.findSeats(info).map(seat => (seat, nextPreReservation()))
+
+            if (logger.isDebugEnabled)
+              logger.debug(s"$show $order $ticketOrderId: seat->user" + seatsWithPreUser.map{case (seat, user) => (seat.seatId, user)})
+
             orderService.insert(seatsWithPreUser.map {
               case (seat, user) => {
                 TicketSeatOrder(ticketOrderId, showId, user, seat.seatId, info.price)
               }
             })
+
+            logger.debug(s"$show $order $ticketOrderId: order written")
 
             seatsWithPreUser.foreach{case (seat, user) => seat.setReserved(user)}
           })
