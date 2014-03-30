@@ -212,7 +212,7 @@ Floorplan.directive 'reservationFloorplan', () ->
     scope:
         showId: '@'
         orderId: '@'
-    controller: ($scope, $http) ->
+    controller: ($scope, $http, $interval) ->
       updatePlan = (plan) ->
         $scope.plan = plan
         $scope.rows = plan.rows
@@ -230,8 +230,14 @@ Floorplan.directive 'reservationFloorplan', () ->
       $scope.cancel = () ->
         console.log('cancel')
 
-      $http.get(jsRoutes.controllers.Orders.ajaxFloorplan($scope.showId, $scope.orderId).url).success (updatePlan)
+      fetchAndUpdate = ->
+        $http.get(jsRoutes.controllers.Orders.ajaxFloorplan($scope.showId, $scope.orderId).url).success (updatePlan)
 
+
+      refreshTimer = $interval(fetchAndUpdate, 5000);
+      $scope.$on('$destroy', -> $interval.cancel(refreshTimer) );
+
+      fetchAndUpdate()
 
 
 CounterInput = angular.module("counterInput", [])
