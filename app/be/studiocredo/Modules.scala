@@ -20,22 +20,30 @@ object Modules {
       bind[PreReservationService].in[Singleton]
       bind[NotificationService].in[Singleton]
       bind[PaymentService].in[Singleton]
+      bind[ReservationEngineMonitorService].asEagerSingleton()
 
       bind[controllers.Application].in[Singleton]
       bind[controllers.admin.EventDetails].in[Singleton]
       bind[controllers.admin.Events].in[Singleton]
       bind[controllers.admin.UserDetails].in[Singleton]
       bind[controllers.admin.Venues].in[Singleton]
+      bind[controllers.admin.Orders].in[Singleton]
+      bind[controllers.Orders].in[Singleton]
+      bind[controllers.Events].in[Singleton]
     }
   }
 
   class AuthModule extends AbstractModule with ScalaModule {
     def configure() {
       import be.studiocredo.auth._
+      binder().disableCircularProxies()
+
       bind[AuthenticatorService].in[Singleton]
 //      bind[AuthTokenStore].to[CacheAuthTokenStore].in[Singleton]
       bind[AuthTokenStore].to[DbAuthTokenStore].in[Singleton]
       bind[IdentityService].in[Singleton]
+
+      bind[AuthTokenExpireService].asEagerSingleton()
       // todo replace with method that doesn't suck
       val multi = ScalaMultibinder.newSetBinder[Service](binder)
       multi.addBinding().to[AuthTokenExpireService]

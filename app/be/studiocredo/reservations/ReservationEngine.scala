@@ -95,36 +95,39 @@ case class AvailableSeats(fp: FloorPlan, availabilityByType: Map[SeatType, Int])
 }
 
 object ReservationEngine {
+  val logger = Logger("be.studiocredo.suggester")
   // ShowAvailability = current free seats - prereserved seats
 
   def suggestSeats(quantity: Int, floorplan: FloorPlan, showAvailability: ShowAvailability, availableTypes: Set[SeatType] = Set(SeatType.Normal)): Either[String, List[SeatId]] = {
     suggestSeats(quantity, AvailableSeats(floorplan, showAvailability.byType), availableTypes)
   }
+
   def suggestSeats(quantity: Int, seats: AvailableSeats, availableTypes: Set[SeatType]): Either[String, List[SeatId]] = {
-    availableTypes.map(seats.availabilityByType.get(_).getOrElse(0)).sum match {
-      case total: Int if total >= quantity => {
-        val groupSizesList = groupSizes(quantity)
-        val adjacentSolutionsBySize = calculateAllAdjacentSuggestions(seats, groupSizesList.flatten.distinct.sorted.reverse)
+    val avail = availableTypes.map(seats.availabilityByType.get(_).getOrElse(0)).sum
+    logger.debug(s"requested $quantity have $avail available $availableTypes ${seats.availabilityByType}")
+    if (avail >= quantity) {
+      val groupSizesList = groupSizes(quantity)
+      val adjacentSolutionsBySize = calculateAllAdjacentSuggestions(seats, groupSizesList.flatten.distinct.sorted.reverse)
 
-        def getSolutionForSize(size: Int) = adjacentSolutionsBySize.getOrElse(size, mutable.Set()).toSet
+      def getSolutionForSize(size: Int) = adjacentSolutionsBySize.getOrElse(size, mutable.Set()).toSet
 
-        // If first exists use it, else calc all others & use best scoring
-        calculateBestSuggestion(groupSizesList.head.map(getSolutionForSize), seats) match {
-          //if the first element produces a solution, then this is always considered the best (all on one row and next to each other)
-          case Some(solution) => Right(solution.seatIds)
-          case None => {
-            groupSizesList.drop(1).map(sizes => calculateBestSuggestion(sizes.map(getSolutionForSize), seats)).flatten match {
-              //nevermind, just take individual best seats
-              case Nil => Right(seats.takeBest(quantity))
-              case solutions =>
-                Right(solutions.minBy(_.score).seatIds)
-            }
+      // If first exists use it, else calc all others & use best scoring
+      calculateBestSuggestion(groupSizesList.head.map(getSolutionForSize), seats) match {
+        //if the first element produces a solution, then this is always considered the best (all on one row and next to each other)
+        case Some(solution) => Right(solution.seatIds)
+        case None => {
+          groupSizesList.drop(1).map(sizes => calculateBestSuggestion(sizes.map(getSolutionForSize), seats)).flatten match {
+            //nevermind, just take individual best seats
+            case Nil => Right(seats.takeBest(quantity))
+            case solutions =>
+              Right(solutions.minBy(_.score).seatIds)
           }
         }
       }
-      case _ => Left("re.capacity.insufficient")
-    }
+    } else
+      Left("re.capacity.insufficient")
   }
+
 
   private def groupSizes(size: Int): List[List[Int]] = {
     var result = List(List(size))
@@ -187,15 +190,20 @@ object ReservationEngine {
 
 class ReservationEngineMonitorService @Inject()(showService: ShowService, venueService: VenueService, orderService: OrderService, preReservationService: PreReservationService) extends Service {
 
+  val logger = Logger("be.studiocredo.orders.seat")
+
   var seatOrderActor: Option[ActorRef] = None
 
   override def onStart() {
     import play.api.Play.current
 
+    logger.debug("Starting reservation actor")
+
     seatOrderActor = Some(Akka.system.actorOf(SeatOrderActor.props(showService, venueService, orderService, preReservationService), name = "seatOrders"))
   }
 
   override def onStop() {
+    logger.debug("Stopping reservation actor")
     seatOrderActor.map(Akka.system.stop)
     seatOrderActor = None
   }
@@ -327,6 +335,7 @@ object MaitreDActor {
 
 // todo auth user access to order
 class MaitreDActor(showId: ShowId, showService: ShowService, venueService: VenueService, orderService: OrderService, preReservationService: PreReservationService) extends Actor {
+  val logger = Logger("be.studiocredo.maitred")
 
   import FloorProtocol._
 
@@ -358,8 +367,7 @@ class MaitreDActor(showId: ShowId, showService: ShowService, venueService: Venue
     }
 
     def availableSeats(order: OrderInfo)= {
-
-      val avail = mutable.Map[SeatType, Int]().withDefault(kind => {state.seatCountbyType.getOrElse(kind, 0)})
+      val avail = mutable.Map[SeatType, Int]().withDefaultValue(0) ++ state.seatCountbyType
       // Subtract seats that are reserved or pending for other pepole
       val takenSeatsExcludingMyOwn: (SeatState) => Boolean = seat => !(seat.isFree || seat.isPending(order))
       state.bySeat.values.filter(takenSeatsExcludingMyOwn).foreach(seat => avail(seat.kind) -= 1)
@@ -371,6 +379,7 @@ class MaitreDActor(showId: ShowId, showService: ShowService, venueService: Venue
             avail(SeatType.Normal) -= Math.max(0, quantity - usedPreReservations(userId))
         }
 
+        logger.debug(s"${avail}")
         AvailableSeats(state.toFloorPlan(order), avail.toMap)
       }
     }
@@ -380,17 +389,26 @@ class MaitreDActor(showId: ShowId, showService: ShowService, venueService: Venue
         orderInfoMap.remove(order)
         state.remove(order)
 
-        // todo check enough prereservations
-        orderInfoMap += ((order, OrderInfo(order, availableTypes, users, price)))
+        val info = OrderInfo(order, availableTypes, users, price)
 
-        respond(order, info => {
-          val suggested = ReservationEngine.suggestSeats(seats, availableSeats(info), info.availableTypes)
-          suggested.fold(msg => List(error(msg)), newSeats => {
+        val myAvailable = availableSeats(info)
+
+        logger.debug(s"$seats requested hava ${myAvailable.totalAvailable} available ${myAvailable.availabilityByType}")
+        if (myAvailable.totalAvailable < seats) {
+          sender ! Status.Failure(new CapacityExceededException(show, order))
+        } else {
+          val suggested = ReservationEngine.suggestSeats(seats, myAvailable, info.availableTypes)
+
+          sender ! suggested.fold(msg => {
+            Status.Failure(new FailedToAssignInitialSeatingException(msg))
+          }, newSeats => {
+
+            orderInfoMap += ((order, OrderInfo(order, availableTypes, users, price)))
             newSeats foreach (id => state(id).setPending(info))
 
-            List()
+            toResponse(info, List())
           })
-        })
+        }
       }
 
       case MoveBest(show, order) => {
@@ -410,7 +428,9 @@ class MaitreDActor(showId: ShowId, showService: ShowService, venueService: Venue
 
       case Move(show, order, target, seats) => {
         respond(order, info => {
-          val current = state.findSeats(info).filter(seat => seats.getOrElse(Set.empty).contains(seat.seatId))
+          val allSeats = state.findSeats(info)
+
+          val current = seats.fold(allSeats)(wanted => allSeats.filter(seat => wanted.contains(seat.seatId)))
 
           state.adjacentFreeSeats(target, info, current.size).fold(msg => List(msg), suggestedSeats => {
             current foreach (_.setFree())
@@ -677,6 +697,9 @@ object SeatState {
   }
 }
 
+
+case class FailedToAssignInitialSeatingException(msg: String) extends RuntimeException(msg)
+case class CapacityExceededException(show :ShowId, orderId: OrderId) extends RuntimeException()
 
 case class ReloadFailedException(show: ShowId) extends RuntimeException()
 

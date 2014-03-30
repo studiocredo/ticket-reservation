@@ -23,6 +23,8 @@ class Application @Inject()(showService: ShowService, eventService: EventService
         mr.Events.ajaxFloorplan,
         mr.Events.ajaxAvailabilityFloorplan,
         mr.Orders.ajaxFloorplan,
+        mr.Orders.ajaxMove,
+        mr.Orders.ajaxMoveBest,
         ar.Orders.ajaxFloorplan,
         ar.Floorplans.ajaxSaveFloorPlan,
         ar.Floorplans.ajaxFloorPlan

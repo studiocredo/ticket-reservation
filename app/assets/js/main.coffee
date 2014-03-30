@@ -183,18 +183,13 @@ Floorplan.directive 'orderAdminFloorplan', () ->
         show: '='
     controller: 'OrderAdminFloorpanCtrl'
 
-Floorplan.controller "ReservationFloorpanCtrl", ($scope, $http) ->
-     $http.get(jsRoutes.controllers.Orders.ajaxFloorplan($scope.show).url).success (plan) ->
-             $scope.plan = plan
-             $scope.rows = plan.rows
-             $scope.claim = (seat) ->
-                     console.log('claim '+seat)
-             $scope.release = (show, seat) ->
-                     console.log('release '+seat)
-             $scope.suggest = (show, quantity) ->
-                     console.log('suggest '+quantity)
-             $scope.cancel = () ->
-                     console.log('cancel')
+
+MOVE_BEST = "MOVE_BEST"
+
+Floorplan.controller "ReservationFloorplanCtrl", ($scope, $http) ->
+  $scope.moveBest = () ->
+    $scope.$broadcast(MOVE_BEST)
+
 
 Floorplan.directive 'reservationFloorplan', () ->
     restrict: 'EA'
@@ -215,8 +210,29 @@ Floorplan.directive 'reservationFloorplan', () ->
 </div>
 """
     scope:
-        show: '='
-    controller: 'ReservationFloorpanCtrl'
+        showId: '@'
+        orderId: '@'
+    controller: ($scope, $http) ->
+      updatePlan = (plan) ->
+        $scope.plan = plan
+        $scope.rows = plan.rows
+
+      $scope.claim = (seat) ->
+        $http.post(jsRoutes.controllers.Orders.ajaxMove($scope.showId, $scope.orderId).url, {target: {name:seat}}).success(updatePlan)
+
+      $scope.$on(MOVE_BEST, () ->
+        $http.post(jsRoutes.controllers.Orders.ajaxMoveBest($scope.showId, $scope.orderId).url).success(updatePlan)
+      )
+      $scope.release = (show, seat) ->
+        console.log('release '+seat)
+      $scope.suggest = (show, quantity) ->
+        console.log('suggest '+quantity)
+      $scope.cancel = () ->
+        console.log('cancel')
+
+      $http.get(jsRoutes.controllers.Orders.ajaxFloorplan($scope.showId, $scope.orderId).url).success (updatePlan)
+
+
 
 CounterInput = angular.module("counterInput", [])
 
@@ -240,3 +256,32 @@ CounterInput.controller "CounterInputCtrl", ($scope, $http) ->
 
     $scope.isMaxQuotaSatisfied = ->
         $scope.totalUsed() <= $scope.maxQuota
+
+
+
+Floorplan.directive 'counterInput', () ->
+  restrict: 'EA'
+  template: """
+<input name="{{name}}" type="hidden" value="{{value}}" >
+            <div class="quantity">{{value}}</div>
+            <div class="btn-group-vertical inline">
+                <button type="button" class="btn btn-primary btn-sm" data-ng-click="increment()"><span class="glyphicon glyphicon-plus"></span>
+                </button>
+                <button type="button" class="btn btn-primary btn-sm" data-ng-click="decrement()"><span class="glyphicon glyphicon-minus"></span>
+                </button>
+            </div>
+
+
+"""
+  scope:
+    name: '@'
+    max: '@'
+  controller: ($scope) ->
+    $scope.value = 0
+    $scope.increment = ->
+      if ($scope.value < $scope.max)
+        $scope.value += 1
+    $scope.decrement = ->
+      if ($scope.value > 0)
+        $scope.value -= 1
+

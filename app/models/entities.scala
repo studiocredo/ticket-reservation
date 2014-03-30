@@ -36,6 +36,8 @@ object entities {
     def name = user.name
     def username = user.username
     def email = user.email
+
+    def allUsers = user.id :: otherUsers.map { _.id }
   }
 
   case class User(id: UserId, name: String, username: String, password: Password, loginGroupId: Option[UserId], active: Boolean)
@@ -177,6 +179,7 @@ object entities {
   }
   case class OrderEdit(         userId: UserId, date: DateTime, billingName: String, billingAddress: String, processed: Boolean)
   case class OrderDetail(order: Order, user: User, ticketOrders: List[TicketOrderDetail]) {
+    def id = order.id
     def price = ticketOrders.map(_.price).foldLeft(Money(0))((total, amount) => total.plus(amount))
     val numberOfSeats = ticketOrders.map(_.ticketSeatOrders.length).sum
   }

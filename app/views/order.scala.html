@@ -1,4 +1,4 @@
-@(info: models.admin.EventReservationsDetail, order: models.entities.OrderDetail, reservationForms: Map[models.ids.ShowId, Form[controllers.ShowReservationForm]], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
+@(info: models.admin.EventReservationsDetail, order: models.entities.OrderDetail, userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
 @import helper._
 
 @orderRowInactive(ticketOrder: models.entities.TicketOrderDetail)= {
@@ -35,7 +35,7 @@
         <td>@ticketOrder.ticketSeatOrders.length</td>
         <td>@CurrencyFormat.format(ticketOrder.price)</td>
         <td>
-            <a class="btn btn-danger btn-sm" href="@routes.Orders.cancelShow(ticketOrder.show.id)">Verwijderen</a>
+            <a class="btn btn-danger btn-sm" href="@routes.Orders.cancelSeatOrder(ticketOrder.show.id)">Verwijderen</a>
         </td>
     </tr>
 }
@@ -50,16 +50,18 @@
             <p class="text-muted h5">@venue.name</p>
         </td>
         <td>
-            <div class="quantity">{{values[@ngModelIndex]}}</div>
-            <div class="inline">
-                <button type="button" class="btn btn-primary btn-sm" data-ng-click="increment(@ngModelIndex, @max)"><span class="glyphicon glyphicon-plus"></span>
-                </button>
-                <button type="button" class="btn btn-primary btn-sm" data-ng-click="decrement(@ngModelIndex, 0)"><span class="glyphicon glyphicon-minus"></span>
-                </button>
-            </div>
+
+
+            @form(action = controllers.routes.Orders.startSeatOrder(show.id, order.id, info.id), 'class -> "form form-horizontal", 'name -> "orderForm") {
+
+                <div counter-input name="quantity" max="@info.totalQuota"></div>
+
+                <button type="submit" class="btn btn-primary" data-ng-disabled="orderForm.$invalid">Plaatsen kiezen</button>
+            }
+
         </td>
         <td>
-            <a class="btn btn-primary btn-sm" href="@routes.Orders.viewShow(show.id)">Plaatsen kiezen</a>
+
         </td>
     </tr>
     }

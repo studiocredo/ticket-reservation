@@ -3,7 +3,7 @@ package controllers
 import com.google.inject.Inject
 import be.studiocredo._
 import be.studiocredo.auth._
-import play.api.mvc.Controller
+import play.api.mvc.{SimpleResult, Controller}
 import models.ids.{OrderId, ShowId, EventId}
 import models.entities.FloorPlanJson._
 import play.api.data.Form
@@ -11,21 +11,33 @@ import play.api.data.Forms._
 import controllers.auth.Mailer
 import scala.Some
 import be.studiocredo.auth.SecuredDBRequest
-import play.api.libs.json.Json
-import models.entities.OrderEdit
+import play.api.libs.json.{JsError, Json}
+import models.entities.{SeatId, SeatType, OrderEdit}
+import be.studiocredo.reservations.{CapacityExceededException, FloorProtocol, ReservationEngineMonitorService}
+import scala.collection.immutable.Set
+import be.studiocredo.util.Money
+import scala.concurrent.duration._
+import akka.util.Timeout
+import akka.pattern.{ask, pipe}
+import play.api.Play.current
+import scala.concurrent.Future
+import be.studiocredo.reservations.FloorProtocol.{Response, StartOrder}
+import play.api.Logger
 
-case class ShowReservationForm(showId: ShowId, quantity: Int)
+case class StartSeatOrderForm(quantity: Int)
 
-class Orders @Inject()(eventService: EventService, orderService: OrderService, showService: ShowService, preReservationService: PreReservationService, venueService: VenueService, val authService: AuthenticatorService, val notificationService: NotificationService, val userService: UserService) extends Controller with Secure with UserContextSupport {
+class Orders @Inject()(eventService: EventService, orderService: OrderService, showService: ShowService, preReservationService: PreReservationService, venueService: VenueService, val authService: AuthenticatorService, val notificationService: NotificationService, val userService: UserService, orderEngine: ReservationEngineMonitorService) extends Controller with Secure with UserContextSupport {
+  val logger = Logger("be.studiocredo.orders")
 
   val defaultAuthorization = Some(Authorization.ANY)
 
-  def reservationForm(showId: ShowId): Form[ShowReservationForm] = Form(
+  val startSeatOrderForm: Form[StartSeatOrderForm] = Form(
     mapping(
-      "show" -> ignored(showId),
       "quantity" -> number(min = 0)
-    )(ShowReservationForm.apply)(ShowReservationForm.unapply)
+    )(StartSeatOrderForm.apply)(StartSeatOrderForm.unapply)
   )
+
+  implicit val ec = play.api.libs.concurrent.Akka.system.dispatcher
 
   def start(id: EventId) = AuthDBAction { implicit rs =>
     val users = rs.currentUser match {
@@ -71,28 +83,53 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
   def cancel(id: OrderId) = AuthDBAction { implicit rs =>
     ???
   }
-  
-  def viewShow(id: ShowId) = AuthDBAction { implicit rs =>
-    showService.get(id) match {
-      case None => BadRequest(s"Voorstelling $id niet gevonden")
-      case Some(showDetail) => {
-        val details = eventService.eventDetails(showDetail.eventId).get
-        val currentUserContext = userContext
-        val venueShow = details.shows.flatMap(_.shows).find(_.id == id)
-        val showAvailability = venueShow.map {
-          s => preReservationService.availability(showService.getEventShow(s.id))
+
+  def startSeatOrder(id: ShowId, order: OrderId, event: EventId) = AuthDBAction.async {
+    implicit rs =>
+      import FloorProtocol._
+
+      val bindedForm = startSeatOrderForm.bindFromRequest
+      bindedForm.fold(
+        formWithErrors => Future.successful(Redirect(routes.Orders.view(order, event))),
+        res => {
+
+          val money = Money(10) // todo
+          val avail = Set(SeatType.Normal) // todo
+
+          implicit val timeout = Timeout(30.seconds)
+
+          // todo: check orderid is for current user
+
+          (orderEngine.floors ? StartOrder(id, order, res.quantity, rs.user.allUsers, money, avail)).map {
+            case status: Response => {
+
+              Redirect(routes.Orders.viewSeatOrder(id, order))
+            }
+          }.recover({
+            case ooc: CapacityExceededException =>
+              logger.debug(s"$id $order: Capacity exceeded")
+              InternalServerError("No room sorry :(")
+            case error =>
+              logger.error(s"$id $order: Failed to start seat order", error)
+              InternalServerError
+          })
         }
-        Ok(views.html.reservationFloorplan(details, showAvailability.get, currentUserContext))
-      }
-    }
+      )
   }
 
 
- def cancelShow(id: ShowId) = AuthDBAction { implicit rs =>
+
+
+  def viewSeatOrder(id: ShowId, order: OrderId) = AuthDBAction { implicit rs =>
+    // todo check orderid for current user
+    Ok(views.html.reservationFloorplan(showService.getEventShow(id), order, userContext))
+  }
+
+ def cancelSeatOrder(id: ShowId) = AuthDBAction { implicit rs =>
     ???
   }
 
-  def saveShow(id: ShowId) = AuthDBAction { implicit rs =>
+  def saveSeatOrder(id: ShowId) = AuthDBAction { implicit rs =>
     ???
 //    val bindedForm = reservationForm.bindFromRequest
 //    bindedForm.fold(
@@ -116,22 +153,78 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
 //    )
   }
 
-  def ajaxFloorplan(id: ShowId) = AuthAwareDBAction { implicit rs =>
-    val plan = for {
-      show <- showService.get(id)
-      venue <- venueService.get(show.venueId)
-      fp <- venue.floorplan
-    } yield (fp)
+  def ajaxFloorplan(id: ShowId, order: OrderId) = AuthAwareDBAction.async { implicit rs =>
+    import FloorProtocol._
 
-    plan match {
-      case None => BadRequest(s"Zaalplan voor show $id niet gevonden")
-      case Some(plan) => {
-        Ok(Json.toJson(venueService.fillFloorplanReservations(plan, orderService.byShowId(id), Nil)))
+  // todo check order current user
+
+    implicit val timeout = Timeout(30.seconds)
+
+    (orderEngine.floors ? CurrentStatus(id, order)).map {
+      case status: Response => {
+        Ok(Json.toJson(status.floorPlan))
       }
+    }.recover({
+      case error => {
+        logger.warn(s"$id $order: Failed to retrieve  floorplan", error)
+        InternalServerError
+      }
+    })
+  }
+
+  case class AjaxMove(target: SeatId)
+  implicit val ajaxMoveFMT = Json.format[AjaxMove]
+
+  def ajaxMove(id: ShowId, order: OrderId) = AuthAwareDBAction.async(parse.json) { implicit rs =>
+    import FloorProtocol._
+
+    // todo check order current user
+
+    implicit val timeout = Timeout(5.seconds)
+
+    rs.body.validate[AjaxMove].map{
+      case (move) =>  {
+        (orderEngine.floors ? Move(id, order, move.target, None)).map {
+          case status: Response => {
+            // status.messages // todo message in case can't move
+
+            Ok(Json.toJson(status.floorPlan))
+          }
+        }.recover({
+          case error => {
+            logger.warn(s"$id $order: Failed to move to seat $move", error)
+            InternalServerError
+          }
+        })
+      }
+    }.recoverTotal{
+        e => Future.successful(BadRequest("Detected error:"+ JsError.toFlatJson(e)))
     }
   }
 
-  private def viewPage(id: OrderId, event: EventId, form: Option[Map[ShowId, ShowReservationForm]] = None, status: Status = Ok)(implicit rs: SecuredDBRequest[_]) = {
+
+  def ajaxMoveBest(id: ShowId, order: OrderId) = AuthAwareDBAction.async { implicit rs =>
+    import FloorProtocol._
+
+    // todo check order current user
+
+    implicit val timeout = Timeout(30.seconds)
+
+    (orderEngine.floors ? MoveBest(id, order)).map {
+      case status: Response => {
+        // status.messages // todo
+        Ok(Json.toJson(status.floorPlan))
+      }
+    }.recover({
+      case error => {
+        logger.warn(s"Failed to retreive ajax floorplan $id $order", error)
+        InternalServerError
+      }
+    })
+  }
+
+
+  private def viewPage(id: OrderId, event: EventId, status: Status = Ok)(implicit rs: SecuredDBRequest[_]) = {
     val users = rs.currentUser match {
       case None => List()
       case Some(identity) => identity.id :: identity.otherUsers.map { _.id }
@@ -142,20 +235,11 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
         orderService.get(id) match {
           case None => BadRequest(s"Bestelling $id niet gevonden")
           case Some(order) if !order.order.processed => {
-            form match {
-              case Some(forms) => status(views.html.order(event, order, forms.map{ case (show, srf) => (show, reservationForm(show).fill(srf)) }.toMap, userContext))
-              case _ => {
-                val showReservations = event.shows.map {
-                  _.shows.map {
-                    _.id
-                  }
-                }.flatten.map {
-                  id => (id, reservationForm(id).fill(ShowReservationForm(id, event.pendingPrereservationsByShow(id))))
-                }.toMap
-                status(views.html.order(event, order, showReservations, userContext))
+
+                status(views.html.order(event, order, userContext))
               }
-            }
-          }
+
+
           case _ => BadRequest(s"Bestelling $id is afgesloten")
         }
       }
