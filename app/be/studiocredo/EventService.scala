@@ -30,6 +30,17 @@ class EventService @Inject()(showService: ShowService, preReservationService: Pr
     Page(values, page, pageSize, offset, total)
   }
 
+  def pageAll(page: Int = 0, pageSize: Int = 10, filter: Option[String] = None)(implicit s: Session): Page[Event] = {
+    val offset = pageSize * page
+    val total = EventsQ.length.run
+    val values = filter.foldLeft {
+      paginate(EventsQ.sortBy(_.id.desc), page, pageSize)
+    } {
+      (query, filter) => query.filter(q => iLike(q.name, filter)) // should replace with lucene
+    }.run
+    Page(values, page, pageSize, offset, total)
+  }
+
   def insert(event: EventEdit)(implicit s: Session): Either[ServiceFailure, EventId] = {
     validateEvent(event).fold(
       error => Left(error),

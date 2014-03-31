@@ -21,7 +21,7 @@
             @currentPage.items.map { event =>
                 <tr>
                     <td>@event.id</td>
-                    <td><a href="@routes.EventDetails.view(event.id)">@event.name</a></td>
+                    <td><a href="@routes.EventDetails.view(event.id)" class="@if(event.archived){text-warning}">@event.name</a></td>
                     <td>@event.description</td>
                     <td><a class="btn btn-default btn-xs" href="@{routes.Events.edit(event.id)}">Bewerken</a></td>
                 </tr>

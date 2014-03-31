@@ -28,7 +28,7 @@ class Events @Inject()(eventService: EventService, val authService: Authenticato
   )
 
   def list(page: Int) = AuthDBAction { implicit rs =>
-    val list = eventService.page(page)
+    val list = eventService.pageAll(page)
     Ok(views.html.admin.events(list, userContext))
   }
 
