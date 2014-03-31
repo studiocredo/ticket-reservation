@@ -27,6 +27,24 @@
             @order.order.billingAddress
         </p>
 
+        <h1>Betalingsgegevens</h1>
+        <dl>
+            <dt>Bedrag</dt>
+            <dd><strong>@CurrencyFormat.format(order.price)</strong></dd>
+
+            <dt>Rekeningnummer (IBAN)</dt>
+            <dd><strong>IBAN BE27 7512 0260 7273</strong></dd>
+
+            <dt>Bank (BIC)</dt>
+            <dd><strong>AXABBE22</strong></dd>
+
+            <dt>Adres</dt>
+            <dd><strong>Studio Credo vzw<br/>Diksmuidse Heerweg 105<br/>8200 Sint-Andries</strong></dd>
+
+            <dt>Gestructureerde mededeling</dt>
+            <dd><strong>@order.order.reference</strong></dd>
+        </dl>
+
         <h1>Overzicht bestelling</h1>
         <table cellpadding="3px">
             <thead>
@@ -70,24 +88,8 @@
             </tfoot>
         </table>
 
-        <h1>Betalingsgegevens</h1>
-        <dl>
-            <dt>Bedrag</dt>
-            <dd><strong>@CurrencyFormat.format(order.price)</strong></dd>
-
-            <dt>Rekeningnummer (IBAN)</dt>
-            <dd><strong>IBAN BE27 7512 0260 7273</strong></dd>
-
-            <dt>Bank (BIC)</dt>
-            <dd><strong>AXABBE22</strong></dd>
-
-            <dt>Adres</dt>
-            <dd><strong>Studio Credo vzw<br/>Diksmuidse Heerweg 105<br/>8200 Sint-Andries</strong></dd>
-
-            <dt>Gestructureerde mededeling</dt>
-            <dd><strong>@order.order.reference</strong></dd>
-        </dl>
         <p>Gelieve het verschuldigde bedrag zo snel mogelijk over te schrijven op onze rekening.</p>
+        <p>Na ontvangst van de betaling worden de tickets je via e-mail toegestuurd.</p>
 
         <p>Bedankt voor het vertrouwen,</p>
         @emailFooter()
