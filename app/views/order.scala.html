@@ -1,5 +1,16 @@
 @(info: models.admin.EventReservationsDetail, order: models.entities.OrderDetail, userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
 @import helper._
+@import be.studiocredo.util.Joda._
+
+@pageScripts = {
+<script>
+$(document).ready(function() {
+    $('body').on('click', '#order-more-button', function(e) {
+        $('#order-more').attr('class', 'show');
+    });
+});
+</script>
+}
 
 @orderRowInactive(ticketOrder: models.entities.TicketOrderDetail)= {
     <tr class="active">
@@ -44,32 +55,29 @@
     @defining(show.id) { ngModelIndex =>
     @defining(info.totalQuota) { max =>
     @defining(info.pendingPrereservationsByShow(show.id)) { startValue =>
-    <tr data-ng-init="values[@ngModelIndex] = @startValue">
-        <td>
+    <div class="row" data-ng-init="values[@ngModelIndex] = @startValue">
+        <div class="col-md-6">
             <p class="text-info h4">@HumanDateTime.formatDateTime(show.date)</p>
             <p class="text-muted h5">@venue.name</p>
-        </td>
-        <td>
-
-
+        </div>
+        <div class="col-md-6">
             @form(action = controllers.routes.Orders.startSeatOrder(show.id, order.id, info.id), 'class -> "form form-horizontal", 'name -> "orderForm") {
+            <input id="seattype-disabled-input" name="seattype-disabled" type="hidden" value="false">
+            <input name="price" type="hidden" value="32">
+            <div data-counter-input name="quantity" max="@info.totalQuota" class="quantity-input-sm div-inline"></div>
 
-                <div counter-input name="quantity" max="@info.totalQuota"></div>
-
-                <button type="submit" class="btn btn-primary" data-ng-disabled="orderForm.$invalid">Plaatsen kiezen</button>
+            <div class="div-inline">
+                <button type="submit" class="btn btn-primary btn-sm" data-ng-disabled="orderForm.$invalid">Plaatsen kiezen &raquo;</button>
+            </div>
             }
-
-        </td>
-        <td>
-
-        </td>
-    </tr>
+        </div>
+    </div>
     }
     }
     }
 }
 
-@base("Overzicht bestelling")(userContext) {
+@base("Overzicht bestelling", pageScripts)(userContext) {
     <div class="page-header">
         <h1>Bestelling @info.event.name <small>@order.user.name</small></h1>
     </div>
@@ -93,7 +101,7 @@
 
             @if(!order.ticketOrders.isEmpty) {
 
-            <h2>Bestaande bestellingen</h2>
+            <h2>Overzicht bestellingen</h2>
 
             <table class="table table-hover table-striped">
                 <thead>
@@ -107,11 +115,8 @@
                 </thead>
                 <tbody>
 
-                    @order.ticketOrders.find( _.show.eventId == info.id) match {
-                        case None => { }
-                        case Some(ticketOrder) => {
-                            @orderRowActive(ticketOrder)
-                        }
+                    @for((ticketOrder) <- order.ticketOrders.filter( _.show.eventId == info.id).sortBy(r => (r.show.date, r.ticketOrder.id.toInt))) {
+                        @orderRowActive(ticketOrder)
                     }
                     @for((ticketOrder) <- order.ticketOrders.filterNot(to => to.show.eventId == info.id)) {
                         @orderRowInactive(ticketOrder)
@@ -129,58 +134,53 @@
 
             }
 
-            <h2>@if(order.numberOfSeats > 0) { Extra bestellingen } else { Nieuwe bestellingen }</h2>
+            @if(order.numberOfSeats > 0) {
+                    @form(action = routes.Orders.confirm(order.order.id), 'class -> "form form-inline form-no-feedback") {
+                        <p>
+                            <button type="submit" class="btn btn-primary">Bestelling afronden</button>
+                            <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#cancelModal">Annuleren</button>
+                            <button type="button" id="order-more-button" class="btn btn-success @if(order.numberOfSeats == 0) { hidden }">Meer tickets bestellen &raquo;</button>
+                        </p>
+                    }
+            } else {
+                <p>
+                    <button class="btn btn-warning" data-toggle="modal" data-target="#cancelModal">Annuleren</button>
+                    <button id="order-more-button" class="btn btn-success @if(order.numberOfSeats == 0) { hidden }">Meer tickets bestellen &raquo;</button>
+                </p>
+            }
+
+            <div id="order-more" class="@if(order.numberOfSeats > 0) { hidden }" data-ng-controller="CounterInputCtrl" data-ng-init="maxQuota = @info.totalQuota; usedQuota = @order.numberOfSeats">
+
+            <h2>@if(order.numberOfSeats > 0) { Extra bestelling } else { Nieuwe bestelling }</h2>
 
             <div class="alert alert-info">
                 <p>Selecteer het aantal gewenste tickets per show.</p>
                 @if(info.users.length == 1) {
-                    <p>Je kan per sessie maximaal @info.totalQuota tickets bestellen.</p>
+                    <p>Je kan per sessie voor elke voorstelling maximaal @info.totalQuota tickets bestellen.</p>
                 } else {
-                    <p>Je kan per sessie maximaal @info.totalQuota tickets bestellen (@info.users.length gekoppelde gebruikers).</p>
+                    <p>Je kan per sessie voor elke voorstelling maximaal @info.totalQuota tickets bestellen (@info.users.length gekoppelde gebruikers).</p>
                 }
                 @if(order.numberOfSeats > 0) {
                     <p>Je hebt in deze sessie al @order.numberOfSeats tickets besteld.</p>
                 }
             </div>
 
-            <table class="table table-hover table-striped" data-ng-controller="CounterInputCtrl" data-ng-init="maxQuota = @info.totalQuota; usedQuota = @order.numberOfSeats">
-                <thead>
-                <tr>
-                    <th>Voorstelling</th>
-                    <th>@if(order.numberOfSeats > 0) { Aantal extra } else { Aantal }</th>
-                    <th></th>
-                </tr>
-                </thead>
-                <tbody>
+            <div class="alert alert-success">
+                <div class="checkbox">
+                    <label>
+                        <input id="seattype-disabled" type="checkbox" value="">
+                        Ik wens plaatsen voor rolstoelgebruikers indien beschikbaar.
+                    </label>
+                </div>
+            </div>
 
-
-                    @defining(info.shows.map{ vs => vs.shows.map{(vs.venue, _)}}.flatten) { venueShows =>
-                        @for(((venue, show), index) <- venueShows.zipWithIndex) {
-                            @orderRowNew(show, venue)
-                        }
-                    }
-
-                </tbody>
-                <tfoot>
-                <tr class="success">
-                    <th>Totaal aantal plaatsen</th>
-                    <th>
-                        <span data-ng-show="isMaxQuotaSatisfied()">{{totalUsed()}} / @info.totalQuota</span>
-                        <span class="text-danger" data-ng-show="!isMaxQuotaSatisfied()">{{totalUsed()}} / @info.totalQuota</span>
-                    </th>
-                    <th/>
-                </tr>
-                </tfoot>
-            </table>
-
-            @if(order.numberOfSeats > 0) {
-                @form(action = routes.Orders.confirm(order.order.id), 'class -> "form form-inline form-no-feedback") {
-                    <button type="submit" class="btn btn-primary">Bestelling afronden</button>
-                    <button class="btn btn-warning" data-toggle="modal" data-target="#cancelModal">Annuleren</button>
+             @defining(info.shows.map{ vs => vs.shows.map{(vs.venue, _)}}.flatten) { venueShows =>
+                @for(((venue, show), index) <- venueShows.zipWithIndex) {
+                    @orderRowNew(show, venue)
                 }
-            } else {
-                <button class="btn btn-warning" data-toggle="modal" data-target="#cancelModal">Annuleren</button>
-            }
+             }
+
+            </div><!-- #order-more -->
 
             <!-- Modal -->
             <div class="modal fade" id="cancelModal" tabindex="-1" role="dialog" aria-labelledby="cancelModalLabel" aria-hidden="true">

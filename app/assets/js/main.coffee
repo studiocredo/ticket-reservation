@@ -269,15 +269,11 @@ Floorplan.directive 'counterInput', () ->
   restrict: 'EA'
   template: """
 <input name="{{name}}" type="hidden" value="{{value}}" >
-            <div class="quantity">{{value}}</div>
-            <div class="btn-group-vertical inline">
-                <button type="button" class="btn btn-primary btn-sm" data-ng-click="increment()"><span class="glyphicon glyphicon-plus"></span>
-                </button>
-                <button type="button" class="btn btn-primary btn-sm" data-ng-click="decrement()"><span class="glyphicon glyphicon-minus"></span>
-                </button>
-            </div>
-
-
+<div class="quantity">{{value}}</div>
+<div class="btn-group-vertical inline">
+<button type="button" class="btn btn-primary btn-xs" data-ng-click="increment()"><span class="glyphicon glyphicon-plus"></span></button>
+<button type="button" class="btn btn-primary btn-xs" data-ng-click="decrement()"><span class="glyphicon glyphicon-minus"></span></button>
+</div>
 """
   scope:
     name: '@'

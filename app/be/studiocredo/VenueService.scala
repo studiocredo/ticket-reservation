@@ -97,7 +97,7 @@ class VenueService @Inject()() {
   private def getComment(seat: Seat, tickets: List[TicketSeatOrderDetail]): Option[String] = {
     tickets.find(_.ticketSeatOrder.seat == seat.id) match {
       case None => None
-      case Some(ticket) => Some(s"${ticket.user.map(_.name).getOrElse("Onbekend")}")
+      case Some(ticket) => Some(s"${ticket.ticketSeatOrder.userId}") //todo replace with user name
     }
   }
 

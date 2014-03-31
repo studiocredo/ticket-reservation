@@ -182,6 +182,7 @@ object entities {
     def id = order.id
     def price = ticketOrders.map(_.price).foldLeft(Money(0))((total, amount) => total.plus(amount))
     val numberOfSeats = ticketOrders.map(_.ticketSeatOrders.length).sum
+    //val numberOfSeatsByShow = ticketOrders.flatMap(_.ticketSeatOrders.map((_.show.id, )))
   }
 
   case class TicketOrder(id: TicketOrderId, orderId: OrderId, showId: ShowId)
@@ -190,7 +191,7 @@ object entities {
   }
 
   case class TicketSeatOrder(ticketOrderId: TicketOrderId, showId: ShowId, userId: Option[UserId], seat: SeatId, price: Money)
-  case class TicketSeatOrderDetail(ticketSeatOrder: TicketSeatOrder, show: EventShow, user: Option[User]) {
+  case class TicketSeatOrderDetail(ticketSeatOrder: TicketSeatOrder, show: EventShow) {
     def price = ticketSeatOrder.price
   }
 
