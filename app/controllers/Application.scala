@@ -7,11 +7,15 @@ import be.studiocredo._
 import com.google.inject.Inject
 import be.studiocredo.auth.{Secure, AuthenticatorService}
 
-class Application @Inject()(showService: ShowService, eventService: EventService, val authService: AuthenticatorService, val notificationService: NotificationService, val userService: UserService) extends Controller with Secure with UserContextSupport {
+class Application @Inject()(showService: ShowService, eventService: EventService, val authService: AuthenticatorService, val notificationService: NotificationService, val userService: UserService) extends Controller with Secure with UserContextSupport with BrowserDetectionSupport {
   val defaultAuthorization = None
 
   def index = AuthAwareDBAction { implicit request =>
-    Ok(views.html.index(showService.nextShows(4), eventService.listUpcoming, userContext))
+    if (isOldExplorer) {
+      Ok(views.html.reject())
+    } else {
+      Ok(views.html.index(showService.nextShows(4), eventService.listUpcoming, userContext))
+    }
   }
 
 

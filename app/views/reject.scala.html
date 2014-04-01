@@ -1,0 +1,42 @@
+@()(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
+
+@header = {
+    <link rel='stylesheet' href='@routes.Assets.at("css/jquery.reject.css")'>
+}
+
+@base("Browserversie niet ondersteund", header)(None) {
+
+<div style="display: block;">
+    <div id="jr_overlay" style="width: 1920px; height: 982px; background: none repeat scroll 0% 0% rgb(0, 0, 0); opacity: 0.8;">
+
+    </div>
+    <div id="jr_wrap" style="top: 142.25px; left: 0px;">
+        <div id="jr_inner" style="min-width: 500px; max-width: 700px; width: auto;">
+            <h1 id="jr_header">Je browserversie wordt niet (volledig) ondersteund op deze website</h1>
+            <p>Sommige functionaliteit zal hierdoor niet werken zoals bedoeld</p>
+            <p>Voor een betere gebruikerservaring moet je browser updaten of één van deze ondersteunde browsers installeren</p>
+            <p>Je kan deze website ook via tablet of smartphone bekijken</p>
+            <ul>
+                <li id="jr_firefox" style="background: url(&quot;@routes.Assets.at("images/browsers/background_browser.gif")&quot;) no-repeat scroll left top transparent;">
+                    <div class="jr_icon" style="background: url(&quot;@routes.Assets.at("images/browsers/browser_firefox.gif")&quot;) no-repeat scroll left top transparent;"></div>
+                    <div><a href="http://www.mozilla.com/firefox/">Firefox</a></div>
+                </li>
+                <li id="jr_chrome" style="background: url(&quot;@routes.Assets.at("images/browsers/background_browser.gif")&quot;) no-repeat scroll left top transparent;">
+                    <div class="jr_icon" style="background: url(&quot;@routes.Assets.at("images/browsers/browser_chrome.gif")&quot;) no-repeat scroll left top transparent;"></div>
+                    <div><a href="http://www.google.com/chrome/">Chrome</a></div>
+                </li>
+                <li id="jr_msie" style="background: url(&quot;@routes.Assets.at("images/browsers/background_browser.gif")&quot;) no-repeat scroll left top transparent;">
+                    <div class="jr_icon" style="background: url(&quot;@routes.Assets.at("images/browsers/browser_msie.gif")&quot;) no-repeat scroll left top transparent;"></div>
+                    <div><a href="http://www.microsoft.com/windows/Internet-explorer/">Internet Explorer 9</a></div>
+                </li>
+                <li id="jr_safari" style="background: url(&quot;@routes.Assets.at("images/browsers/background_browser.gif")&quot;) no-repeat scroll left top transparent;">
+                    <div class="jr_icon" style="background: url(&quot;@routes.Assets.at("images/browsers/browser_safari.gif")&quot;) no-repeat scroll left top transparent;"></div>
+                    <div><a href="http://www.apple.com/safari/download/">Safari</a></div>
+                </li>
+            </ul>
+            <div id="jr_close"></div>
+        </div>
+    </div>
+</div>
+
+}

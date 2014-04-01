@@ -19,14 +19,14 @@ package controllers.auth
 import play.api.mvc._
 import be.studiocredo.auth._
 import play.api.Logger
-import be.studiocredo.{UserContextSupport, NotificationService, UserService}
+import be.studiocredo.{BrowserDetectionSupport, UserContextSupport, NotificationService, UserService}
 import play.api.data.Form
 import play.api.data.Forms._
 import scala.Some
 import play.api.mvc.SimpleResult
 import com.google.inject.Inject
 
-class LoginPage @Inject()(val authService: AuthenticatorService, val userService: UserService, val notificationService: NotificationService) extends Controller with Secure with UserContextSupport {
+class LoginPage @Inject()(val authService: AuthenticatorService, val userService: UserService, val notificationService: NotificationService) extends Controller with Secure with UserContextSupport with BrowserDetectionSupport {
   val defaultAuthorization = None
 
   def toUrl(implicit request: RequestHeader) = session.get(OriginalUrlKey).getOrElse("/")
@@ -39,7 +39,9 @@ class LoginPage @Inject()(val authService: AuthenticatorService, val userService
   )
 
   def login = AuthAwareDBAction { implicit request =>
-    if (request.currentUser.isDefined) {
+    if (isOldExplorer) {
+      Ok(views.html.reject())
+    } else if (request.currentUser.isDefined) {
       Redirect("/")
     } else {
       withReferrerAsOriginalUrl(Ok(views.html.auth.login(loginForm, None, userContext)))
