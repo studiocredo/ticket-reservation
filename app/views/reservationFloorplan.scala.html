@@ -14,6 +14,13 @@
 
 <div class="row" data-ng-controller="ReservationFloorplanCtrl">
     <div class="col-xs-12 col-md-3 col-md-push-9" id="sidebar" role="navigation">
+        <div class="panel panel-default" >
+            <div class="panel-heading">Timeout</div>
+            <div class="panel-body fp fp-fancy-legend">
+                <div ng-show="millis > 0">{{humanTimeout(millis)}}</div>
+            </div>
+        </div>
+
         <div class="panel panel-default">
             <div class="panel-heading">Legende</div>
             <div class="panel-body fp fp-fancy-legend">

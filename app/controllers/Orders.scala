@@ -21,7 +21,7 @@ import akka.util.Timeout
 import akka.pattern.ask
 import play.api.Play.current
 import scala.concurrent.Future
-import be.studiocredo.reservations.FloorProtocol.StartOrder
+import be.studiocredo.reservations.FloorProtocol.{Response, StartOrder}
 import play.api.Logger
 import play.api.cache.Cache
 import play.api.db.slick._
@@ -201,6 +201,9 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
 //    )
   }
 
+
+  def toJson(status: Response) = Json.obj("plan" -> Json.toJson(status.floorPlan), "timeout" -> status.timeout)
+
   def ajaxFloorplan(id: ShowId, order: OrderId) = AuthDBAction.async { implicit rs =>
     import FloorProtocol._
 
@@ -209,9 +212,7 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
       implicit val timeout = Timeout(30.seconds)
 
       (orderEngine.floors ? CurrentStatus(id, order)).map {
-        case status: Response => {
-          Ok(Json.toJson(status.floorPlan))
-        }
+        case status: Response => { Ok(toJson(status)) }
       }.recover({
         case error: MissingOrderException => {
           NotFound(Json.obj("error" -> "missing", "redirect" -> controllers.routes.Orders.view(order, toEventId(id)).url))
@@ -237,11 +238,7 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
       rs.body.validate[AjaxMove].map {
         case (move) => {
           (orderEngine.floors ? Move(id, order, move.target, None)).map {
-            case status: Response => {
-              // status.messages // todo message in case can't move
-
-              Ok(Json.toJson(status.floorPlan))
-            }
+            case status: Response => Ok(toJson(status))
           }.recover({
             case error => {
               logger.warn(s"$id $order: Failed to move to seat $move", error)
@@ -264,10 +261,7 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
       implicit val timeout = Timeout(30.seconds)
 
       (orderEngine.floors ? MoveBest(id, order)).map {
-        case status: Response => {
-          // status.messages // todo
-          Ok(Json.toJson(status.floorPlan))
-        }
+        case status: Response => Ok(toJson(status))
       }.recover({
         case error => {
           logger.warn(s"Failed to retreive ajax floorplan $id $order", error)

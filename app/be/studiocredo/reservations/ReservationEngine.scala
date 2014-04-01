@@ -413,6 +413,8 @@ class MaitreDActor(showId: ShowId, showService: ShowService, venueService: Venue
 
       case MoveBest(show, order) => {
         respond(order, info => {
+          info.touch()
+
           val old = state.findSeats(info)
           val suggested = ReservationEngine.suggestSeats(old.size, availableSeats(info), info.availableTypes)
           suggested.fold(msg => List(error(msg)), newSeats => {
@@ -428,6 +430,8 @@ class MaitreDActor(showId: ShowId, showService: ShowService, venueService: Venue
 
       case Move(show, order, target, seats) => {
         respond(order, info => {
+          info.touch()
+
           val allSeats = state.findSeats(info)
 
           val current = seats.fold(allSeats)(wanted => allSeats.filter(seat => wanted.contains(seat.seatId)))
@@ -471,6 +475,8 @@ class MaitreDActor(showId: ShowId, showService: ShowService, venueService: Venue
       case Commit(show, order) => {
         logger.debug(s"$show $order: commiting")
         respond(order, info => {
+          info.touch()
+
           DB.withTransaction({ implicit session: Session =>
             case class UseablePreReservation(userId: UserId, var quantity: Int)
 
