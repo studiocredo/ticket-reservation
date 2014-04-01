@@ -91,4 +91,9 @@ class Users @Inject()(val userService: UserService, val authService: Authenticat
       }
     )
   }
+
+  def sudo(userId: UserId) = AuthDBAction { implicit rs =>
+    authService.sudo(userId, Redirect(controllers.routes.Application.index()).withSession(session - OriginalUrlKey), BadRequest("sudo failed").withSession(session - OriginalUrlKey))
+  }
+
 }

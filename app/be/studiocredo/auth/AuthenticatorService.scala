@@ -33,6 +33,7 @@ import play.api.mvc.DiscardingCookie
 import play.api.mvc.Cookie
 import play.api.data.validation.{Valid, Invalid, Constraint}
 import models.entities.{Identity, User}
+import models.ids.UserId
 
 class AuthenticatorService @Inject()(store: AuthTokenStore, identityService: IdentityService) {
   val cookieName = "id"
@@ -57,6 +58,11 @@ class AuthenticatorService @Inject()(store: AuthTokenStore, identityService: Ide
       }
     )
   }
+
+  def sudo(userId: UserId, success: => SimpleResult, failure: => SimpleResult)(implicit request: Request[_]): SimpleResult = {
+    identityService.find(userId).fold(failure)(user => success.withCookies(authCookie(create(user))))
+  }
+
   private def authCookie(authenticator: AuthToken): Cookie = {
     Cookie(
       cookieName,

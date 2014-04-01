@@ -38,6 +38,7 @@ POST        /profile                                @controllers.Profile.update
 GET         /admin/users                            @controllers.admin.Users.list(p:Int ?= 0)
 GET         /admin/users/new                        @controllers.admin.Users.create
 POST        /admin/users                            @controllers.admin.Users.save
+GET         /admin/users/sudo/:id                   @controllers.admin.Users.sudo(id:UserId)
 GET         /admin/users/:id                        @controllers.admin.Users.edit(id:UserId)
 POST        /admin/users/:id                        @controllers.admin.Users.update(id:UserId)
 GET         /admin/users/activate/:name             @controllers.admin.Users.activate(name:String)

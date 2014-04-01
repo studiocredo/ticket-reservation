@@ -41,6 +41,7 @@
                         @if(!user.active) {
                             <a class="btn btn-default btn-xs" href="@{routes.Users.activate(user.username)}">Activeren</a>
                         }
+                        <a class="btn btn-default btn-xs" href="@{routes.Users.sudo(user.id)}">Sudo</a>
                     </td>
                 </tr>
             }
