@@ -238,6 +238,7 @@ object FloorProtocol {
   case class ReloadState(show: ShowId) extends FloorAction
 
 
+  case object TimeOut
 
   trait Message {
     def text: String
@@ -314,18 +315,16 @@ class SeatOrderActor(showService: ShowService, venueService: VenueService, order
 }
 
 case class OrderInfo(orderId: OrderId, availableTypes: Set[SeatType], users: List[UserId], price: Money) {
-  val TIMEOUT = Duration(10, TimeUnit.MINUTES)
-
-  var timeout: Long = newTimeout
-
   def isOrder(id: OrderId) = id == this.orderId
   def isAvailable(seatType: SeatType) = availableTypes.contains(seatType)
 
-  def touch() {
-    this.timeout = newTimeout
-  }
+
+  val TIMEOUT = Duration(10, TimeUnit.MINUTES)
+  var timeout: Long = newTimeout
+  def touch() =  this.timeout = newTimeout
 
   def newTimeout = System.currentTimeMillis() + TIMEOUT.toMillis
+  def isTimedOut(current: Long): Boolean = this.timeout < current
 }
 
 
@@ -341,12 +340,23 @@ class MaitreDActor(showId: ShowId, showService: ShowService, venueService: Venue
 
   val orderInfoMap = mutable.Map[OrderId, OrderInfo]()
 
+  var cancellable: Option[Cancellable] = None
+
   override def preStart() {
     self ! ReloadState(showId)
+
+    import scala.concurrent.duration._
+    import context.dispatcher
+    cancellable = Some(context.system.scheduler.schedule(1.minutes, 1.minutes, self, TimeOut))
+  }
+
+  override def postStop() = {
+    cancellable.map(_.cancel())
   }
 
   override def receive = {
-    case ReloadState(show) => context.become(running(loadState(show).get))
+    case ReloadState(show) => context.become(running(loadState(show).get), true)
+    case TimeOut =>
     case other => sender ! Status.Failure(new NotInitializedException(showId))
   }
 
@@ -524,9 +534,20 @@ class MaitreDActor(showId: ShowId, showService: ShowService, venueService: Venue
         )(newState => {
           newState.drainPending(state)
           
-          context.become(running(newState))
+          context.become(running(newState), true)
           Status.Success(null)
         })
+      }
+
+      case TimeOut => {
+        val current = System.currentTimeMillis()
+        orderInfoMap.values.toList foreach { info =>
+          if (info.isTimedOut(current)) {
+            logger.debug(s"$showId ${info.orderId}: Timeout, removing seats")
+            state.findSeats(info) foreach (seat => seat.setFree())
+            orderInfoMap.remove(info.orderId)
+          }
+        }
       }
     }
   }
