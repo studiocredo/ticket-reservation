@@ -85,19 +85,22 @@ class VenueService @Inject()() {
    FloorPlan(fp.rows.map{row => Row(row.content.map{ case seat: Seat => SeatWithStatus(seat.id, seat.kind, getSeatStatus(seat, mine.map{_.seat}, notmine.map{_.seat}, availableTypes), seat.preference); case seat:SeatWithStatus => seat; case spacer:Spacer => spacer }, row.vspace) })
   }
 
-  def fillFloorplanDetailed(fp: FloorPlan, tickets: List[TicketSeatOrderDetail], users: List[UserId] = List(), availableTypes: List[SeatType] = List(SeatType.Normal)): FloorPlan = {
-    val (mine, notmine) = tickets.partition(ticket => ticket.ticketSeatOrder.userId match { case Some(userId) => users.contains(userId); case None => false})
-    FloorPlan(fp.rows.map{row => Row(row.content.map{ case seat: Seat => SeatWithStatus(seat.id, seat.kind, getSeatStatus(seat, mine.map{_.ticketSeatOrder.seat}, notmine.map{_.ticketSeatOrder.seat}, availableTypes), seat.preference, getComment(seat, tickets)); case seat:SeatWithStatus => seat; case spacer:Spacer => spacer }, row.vspace) })
+  def fillFloorplanDetailed(fp: FloorPlan, orders: List[OrderDetail], users: List[UserId] = List(), availableTypes: List[SeatType] = List(SeatType.Normal)): FloorPlan = {
+    val (myOrders, otherOrders) = orders.partition(order => users.contains(order.order.userId))
+    val mySeats = myOrders.flatMap(_.ticketSeatOrders.map(_.ticketSeatOrder.seat))
+    val otherSeats = otherOrders.flatMap(_.ticketSeatOrders.map(_.ticketSeatOrder.seat))
+    val orderBySeat = orders.flatMap(order => order.ticketSeatOrders.map(tso => (tso.ticketSeatOrder.seat, order))).toMap
+    FloorPlan(fp.rows.map{row => Row(row.content.map{ case seat: Seat => SeatWithStatus(seat.id, seat.kind, getSeatStatus(seat, mySeats, otherSeats, availableTypes), seat.preference, getComment(seat, orderBySeat.get(seat.id))); case seat:SeatWithStatus => seat; case spacer:Spacer => spacer }, row.vspace) })
   }
 
   def fillFloorplanReservations(fp: FloorPlan, tickets: List[TicketSeatOrder], users: List[UserId] = List(), availableTypes: List[SeatType] = List(SeatType.Normal)): FloorPlan = {
     FloorPlan(fp.rows.map{row => Row(row.content.map{ case seat: Seat => SeatWithStatus(seat.id, seat.kind, getSeatStatusForReservations(seat, tickets.map(_.seat), availableTypes), seat.preference); case seat:SeatWithStatus => seat; case spacer:Spacer => spacer }, row.vspace) })
   }
 
-  private def getComment(seat: Seat, tickets: List[TicketSeatOrderDetail]): Option[String] = {
-    tickets.find(_.ticketSeatOrder.seat == seat.id) match {
+  private def getComment(seat: Seat, order: Option[OrderDetail]): Option[String] = {
+    order match {
       case None => None
-      case Some(ticket) => Some(s"${ticket.ticketSeatOrder.userId}") //todo replace with user name
+      case Some(order) => Some(s"${order.user.name}")
     }
   }
 

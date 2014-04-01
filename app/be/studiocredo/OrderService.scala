@@ -30,16 +30,56 @@ class OrderService @Inject()(venueService: VenueService) {
     }
   }
 
-  def detailsByShowId(id: ShowId, excludedUsers: List[UserId] = List())(implicit s: Session): List[TicketSeatOrderDetail] = {
-    val query = for {
-      (((ticketSeatOrder, show), event), venue) <- TicketSeatOrders.where(_.showId === id).leftJoin(Shows).on(_.showId === _.id).leftJoin(Events).on(_._2.eventId === _.id).leftJoin(Venues).on(_._1._2.venueId === _.id)
-    } yield (ticketSeatOrder, show, event, venue)
-    query.list.filter{ x =>
-      x._1.userId match {
-        case Some(userId) => !excludedUsers.contains(userId)
-        case None => true
+  //returns orders that only contain the ticketseatorders for a specific show
+  def detailsByShowId(showId: ShowId)(implicit s: Session): List[OrderDetail] = {
+    val orderIdsQuery = for {
+      ticketOrder <- TOQ
+      ticketSeatOrder <- TSOQ
+      if ticketSeatOrder.ticketOrderId === ticketOrder.id
+      if ticketSeatOrder.showId === showId
+    } yield (ticketOrder.orderId)
+    val orderIdsForShow = orderIdsQuery.list.distinct
+    
+    val ordersQuery = for {
+      order <- OQ
+      if order.id inSet orderIdsForShow
+      user <- Users
+      if user.id === order.userId
+    } yield(order, user)
+
+    val ordersUsers = ordersQuery.sortBy(_._1.date).list
+    val orders = ordersUsers.map(_._1)
+
+    val ticketOrderQuery = for {
+      ticketOrder <- TicketOrders if ticketOrder.orderId inSet orderIdsForShow
+      ticketSeatOrder <- TicketSeatOrders if ticketSeatOrder.ticketOrderId === ticketOrder.id
+      if ticketSeatOrder.showId === showId
+      show <- Shows if ticketOrder.showId === show.id
+      event <- Events if show.eventId === event.id
+      venue <- Venues if show.venueId === venue.id
+    } yield (ticketOrder, ticketSeatOrder, show, event, venue)
+
+    val orderMap = new mutable.HashMap[OrderId, mutable.Set[TicketOrder]]() with mutable.MultiMap[OrderId, TicketOrder]
+    val ticketOrderMap = new mutable.HashMap[TicketOrder, mutable.Set[TicketSeatOrder]]() with mutable.MultiMap[TicketOrder, TicketSeatOrder]
+    val showMap = mutable.Map[ShowId, EventShow]()
+    val userMap = mutable.Map[UserId, User]()
+
+    ordersUsers.map(_._2).foreach( u => userMap.put(u.id, u))
+
+    val x = ticketOrderQuery.list
+    x.foreach { case (ticketOrder, ticketSeatOrder, show, event, venue) =>
+      orderMap.addBinding(ticketOrder.orderId, ticketOrder)
+      ticketOrderMap.addBinding(ticketOrder, ticketSeatOrder)
+      showMap.put(show.id, EventShow(show.id, event.id, event.name, show.venueId, venue.name, show.date, show.archived))
+    }
+
+    orders.map { order =>
+      val ticketOrders = orderMap.get(order.id).getOrElse(Set.empty).toList.map{ ticketOrder =>
+        val ticketSeatOrders = ticketOrderMap(ticketOrder).toList.map { ticketSeatOrder => TicketSeatOrderDetail(ticketSeatOrder, showMap(ticketSeatOrder.showId)) }
+        TicketOrderDetail(ticketOrder, order, showMap(ticketOrder.showId), ticketSeatOrders)
       }
-    }.map{ case (tso: TicketSeatOrder, s: Show, e: Event, v: Venue) => TicketSeatOrderDetail(tso, EventShow(s.id, e.id, e.name, s.venueId, v.name, s.date, s.archived)) }
+      OrderDetail(order, userMap(order.userId), ticketOrders)
+    }.toList
   }
 
   private def orderDetail(implicit s: Session): (Order) => OrderDetail = {
@@ -165,8 +205,7 @@ class OrderService @Inject()(venueService: VenueService) {
       show <- Shows if ticketOrder.showId === show.id
       event <- Events if show.eventId === event.id
       venue <- Venues if show.venueId === venue.id
-      user <- Users if ticketSeatOrder.userId === user.id
-    } yield (ticketOrder, ticketSeatOrder, show, event, user, venue)
+    } yield (ticketOrder, ticketSeatOrder, show, event, venue)
 
     val orderMap = new mutable.HashMap[OrderId, mutable.Set[TicketOrder]]() with mutable.MultiMap[OrderId, TicketOrder]
     val ticketOrderMap = new mutable.HashMap[TicketOrder, mutable.Set[TicketSeatOrder]]() with mutable.MultiMap[TicketOrder, TicketSeatOrder]
@@ -176,11 +215,10 @@ class OrderService @Inject()(venueService: VenueService) {
     ordersUsers.map(_._2).foreach( u => userMap.put(u.id, u))
 
     val x = ticketOrderQuery.list
-    x.foreach { case (ticketOrder, ticketSeatOrder, show, event, user, venue) =>
+    x.foreach { case (ticketOrder, ticketSeatOrder, show, event, venue) =>
       orderMap.addBinding(ticketOrder.orderId, ticketOrder)
       ticketOrderMap.addBinding(ticketOrder, ticketSeatOrder)
       showMap.put(show.id, EventShow(show.id, event.id, event.name, show.venueId, venue.name, show.date, show.archived))
-      userMap.put(user.id, user)
     }
 
     orders.map { order =>

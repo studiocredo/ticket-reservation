@@ -181,6 +181,7 @@ object entities {
   case class OrderDetail(order: Order, user: User, ticketOrders: List[TicketOrderDetail]) {
     def id = order.id
     def price = ticketOrders.map(_.price).foldLeft(Money(0))((total, amount) => total.plus(amount))
+    def ticketSeatOrders = ticketOrders.flatMap(_.ticketSeatOrders)
     val numberOfSeats = ticketOrders.map(_.ticketSeatOrders.length).sum
     //val numberOfSeatsByShow = ticketOrders.flatMap(_.ticketSeatOrders.map((_.show.id, )))
   }
