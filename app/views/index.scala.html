@@ -4,7 +4,7 @@
 
 @base("Studio Credo Ticket Reservatie")(userContext) {
 
-<div class="jumbotron front-page-banner">
+<div class="jumbotron front-page-banner hidden-xs">
     <div class="inner-1">
         <div class="inner-2">
             <div class="inner-3">
@@ -30,6 +30,32 @@
             </div>
         </div>
     </div>
+</div>
+
+<div class="jumbotron front-page-banner visible-xs">
+    <h1 class="text-center">Studio Credo</h1>
+
+    <p class="text-center">Studio voor creatieve dansopleiding</p>
+
+    @if(request.currentUser.isDefined) {
+        @events.filter(_.preReservationAllowed).headOption.map { event =>
+            <p>
+                <a href="@routes.Prereservations.start(event.id)" class="btn btn-primary btn-lg btn-block">Pre-reservaties &raquo;</a>
+            </p>
+        }
+        @events.filter(_.reservationAllowed).headOption.map { event =>
+            <p>
+                <a href="@routes.Orders.start(event.id)" class="btn btn-primary btn-lg btn-block">Bestellen &raquo;</a>
+            </p>
+        }
+    } else {
+    <p>
+        <a class="btn btn-primary btn-lg btn-block" href="@auth.routes.LoginPage.login()">Aanmelden &raquo;</a>
+    </p>
+    <p>
+        <a class="btn btn-primary btn-lg btn-block" href="@auth.routes.SignUp.startSignUp()">Registreren  &raquo;</a>
+    </p>
+    }
 </div>
 
 <div class="row">
