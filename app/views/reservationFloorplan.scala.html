@@ -33,7 +33,10 @@
         <div class="panel panel-default">
             <div class="panel-heading">Selectie</div>
             <div class="panel-body">
-                <button class="btn btn-sm btn-warning">Selectie Leegmaken</button>
+                <ul>
+                    <li data-ng-repeat="seat in selected">{{seat}}</li>
+                </ul>
+                <button class="btn btn-sm btn-warning" ng-click="clearSelection()">Selectie Leegmaken</button>
                 <button class="btn btn-sm btn-info" ng-click="moveBest()">Nieuwe suggestie</button>
             </div>
         </div>

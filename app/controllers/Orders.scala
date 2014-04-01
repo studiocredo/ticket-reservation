@@ -225,7 +225,7 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
     }
   }
 
-  case class AjaxMove(target: SeatId)
+  case class AjaxMove(target: SeatId, seats: Option[List[SeatId]])
   implicit val ajaxMoveFMT = Json.format[AjaxMove]
 
   def ajaxMove(id: ShowId, order: OrderId) = AuthDBAction.async(parse.json) { implicit rs =>
@@ -237,7 +237,7 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
 
       rs.body.validate[AjaxMove].map {
         case (move) => {
-          (orderEngine.floors ? Move(id, order, move.target, None)).map {
+          (orderEngine.floors ? Move(id, order, move.target, move.seats.map(_.toSet))).map {
             case status: Response => Ok(toJson(status))
           }.recover({
             case error => {

@@ -185,11 +185,14 @@ Floorplan.directive 'orderAdminFloorplan', () ->
 
 
 MOVE_BEST = "MOVE_BEST"
+UPDATE_SEAT_SELECTION = "UPDATE_SEAT_SELECTION"
 UPDATE_TIMEOUT = "SET_TIMEOUT"
+CLEAR_SEAT_SELECTION = "CLEAR_SEAT_SELECTION"
 Floorplan.controller "ReservationFloorplanCtrl", ($scope, $http, $timeout) ->
   $scope.moveBest = () ->
     $scope.$broadcast(MOVE_BEST)
-
+  $scope.clearSelection = () ->
+    $scope.$broadcast(CLEAR_SEAT_SELECTION)
 
   $scope.timeout = 0
   $scope.millis = 0
@@ -210,6 +213,10 @@ Floorplan.controller "ReservationFloorplanCtrl", ($scope, $http, $timeout) ->
     $timeout.cancel($scope.ticker)
   )
 
+  $scope.selected = []
+  $scope.$on(UPDATE_SEAT_SELECTION, (event, selection) ->
+    $scope.selected = selection
+  )
   $scope.workaround = 5
 
 
@@ -225,7 +232,7 @@ Floorplan.directive 'reservationFloorplan', () ->
                 <div class="spacer spacer-{{content.width}}" data-ng-if="content.ct == 'spacer'"></div>
                 <div class="seat seat-{{content.kind}}" data-ng-if="content.ct == 'seat'">{{content.id.name}}</div>
                 <div class="seat seat-status-{{content.status}}" data-ng-if="content.ct == 'seat-status' && content.status == 'free'" data-ng-click="claim(content.id.name)">{{content.id.name}}</div>
-                <div class="seat seat-status-{{content.status}}" data-ng-if="content.ct == 'seat-status' && content.status == 'mine'" data-ng-click="release(content.id.name)">{{content.id.name}}</div>
+                <div class="seat seat-status-{{content.status}}" data-ng-if="content.ct == 'seat-status' && content.status == 'mine'" data-ng-click="toggleSelect(content.id.name)">{{content.id.name}}</div>
                 <div class="seat seat-status-{{content.status}}" data-ng-if="content.ct == 'seat-status' && content.status != 'free' && content.status != 'mine'">{{content.id.name}}</div>
             </div>
         </div>
@@ -247,17 +254,35 @@ Floorplan.directive 'reservationFloorplan', () ->
         $scope.$emit(UPDATE_TIMEOUT, response.timeout)
 
       $scope.claim = (seat) ->
-        $http.post(jsRoutes.controllers.Orders.ajaxMove($scope.showId, $scope.orderId).url, {target: {name:seat}}).success(update).error(errorHandler)
+        payload = {target: {name:seat}}
+        if ($scope.selected.length > 0)
+            payload.seats = []
+            angular.forEach($scope.selected, (seat) ->
+                payload.seats.push({name: seat})
+            )
+        $scope.clearSelected()
+        $http.post(jsRoutes.controllers.Orders.ajaxMove($scope.showId, $scope.orderId).url, payload).success(update).error(errorHandler)
 
       $scope.$on(MOVE_BEST, () ->
         $http.post(jsRoutes.controllers.Orders.ajaxMoveBest($scope.showId, $scope.orderId).url).success(update).error(errorHandler)
       )
-      $scope.release = (show, seat) ->
-        console.log('release '+seat)
-      $scope.suggest = (show, quantity) ->
-        console.log('suggest '+quantity)
-      $scope.cancel = () ->
-        console.log('cancel')
+
+      $scope.selected = []
+      $scope.toggleSelect = (seat) ->
+        idx = $scope.selected.indexOf(seat)
+        if (idx == -1)
+          $scope.selected.push(seat)
+          $scope.selected.sort()
+        else
+          $scope.selected.splice(idx, 1)
+        $scope.$emit(UPDATE_SEAT_SELECTION, $scope.selected)
+      $scope.$on(CLEAR_SEAT_SELECTION, () -> $scope.clearSelected())
+
+      $scope.clearSelected = () ->
+        $scope.selected = []
+        $scope.$emit(UPDATE_SEAT_SELECTION, $scope.selected)
+
+
 
       fetchAndUpdate = ->
         $http.get(jsRoutes.controllers.Orders.ajaxFloorplan($scope.showId, $scope.orderId).url).success(update).error(errorHandler)
