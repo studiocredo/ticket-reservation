@@ -43,11 +43,10 @@ class Events @Inject()(venueService: VenueService, eventService: EventService, s
 
   private def hasQuota(eventId: EventId, userContext: Option[UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_]): Boolean = {
     request.currentUser match {
-      case Some(user) => {
-        val userIds = user.id :: userContext.get.otherUsers.map { _.id }
+      case Some(identity) => {
         DB.withSession {
           implicit session =>
-            preReservationService.totalQuotaByUsersAndEvent(userIds, eventId) match {
+            preReservationService.totalQuotaByUsersAndEvent(identity.allUsers, eventId) match {
               case Some(total) => total > 0
               case None => false
             }
@@ -80,7 +79,7 @@ class Events @Inject()(venueService: VenueService, eventService: EventService, s
       case Some(plan) => {
         val users = rs.user match {
           case None => Nil
-          case Some(identity) => identity.id :: identity.otherUsers.map{_.id}
+          case Some(identity) => identity.allUsers
         }
         Ok(Json.toJson(venueService.fillFloorplan(plan, orderService.byShowId(id), users)))
       }

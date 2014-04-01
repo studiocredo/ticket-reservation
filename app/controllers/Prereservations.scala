@@ -41,7 +41,7 @@ class Prereservations @Inject()(eventService: EventService, showService: ShowSer
       formWithErrors => page(id, Some(formWithErrors), BadRequest),
       preres => {
         val currentUser = rs.currentUser.get
-        val userIds = currentUser.id :: userContext.get.otherUsers.map{_.id}
+        val userIds = currentUser.allUsers
         validatePrereservations(bindedForm, preres, prereservationService.totalQuotaByUsersAndEvent(userIds, id)).fold(
           formWithErrors => page(id, Some(formWithErrors), BadRequest),
           success => {
@@ -61,7 +61,7 @@ class Prereservations @Inject()(eventService: EventService, showService: ShowSer
   private def page(eventId: EventId, form: Option[Form[PrereservationForm]] = None, status: Status = Ok)(implicit rs: SecuredDBRequest[_]) = {
     val users = rs.currentUser match {
       case None => List()
-      case Some(identity) => identity.id :: identity.otherUsers.map { _.id }
+      case Some(identity) => identity.allUsers
     }
     eventService.eventPrereservationDetails(eventId, users) match {
       case None => BadRequest(s"Evenement $eventId niet gevonden")

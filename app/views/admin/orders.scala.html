@@ -37,7 +37,7 @@
                         <td>@helper.showName(ticketOrder.show)&nbsp;<a href="@{routes.Orders.show(ticketOrder.show.id)}"><span class="glyphicon glyphicon-share-alt"></span></a></td>
                         <td><a href="#" class="seat-popovers" data-container="body" data-toggle="popover" data-placement="bottom" data-content="@{ticketOrder.ticketSeatOrders.map(_.ticketSeatOrder.seat.name).sorted.mkString(", ")}">@ticketOrder.ticketSeatOrders.length</a></td>
                         <td>@CurrencyFormat.format(order.price)</td>
-                        <td><a class="btn btn-default btn-xs" href="@{routes.Orders.confirm(order.order.id)}">Bevestiging zenden</a></td>
+                        <td><a class="btn btn-default btn-xs" href="@{routes.Orders.confirm(order.id)}">Bevestiging zenden</a></td>
                     </tr>
                 }
             }

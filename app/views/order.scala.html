@@ -135,7 +135,7 @@ $(document).ready(function() {
             }
 
             @if(order.numberOfSeats > 0) {
-                    @form(action = routes.Orders.confirm(order.order.id), 'class -> "form form-inline form-no-feedback") {
+                    @form(action = routes.Orders.confirm(order.id), 'class -> "form form-inline form-no-feedback") {
                         <p>
                             <button type="submit" class="btn btn-primary">Bestelling afronden</button>
                             <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#cancelModal">Annuleren</button>
@@ -197,7 +197,7 @@ $(document).ready(function() {
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-default" data-dismiss="modal">Nee, terug naar overzicht</button>
-                            <a class="btn btn-primary" href="@routes.Orders.cancel(order.order.id)">Ja, annuleer mijn bestelling</a>
+                            <a class="btn btn-primary" href="@routes.Orders.cancel(order.id)">Ja, annuleer mijn bestelling</a>
                         </div>
                     </div>
                 </div>

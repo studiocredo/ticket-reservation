@@ -45,7 +45,7 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
   def start(id: EventId) = AuthDBAction { implicit rs =>
     val users = rs.currentUser match {
       case None => Nil
-      case Some(identity) => identity.id :: identity.otherUsers.map { _.id }
+      case Some(identity) => identity.allUsers
     }
     eventService.eventReservationDetails(id, users) match {
       case Some(event) if event.event.reservationAllowed => {
@@ -275,7 +275,7 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
   private def viewPage(id: OrderId, event: EventId, status: Status = Ok)(implicit rs: SecuredDBRequest[_]) = {
     val users = rs.currentUser match {
       case None => List()
-      case Some(identity) => identity.id :: identity.otherUsers.map { _.id }
+      case Some(identity) => identity.allUsers
     }
     eventService.eventReservationDetails(event, users) match {
       case None => BadRequest(s"Evenement $id niet gevonden")
