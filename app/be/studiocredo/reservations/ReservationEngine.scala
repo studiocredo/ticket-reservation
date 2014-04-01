@@ -234,7 +234,7 @@ object FloorProtocol {
 
   case class CurrentStatus(show: ShowId, order: OrderId) extends FloorAction
 
-  case class Commit(show: ShowId, order: OrderId, ticketOrderId: TicketOrderId) extends FloorAction
+  case class Commit(show: ShowId, order: OrderId) extends FloorAction
   case class ReloadState(show: ShowId) extends FloorAction
 
 
@@ -334,7 +334,6 @@ object MaitreDActor {
   def props(showId: ShowId, show: ShowService, venue: VenueService, order: OrderService, preReservation: PreReservationService) = Props({ new MaitreDActor(showId, show, venue, order, preReservation)})
 }
 
-// todo auth user access to order
 class MaitreDActor(showId: ShowId, showService: ShowService, venueService: VenueService, orderService: OrderService, preReservationService: PreReservationService) extends Actor {
   val logger = Logger("be.studiocredo.maitred")
 
@@ -469,8 +468,8 @@ class MaitreDActor(showId: ShowId, showService: ShowService, venueService: Venue
         respond(order, info => List())
       }
 
-      case Commit(show, order, ticketOrderId) => {
-        logger.debug(s"$show $order: commiting to $ticketOrderId")
+      case Commit(show, order) => {
+        logger.debug(s"$show $order: commiting")
         respond(order, info => {
           DB.withTransaction({ implicit session: Session =>
             case class UseablePreReservation(userId: UserId, var quantity: Int)
@@ -480,7 +479,7 @@ class MaitreDActor(showId: ShowId, showService: ShowService, venueService: Venue
               UseablePreReservation(pre.userId, useable)
             }).sortBy(_.quantity)
 
-            logger.debug(s"$show $order $ticketOrderId: useable reservations: $useablePreReservations")
+            logger.debug(s"$show $order: useable reservations: $useablePreReservations")
 
             def nextPreReservation(): Option[UserId] = {
               val maybePre = useablePreReservations.find(pre => pre.quantity > 0)
@@ -496,7 +495,9 @@ class MaitreDActor(showId: ShowId, showService: ShowService, venueService: Venue
             val seatsWithPreUser = state.findSeats(info).map(seat => (seat, nextPreReservation()))
 
             if (logger.isDebugEnabled)
-              logger.debug(s"$show $order $ticketOrderId: seat->user" + seatsWithPreUser.map{case (seat, user) => (seat.seatId, user)})
+              logger.debug(s"$show $order: seat->user" + seatsWithPreUser.map{case (seat, user) => (seat.seatId, user)})
+
+            val ticketOrderId = orderService.insert(order, showId)(session)
 
             orderService.insert(seatsWithPreUser.map {
               case (seat, user) => {
@@ -504,7 +505,7 @@ class MaitreDActor(showId: ShowId, showService: ShowService, venueService: Venue
               }
             })
 
-            logger.debug(s"$show $order $ticketOrderId: order written")
+            logger.debug(s"$show $order order written: $ticketOrderId")
 
             seatsWithPreUser.foreach{case (seat, user) => seat.setReserved(user)}
           })

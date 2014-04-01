@@ -127,11 +127,7 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
       ensureOrderAccess(showId, orderId) {
         implicit val timeout = Timeout(30.seconds)
 
-        val ticketOrderId = DB.withSession { session: Session =>
-             orderService.insert(orderId, showId)(session)
-        }
-
-        (orderEngine.floors ? Commit(showId, orderId, ticketOrderId)).map {
+        (orderEngine.floors ? Commit(showId, orderId)).map {
           case status: Response => {
 
             Redirect(routes.Orders.view(orderId, toEventId(showId)))
