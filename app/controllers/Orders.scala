@@ -13,7 +13,7 @@ import scala.Some
 import be.studiocredo.auth.SecuredDBRequest
 import play.api.libs.json.{JsError, Json}
 import models.entities.{Order, SeatId, SeatType}
-import be.studiocredo.reservations.{CapacityExceededException, FloorProtocol, ReservationEngineMonitorService}
+import be.studiocredo.reservations.{MissingOrderException, CapacityExceededException, FloorProtocol, ReservationEngineMonitorService}
 import scala.collection.immutable.Set
 import be.studiocredo.util.Money
 import scala.concurrent.duration._
@@ -213,6 +213,9 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
           Ok(Json.toJson(status.floorPlan))
         }
       }.recover({
+        case error: MissingOrderException => {
+          NotFound(Json.obj("error" -> "missing", "redirect" -> controllers.routes.Orders.view(order, toEventId(id)).url))
+        }
         case error => {
           logger.warn(s"$id $order: Failed to retrieve  floorplan", error)
           InternalServerError

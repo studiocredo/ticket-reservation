@@ -213,15 +213,19 @@ Floorplan.directive 'reservationFloorplan', () ->
         showId: '@'
         orderId: '@'
     controller: ($scope, $http, $interval) ->
+      errorHandler = (response) ->
+        if (response && response.redirect)
+          document.location.href = response.redirect
+
       updatePlan = (plan) ->
         $scope.plan = plan
         $scope.rows = plan.rows
 
       $scope.claim = (seat) ->
-        $http.post(jsRoutes.controllers.Orders.ajaxMove($scope.showId, $scope.orderId).url, {target: {name:seat}}).success(updatePlan)
+        $http.post(jsRoutes.controllers.Orders.ajaxMove($scope.showId, $scope.orderId).url, {target: {name:seat}}).success(updatePlan).error(errorHandler)
 
       $scope.$on(MOVE_BEST, () ->
-        $http.post(jsRoutes.controllers.Orders.ajaxMoveBest($scope.showId, $scope.orderId).url).success(updatePlan)
+        $http.post(jsRoutes.controllers.Orders.ajaxMoveBest($scope.showId, $scope.orderId).url).success(updatePlan).error(errorHandler)
       )
       $scope.release = (show, seat) ->
         console.log('release '+seat)
@@ -231,7 +235,7 @@ Floorplan.directive 'reservationFloorplan', () ->
         console.log('cancel')
 
       fetchAndUpdate = ->
-        $http.get(jsRoutes.controllers.Orders.ajaxFloorplan($scope.showId, $scope.orderId).url).success (updatePlan)
+        $http.get(jsRoutes.controllers.Orders.ajaxFloorplan($scope.showId, $scope.orderId).url).success(updatePlan).error(errorHandler)
 
 
       refreshTimer = $interval(fetchAndUpdate, 5000);
