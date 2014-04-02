@@ -243,15 +243,18 @@ Floorplan.directive 'reservationFloorplan', () ->
     scope:
         showId: '@'
         orderId: '@'
-    controller: ($scope, $http, $interval) ->
+    controller: ($scope, $http, $timeout, $interval) ->
+      $scope.planSeq = 0
       errorHandler = (response) ->
         if (response && response.redirect)
           document.location.href = response.redirect
 
       update = (response) ->
-        $scope.plan = response.plan
-        $scope.rows = response.plan.rows
-        $scope.$emit(UPDATE_TIMEOUT, response.timeout)
+        if ($scope.planSeq < response.seq)
+          $scope.planSeq = response.seq
+          $scope.plan = response.plan
+          $scope.rows = response.plan.rows
+          $scope.$emit(UPDATE_TIMEOUT, response.timeout)
 
       $scope.claim = (seat) ->
         payload = {target: {name:seat}}
@@ -285,11 +288,7 @@ Floorplan.directive 'reservationFloorplan', () ->
 
 
       fetchAndUpdate = ->
-        $http.get(jsRoutes.controllers.Orders.ajaxFloorplan($scope.showId, $scope.orderId).url).success(update).error(errorHandler)
-
-
-      refreshTimer = $interval(fetchAndUpdate, 5000);
-      $scope.$on('$destroy', -> $interval.cancel(refreshTimer) );
+        $http.get(jsRoutes.controllers.Orders.ajaxFloorplan($scope.showId, $scope.orderId).url).success((response) -> $timeout(fetchAndUpdate, 5000); update(response)).error((response) -> $timeout(fetchAndUpdate, 5000); errorHandler(response))
 
       fetchAndUpdate()
 

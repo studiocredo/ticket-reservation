@@ -202,7 +202,7 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
   }
 
 
-  def toJson(status: Response) = Json.obj("plan" -> Json.toJson(status.floorPlan), "timeout" -> status.timeout)
+  def toJson(status: Response) = Json.obj("plan" -> Json.toJson(status.floorPlan), "timeout" -> status.timeout, "seq" -> status.seq)
 
   def ajaxFloorplan(id: ShowId, order: OrderId) = AuthDBAction.async { implicit rs =>
     import FloorProtocol._

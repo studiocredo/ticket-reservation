@@ -26,6 +26,7 @@ import models.entities.Spacer
 import models.entities.FloorPlan
 import models.entities.Seat
 import be.studiocredo.util.Money
+import java.util.concurrent.atomic.{AtomicLong, AtomicInteger}
 
 
 object SeatScore {
@@ -252,7 +253,7 @@ object FloorProtocol {
     override def isError= true
   }
 
-  case class Response(floorPlan: FloorPlan, timeout: Long, messages: List[Message])
+  case class Response(floorPlan: FloorPlan, timeout: Long, seq:Long, messages: List[Message])
 }
 
 object SeatOrderActor {
@@ -329,6 +330,7 @@ case class OrderInfo(orderId: OrderId, availableTypes: Set[SeatType], users: Lis
 
 
 object MaitreDActor {
+
   // has to be static
   def props(showId: ShowId, show: ShowService, venue: VenueService, order: OrderService, preReservation: PreReservationService) = Props({ new MaitreDActor(showId, show, venue, order, preReservation)})
 }
@@ -338,6 +340,7 @@ class MaitreDActor(showId: ShowId, showService: ShowService, venueService: Venue
 
   import FloorProtocol._
 
+  var seq = System.nanoTime()
   val orderInfoMap = mutable.Map[OrderId, OrderInfo]()
 
   var cancellable: Option[Cancellable] = None
@@ -373,7 +376,8 @@ class MaitreDActor(showId: ShowId, showService: ShowService, venueService: Venue
     def error(msg: String): Message = ErrorMessage(msg)
 
     def toResponse(orderInfo: OrderInfo, messages: List[Message] = List()) = {
-      Response(state.toFloorPlan(orderInfo), orderInfo.timeout, messages)
+      seq+=1
+      Response(state.toFloorPlan(orderInfo), orderInfo.timeout, seq, messages)
     }
 
     def availableSeats(order: OrderInfo)= {
