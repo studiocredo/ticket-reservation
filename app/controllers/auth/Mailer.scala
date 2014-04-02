@@ -70,7 +70,7 @@ object Mailer {
     sendEmail(s"$subjectPrefix Instructies om je wachtwoord in te stellen", to, txtAndHtml)
   }
 
-  def sendOrderConfirmationEmail(user: RichUser, order: OrderDetail)(implicit request: RequestHeader) = {
+  def sendOrderConfirmationEmail(user: RichUser, order: OrderDetail) = {
     user.email match {
       case Some(email) => {
         val txtAndHtml = (None, Some(views.html.mails.orderConfirmation(user, order)))

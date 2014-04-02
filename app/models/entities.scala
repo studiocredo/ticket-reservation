@@ -188,6 +188,7 @@ object entities {
 
   case class TicketOrder(id: TicketOrderId, orderId: OrderId, showId: ShowId)
   case class TicketOrderDetail(ticketOrder: TicketOrder, order: Order, show: EventShow, ticketSeatOrders: List[TicketSeatOrderDetail]) {
+    def id = ticketOrder.id
     def price = ticketSeatOrders.map(_.price).foldLeft(Money(0))((total, amount) => total.plus(amount))
   }
 
@@ -304,6 +305,48 @@ object ids {
 
     def unbind(key: String, untypedId: T) = Map(key -> untypedId.toString)
   }
+
+  import play.api.data.FormError
+  implicit val moneyFormatter = new Formatter[Money] {
+    override val format = Some(("format.money", Nil))
+
+    override def bind(key: String, data: Map[String, String]): Either[Seq[FormError], Money] = {
+      data.get(key).map { value =>
+        try {
+          Right(Money(value.toFloat))
+        } catch {
+          case e: NumberFormatException => error(key, "error.money.invalid")
+        }
+      }.getOrElse(error(key, "error.money.missing"))
+    }
+
+    private def error(key: String, msg: String) = Left(List(new FormError(key, msg)))
+
+    override def unbind(key: String, money: Money) = Map(key -> money.amount.toString)
+  }
+
+  import models.entities.SeatType
+  import models.entities.SeatType.SeatType
+  implicit val seatTypeFormatter = new Formatter[SeatType] {
+    override val format = Some(("format.seatType", Nil))
+
+    override def bind(key: String, data: Map[String, String]): Either[Seq[FormError], SeatType] = {
+      data.get(key).map { value =>
+        try {
+          Right(SeatType.withName(value))
+        } catch {
+          case e: NoSuchElementException => error(key, "error.seatType.invalid")
+        }
+      }.getOrElse(error(key, "error.seatType.missing"))
+    }
+
+    private def error(key: String, msg: String) = Left(List(new FormError(key, msg)))
+
+    override def unbind(key: String, value: SeatType): Map[String, String] = {
+      Map(key -> value.toString)
+    }
+  }
+
 
   import play.api.libs.json._
 

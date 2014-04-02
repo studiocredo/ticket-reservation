@@ -188,11 +188,14 @@ MOVE_BEST = "MOVE_BEST"
 UPDATE_SEAT_SELECTION = "UPDATE_SEAT_SELECTION"
 UPDATE_TIMEOUT = "SET_TIMEOUT"
 CLEAR_SEAT_SELECTION = "CLEAR_SEAT_SELECTION"
+SELECT_ALL = "SELECT_ALL"
 Floorplan.controller "ReservationFloorplanCtrl", ($scope, $http, $timeout) ->
   $scope.moveBest = () ->
     $scope.$broadcast(MOVE_BEST)
   $scope.clearSelection = () ->
     $scope.$broadcast(CLEAR_SEAT_SELECTION)
+  $scope.selectAll = () ->
+    $scope.$broadcast(SELECT_ALL)
 
   $scope.timeout = 0
   $scope.millis = 0
@@ -207,7 +210,7 @@ Floorplan.controller "ReservationFloorplanCtrl", ($scope, $http, $timeout) ->
   updateTime()
 
   $scope.humanTimeout = () ->
-    return Math.floor((($scope.millis / (60000)) % 60)) + " min " + Math.floor(($scope.millis / 1000) % 60) + " sec."
+    return Math.floor((($scope.millis / (60000)) % 60)) + " min " + Math.floor(($scope.millis / 1000) % 60) + " sec"
 
   $scope.$on("$destroy", () ->
     $timeout.cancel($scope.ticker)
@@ -232,7 +235,7 @@ Floorplan.directive 'reservationFloorplan', () ->
                 <div class="spacer spacer-{{content.width}}" data-ng-if="content.ct == 'spacer'"></div>
                 <div class="seat seat-{{content.kind}}" data-ng-if="content.ct == 'seat'">{{content.id.name}}</div>
                 <div class="seat seat-status-{{content.status}}" data-ng-if="content.ct == 'seat-status' && content.status == 'free'" data-ng-click="claim(content.id.name)">{{content.id.name}}</div>
-                <div class="seat seat-status-{{content.status}}" data-ng-if="content.ct == 'seat-status' && content.status == 'mine'" data-ng-click="toggleSelect(content.id.name)">{{content.id.name}}</div>
+                <div class="seat seat-status-{{seatStatus(content.id.name)}}" data-ng-if="content.ct == 'seat-status' && content.status == 'mine'" data-ng-click="toggleSelect(content.id.name)">{{content.id.name}}</div>
                 <div class="seat seat-status-{{content.status}}" data-ng-if="content.ct == 'seat-status' && content.status != 'free' && content.status != 'mine'">{{content.id.name}}</div>
             </div>
         </div>
@@ -263,11 +266,12 @@ Floorplan.directive 'reservationFloorplan', () ->
             angular.forEach($scope.selected, (seat) ->
                 payload.seats.push({name: seat})
             )
+            $http.post(jsRoutes.controllers.Orders.ajaxMove($scope.showId, $scope.orderId).url, payload).success(update).error(errorHandler)
         $scope.clearSelected()
-        $http.post(jsRoutes.controllers.Orders.ajaxMove($scope.showId, $scope.orderId).url, payload).success(update).error(errorHandler)
 
       $scope.$on(MOVE_BEST, () ->
         $http.post(jsRoutes.controllers.Orders.ajaxMoveBest($scope.showId, $scope.orderId).url).success(update).error(errorHandler)
+        $scope.clearSelected()
       )
 
       $scope.selected = []
@@ -280,15 +284,27 @@ Floorplan.directive 'reservationFloorplan', () ->
           $scope.selected.splice(idx, 1)
         $scope.$emit(UPDATE_SEAT_SELECTION, $scope.selected)
       $scope.$on(CLEAR_SEAT_SELECTION, () -> $scope.clearSelected())
-
       $scope.clearSelected = () ->
         $scope.selected = []
         $scope.$emit(UPDATE_SEAT_SELECTION, $scope.selected)
+      $scope.$on(SELECT_ALL, () -> $scope.selectAll())
+      $scope.selectAll = () ->
+        console.log($scope.selected)
+        allSelected = []
+        (allSelected.push contentItem.id.name for contentItem in row.content when (contentItem.ct == 'seat-status' && contentItem.status == 'mine')) for row in $scope.rows
+        $scope.selected = allSelected
+        console.log($scope.selected)
+        $scope.$emit(UPDATE_SEAT_SELECTION, $scope.selected)
 
-
+      $scope.seatStatus = (seat) ->
+        idx = $scope.selected.indexOf(seat)
+        if (idx == -1)
+            "mine"
+        else
+            "selected"
 
       fetchAndUpdate = ->
-        $http.get(jsRoutes.controllers.Orders.ajaxFloorplan($scope.showId, $scope.orderId).url).success((response) -> $timeout(fetchAndUpdate, 5000); update(response)).error((response) -> $timeout(fetchAndUpdate, 5000); errorHandler(response))
+        $http.post(jsRoutes.controllers.Orders.ajaxFloorplan($scope.showId, $scope.orderId).url).success((response) -> $timeout(fetchAndUpdate, 5000); update(response)).error((response) -> $timeout(fetchAndUpdate, 5000); errorHandler(response))
 
       fetchAndUpdate()
 
@@ -318,25 +334,47 @@ CounterInput.controller "CounterInputCtrl", ($scope, $http) ->
 
 
 
-Floorplan.directive 'counterInput', () ->
+Floorplan.directive 'orderInput', () ->
   restrict: 'EA'
   template: """
-<input name="{{name}}" type="hidden" value="{{value}}" >
-<div class="quantity">{{value}}</div>
+<input name="seatTypes[{{$index}}]" type="hidden" value="{{seatType}}" data-ng-repeat="seatType in seatTypesArray">
+<input name="priceCategory" type="hidden" value="{{priceCategory}}">
+<input name="quantity" type="hidden" value="{{quantity}}">
+<div class="quantity">{{quantity}}</div>
 <div class="btn-group-vertical inline">
-<button type="button" class="btn btn-primary btn-xs" data-ng-click="increment()"><span class="glyphicon glyphicon-plus"></span></button>
-<button type="button" class="btn btn-primary btn-xs" data-ng-click="decrement()"><span class="glyphicon glyphicon-minus"></span></button>
+    <button type="button" class="btn btn-primary btn-xs" data-ng-click="increment()"><span class="glyphicon glyphicon-plus"></span></button>
+    <button type="button" class="btn btn-primary btn-xs" data-ng-click="decrement()"><span class="glyphicon glyphicon-minus"></span></button>
+</div>
+<div class="div-inline">
+    <button type="submit" class="btn btn-primary btn-sm" data-ng-disabled="!validQuantity()">Plaatsen kiezen &raquo;</button>
 </div>
 """
   scope:
-    name: '@'
+    quantity: '@'
     max: '@'
+    priceCategory: '@'
+    seatTypes: '@'
   controller: ($scope) ->
-    $scope.value = 0
+    $scope.seatTypesArray = eval($scope.seatTypes)
+    $scope.quantity = parseInt($scope.quantity)
     $scope.increment = ->
-      if ($scope.value < $scope.max)
-        $scope.value += 1
+      if ($scope.quantity < $scope.max)
+        $scope.quantity = parseInt($scope.quantity) + 1
     $scope.decrement = ->
-      if ($scope.value > 0)
-        $scope.value -= 1
+      if ($scope.quantity > 0)
+        $scope.quantity -= 1
+    $scope.validQuantity = ->
+      $scope.quantity > 0 && $scope.quantity <= $scope.max
+    $scope.$on(UPDATE_DISABLED_SEAT_TYPE, (event, addDisabledSeatType) -> $scope.updateDisabledSeatType(addDisabledSeatType))
+    $scope.updateDisabledSeatType = (addDisabledSeatType) ->
+      idx = $scope.seatTypesArray.indexOf("disabled")
+      if (addDisabledSeatType && idx == -1)
+          $scope.seatTypesArray.push("disabled")
+      else if (!addDisabledSeatType && idx != -1)
+          $scope.seatTypesArray.splice(idx, 1)
 
+
+UPDATE_DISABLED_SEAT_TYPE = "UPDATE_DISABLED_SEAT_TYPE"
+Floorplan.controller "OrderCtrl", ($scope, $http, $timeout) ->
+  $scope.updateDisabledSeatType = () ->
+    $scope.$broadcast(UPDATE_DISABLED_SEAT_TYPE, $scope.disabledSeatType)

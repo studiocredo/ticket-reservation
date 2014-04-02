@@ -87,10 +87,10 @@ GET         /order/:id/overview                     @controllers.Orders.overview
 POST        /order/:order/event/:event/show/:id     @controllers.Orders.startSeatOrder(id:ShowId, order: OrderId, event: EventId)
 GET         /order/:order/show/:id                  @controllers.Orders.viewSeatOrder(id:ShowId, order: OrderId)
 GET         /order/:order/show/:id/commit           @controllers.Orders.commitSeatOrder(id:ShowId, order: OrderId)
+GET         /order/:order/show/:id/cancel           @controllers.Orders.cancelSeatOrder(id:ShowId, order: OrderId)
 
-POST        /order/show/:id                         @controllers.Orders.saveSeatOrder(id:ShowId)
-GET         /order/show/:id/cancel                  @controllers.Orders.cancelSeatOrder(id:ShowId)
-GET         /order/:order/show/:id/floorplan        @controllers.Orders.ajaxFloorplan(id:ShowId, order: OrderId)
+GET         /order/ticket/:id/cancel                @controllers.Orders.cancelTicketOrder(id:TicketOrderId)
+POST        /order/:order/show/:id/floorplan        @controllers.Orders.ajaxFloorplan(id:ShowId, order: OrderId)
 POST        /order/:order/show/:id/move             @controllers.Orders.ajaxMove(id:ShowId, order: OrderId)
 POST        /order/:order/show/:id/moveBest         @controllers.Orders.ajaxMoveBest(id:ShowId, order: OrderId)
 

@@ -10,6 +10,8 @@ import scala.Some
 import com.google.inject.Inject
 import be.studiocredo.util.ServiceReturnValues._
 import models.admin.RichUser
+import com.github.tototoshi.slick.JodaSupport._
+import org.joda.time.DateTime
 
 class OrderService @Inject()(venueService: VenueService) {
   import models.schema.tables._
@@ -239,8 +241,6 @@ class OrderService @Inject()(venueService: VenueService) {
 
   def insert(seatOrders: List[TicketSeatOrder])(implicit s: Session): Either[ServiceFailure, ServiceSuccess] = {
     seatOrders.map{_.seat}
-
-    //TODO proper call to venue service?
     val vQuery = for {
       (show, venue) <- Shows.leftJoin(Venues).on(_.venueId === _.id)
       if show.id inSet seatOrders.map{_.showId}
@@ -265,6 +265,40 @@ class OrderService @Inject()(venueService: VenueService) {
           }
         }
       }
+    }
+  }
+
+  def close(id: OrderId)(implicit s: Session) = {
+    OQ.where(_.id === id).map(_.processed).update(true)
+  }
+
+  def closeStale()(implicit s: Session): List[OrderDetail] = {
+    val q = OQ.where(_.processed === false).where(_.date < DateTime.now().minusHours(6)) //TODO make configurable
+    val (emptyOrders, nonEmptyOrders) = q.list.map(orderDetail).partition(order => order.ticketSeatOrders.isEmpty)
+    q.map(_.processed).update(true)
+    emptyOrders.foreach { emptyOrder =>
+      destroy(emptyOrder.id)
+    }
+    nonEmptyOrders
+  }
+
+  def destroy(id: OrderId)(implicit s: Session) = {
+    s.withTransaction {
+      val q = for {
+        to <- TOQ
+        if to.orderId === id
+      } yield (to.id)
+      val ids = q.list
+      TSOQ.where(_.ticketOrderId inSet ids).delete
+      TOQ.where(_.orderId === id).delete
+      OQ.where(_.id === id).delete
+    }
+  }
+
+  def destroyTicketOrders(id: TicketOrderId)(implicit s: Session) = {
+    s.withTransaction {
+      TSOQ.where(_.ticketOrderId === id).delete
+      TOQ.where(_.id === id).delete
     }
   }
 

@@ -27,6 +27,7 @@ import models.entities.FloorPlan
 import models.entities.Seat
 import be.studiocredo.util.Money
 import java.util.concurrent.atomic.{AtomicLong, AtomicInteger}
+import controllers.auth.Mailer
 
 
 object SeatScore {
@@ -103,29 +104,36 @@ object ReservationEngine {
   }
 
   def suggestSeats(quantity: Int, seats: AvailableSeats, availableTypes: Set[SeatType]): Either[String, List[SeatId]] = {
-    val avail = availableTypes.map(seats.availabilityByType.get(_).getOrElse(0)).sum
-    logger.debug(s"requested $quantity have $avail available $availableTypes ${seats.availabilityByType}")
-    if (avail >= quantity) {
-      val groupSizesList = groupSizes(quantity)
-      val adjacentSolutionsBySize = calculateAllAdjacentSuggestions(seats, groupSizesList.flatten.distinct.sorted.reverse)
+    val start = System.nanoTime()
+    try {
+      if (quantity <= 0)
+        return Left("re.quantity.invalid")
+      val avail = availableTypes.map(seats.availabilityByType.get(_).getOrElse(0)).sum
+      logger.debug(s"requested $quantity have $avail available $availableTypes ${seats.availabilityByType}")
+      if (avail >= quantity) {
+        val groupSizesList = groupSizes(quantity)
+        val adjacentSolutionsBySize = calculateAllAdjacentSuggestions(seats, groupSizesList.flatten.distinct.sorted.reverse)
 
-      def getSolutionForSize(size: Int) = adjacentSolutionsBySize.getOrElse(size, mutable.Set()).toSet
+        def getSolutionForSize(size: Int) = adjacentSolutionsBySize.getOrElse(size, mutable.Set()).toSet
 
-      // If first exists use it, else calc all others & use best scoring
-      calculateBestSuggestion(groupSizesList.head.map(getSolutionForSize), seats) match {
-        //if the first element produces a solution, then this is always considered the best (all on one row and next to each other)
-        case Some(solution) => Right(solution.seatIds)
-        case None => {
-          groupSizesList.drop(1).map(sizes => calculateBestSuggestion(sizes.map(getSolutionForSize), seats)).flatten match {
-            //nevermind, just take individual best seats
-            case Nil => Right(seats.takeBest(quantity))
-            case solutions =>
-              Right(solutions.minBy(_.score).seatIds)
+        // If first exists use it, else calc all others & use best scoring
+        calculateBestSuggestion(groupSizesList.head.map(getSolutionForSize), seats) match {
+          //if the first element produces a solution, then this is always considered the best (all on one row and next to each other)
+          case Some(solution) => Right(solution.seatIds)
+          case None => {
+            groupSizesList.drop(1).map(sizes => calculateBestSuggestion(sizes.map(getSolutionForSize), seats)).flatten match {
+              //nevermind, just take individual best seats
+              case Nil => Right(seats.takeBest(quantity))
+              case solutions =>
+                Right(solutions.minBy(_.score).seatIds)
+            }
           }
         }
-      }
-    } else
-      Left("re.capacity.insufficient")
+      } else
+        Left("re.capacity.insufficient")
+    } finally {
+      logger.debug(s"Suggestion took ${TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start)} ms")
+    }
   }
 
 
@@ -188,24 +196,42 @@ object ReservationEngine {
 
 
 
-class ReservationEngineMonitorService @Inject()(showService: ShowService, venueService: VenueService, orderService: OrderService, preReservationService: PreReservationService) extends Service {
+class ReservationEngineMonitorService @Inject()(showService: ShowService, venueService: VenueService, orderService: OrderService, preReservationService: PreReservationService, userService: UserService) extends Service {
 
   val logger = Logger("be.studiocredo.orders.seat")
 
   var seatOrderActor: Option[ActorRef] = None
+  var cancellable: Option[Cancellable] = None
 
   override def onStart() {
     import play.api.Play.current
+    import scala.concurrent.duration._
+    import play.api.libs.concurrent.Execution.Implicits._
 
     logger.debug("Starting reservation actor")
 
     seatOrderActor = Some(Akka.system.actorOf(SeatOrderActor.props(showService, venueService, orderService, preReservationService), name = "seatOrders"))
+
+    cancellable = Some(
+      Akka.system.scheduler.schedule(1.hour, 6.hours) {
+        logger.info("Closing stale open orders")
+        DB.withSession {
+          implicit session: Session =>
+            orderService.closeStale().map {order =>
+              Mailer.sendOrderConfirmationEmail(userService.find(order.user.id).get,order)
+              logger.warn(s"Closed stale open order ${order.id} (created ${order.order.date} and notified owner ${order.user.name} (${order.user.id})")
+            }
+        }
+      }
+    )
   }
 
   override def onStop() {
     logger.debug("Stopping reservation actor")
     seatOrderActor.map(Akka.system.stop)
     seatOrderActor = None
+    cancellable.map(_.cancel())
+    cancellable = None
   }
 
   def floors: ActorRef = {
@@ -229,6 +255,7 @@ object FloorProtocol {
 
   case class MoveBest(show: ShowId, order: OrderId) extends FloorAction
   case class Move(show: ShowId, order: OrderId, target: SeatId, seats: Option[Set[SeatId]]) extends FloorAction
+  case class Cancel(show: ShowId, order: OrderId) extends FloorAction
 
   case class AddSeat(show: ShowId, order: OrderId, seat: SeatId) extends FloorAction
   case class RemoveSeat(show: ShowId, order: OrderId, seat: SeatId) extends FloorAction
@@ -320,7 +347,7 @@ case class OrderInfo(orderId: OrderId, availableTypes: Set[SeatType], users: Lis
   def isAvailable(seatType: SeatType) = availableTypes.contains(seatType)
 
 
-  val TIMEOUT = Duration(10, TimeUnit.MINUTES)
+  val TIMEOUT = Duration(5, TimeUnit.MINUTES)
   var timeout: Long = newTimeout
   def touch() =  this.timeout = newTimeout
 
@@ -330,7 +357,7 @@ case class OrderInfo(orderId: OrderId, availableTypes: Set[SeatType], users: Lis
 
 
 object MaitreDActor {
-
+  val MAGIC_SEQ_START = System.nanoTime()
   // has to be static
   def props(showId: ShowId, show: ShowService, venue: VenueService, order: OrderService, preReservation: PreReservationService) = Props({ new MaitreDActor(showId, show, venue, order, preReservation)})
 }
@@ -340,7 +367,7 @@ class MaitreDActor(showId: ShowId, showService: ShowService, venueService: Venue
 
   import FloorProtocol._
 
-  var seq = System.nanoTime()
+  var seq = System.nanoTime() - MaitreDActor.MAGIC_SEQ_START  // stay within js range
   val orderInfoMap = mutable.Map[OrderId, OrderInfo]()
 
   var cancellable: Option[Cancellable] = None
@@ -377,6 +404,7 @@ class MaitreDActor(showId: ShowId, showService: ShowService, venueService: Venue
 
     def toResponse(orderInfo: OrderInfo, messages: List[Message] = List()) = {
       seq+=1
+      logger.debug(s"Update message sequence number to $seq")
       Response(state.toFloorPlan(orderInfo), orderInfo.timeout, seq, messages)
     }
 
@@ -393,7 +421,7 @@ class MaitreDActor(showId: ShowId, showService: ShowService, venueService: Venue
             avail(SeatType.Normal) -= Math.max(0, quantity - usedPreReservations(userId))
         }
 
-        logger.debug(s"${avail}")
+        logger.debug(s"Available seats = ${avail}")
         AvailableSeats(state.toFloorPlan(order), avail.toMap)
       }
     }
@@ -407,7 +435,7 @@ class MaitreDActor(showId: ShowId, showService: ShowService, venueService: Venue
 
         val myAvailable = availableSeats(info)
 
-        logger.debug(s"$seats requested hava ${myAvailable.totalAvailable} available ${myAvailable.availabilityByType}")
+        logger.debug(s"$seats ${availableTypes.mkString(",")} requested have ${myAvailable.totalAvailable} available ${myAvailable.availabilityByType}")
         if (myAvailable.totalAvailable < seats) {
           sender ! Status.Failure(new CapacityExceededException(show, order))
         } else {
@@ -456,6 +484,13 @@ class MaitreDActor(showId: ShowId, showService: ShowService, venueService: Venue
 
             List()
           })
+        })
+      }
+
+      case Cancel(show, order) => {
+        respond(order, info => {
+          state.findSeats(info) foreach(_.setFree())
+          List()
         })
       }
 
@@ -667,6 +702,8 @@ object SeatState {
     }
 
     def adjacentFreeSeats(target: SeatId, order: OrderInfo, quantity: Int): Either[Message, List[SeatId]] = {
+      if (quantity <= 0)
+        return Left(ErrorMessage("re.quantity.invalid"))
       val targetIdx = seatList.indexWhere({
         case state:SeatState => state.seatId == target
         case _ => false

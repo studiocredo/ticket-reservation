@@ -19,7 +19,7 @@
 .vspacers(@spacer-sizer, 0) {}
 
 .seat(@item) {
-    @items: '{"mine": 1, "reserved": 2, "disabled": 3, "vip": 4, "unavailable": 5, "normal": 6, "free": 6 }';
+    @items: '{"mine": 1, "reserved": 2, "disabled": 3, "selected": 3, "vip": 4, "unavailable": 5, "normal": 6, "free": 6 }';
     .sprite('../images/seats_sprite.png', 32px, @item, @items);
 }
 
@@ -120,6 +120,10 @@
     .legend-label-mine {
         .seat("mine")
     }
+
+    .legend-label-selected {
+        .seat("selected")
+    }
   }
 
   &.fp-fancy {
@@ -134,7 +138,7 @@
 
     .seat-row {
         margin-bottom: 10px;
-        font-size: 10px;;
+        font-size: 10px;
     }
 
     .seat {
@@ -181,6 +185,10 @@
         .seat("mine")
     }
 
+    .seat-status-selected {
+        .seat("selected")
+    }
+
     .delete-paint {
         background-color: #f40000;
     }
@@ -188,6 +196,34 @@
     .spacers(@spacer-size,8);
     .vspacers(@vspacer-size,8);
   }
+}
+
+.fp-fancy-selection {
+  @seat-size: 32px;
+  @spacer-size: @seat-size / 2;
+  @vspacer-size: 32px;
+  padding-bottom: 0px;
+
+  .seat {
+      font-size: 10px;;
+      border: none;
+      margin-left: 3px;
+      width: @seat-size;
+      height: @seat-size;
+      line-height: @seat-size;
+      text-align: center;
+      padding-top: @seat-size*0.1;
+      display: inline-block;
+      .seat("selected")
+  }
+
+  .btn-group {
+      margin: 0 auto 10px auto;
+      text-align: center;
+      width: inherit;
+      display: inline-block;
+  }
+
 }
 
 

@@ -9,6 +9,7 @@ import models.admin._
 import be.studiocredo.util.ServiceReturnValues._
 import org.joda.time.DateTime
 import be.studiocredo.util.Joda._
+import be.studiocredo.util.Money
 
 class EventService @Inject()(showService: ShowService, preReservationService: PreReservationService, userService: UserService) {
   import models.queries._
@@ -106,6 +107,10 @@ class EventService @Inject()(showService: ShowService, preReservationService: Pr
   def getPricing(id: EventId)(implicit s: Session): Option[EventPricing] = {
     val prices = EventPricesQ.where(_.eventId === id).list
     if (prices.isEmpty) None else Some(EventPricing(id, prices))
+  }
+
+  def getPricing(id: EventId, category: String)(implicit s: Session): Option[Money] = {
+    EventPricesQ.where(_.eventId === id).where(_.priceCategory === category).firstOption.map(_.price)
   }
 
   def eventPrereservationDetails(id: EventId, users: List[UserId])(implicit s: Session): Option[EventPrereservationsDetail] = {

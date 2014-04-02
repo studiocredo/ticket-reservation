@@ -16,6 +16,7 @@
     <div class="page-header">
         <h1>@info.user.name <small>@info.user.email</small>
             @form(routes.Users.edit(info.user.id), 'class -> "pull-right") {
+                <a class="btn btn-danger" href="@{routes.Users.sudo(info.user.id)}">Sudo</a>
                 <input type="submit" value="Bewerken" class="btn btn-warning">
             }
         </h1>

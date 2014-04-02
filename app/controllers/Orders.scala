@@ -4,7 +4,7 @@ import com.google.inject.Inject
 import be.studiocredo._
 import be.studiocredo.auth._
 import play.api.mvc.{SimpleResult, Controller}
-import models.ids.{OrderId, ShowId, EventId}
+import models.ids._
 import models.entities.FloorPlanJson._
 import play.api.data.Form
 import play.api.data.Forms._
@@ -12,7 +12,7 @@ import controllers.auth.Mailer
 import scala.Some
 import be.studiocredo.auth.SecuredDBRequest
 import play.api.libs.json.{JsError, Json}
-import models.entities.{Order, SeatId, SeatType}
+import models.entities._
 import be.studiocredo.reservations.{MissingOrderException, CapacityExceededException, FloorProtocol, ReservationEngineMonitorService}
 import scala.collection.immutable.Set
 import be.studiocredo.util.Money
@@ -25,9 +25,32 @@ import be.studiocredo.reservations.FloorProtocol.{Response, StartOrder}
 import play.api.Logger
 import play.api.cache.Cache
 import play.api.db.slick._
+import models.entities.SeatType.SeatType
+import models.entities.SeatType
+import be.studiocredo.reservations.FloorProtocol.Response
+import be.studiocredo.reservations.MissingOrderException
+import models.entities.SeatId
+import controllers.StartSeatOrderForm
+import scala.Some
+import play.api.mvc.SimpleResult
+import be.studiocredo.reservations.FloorProtocol.StartOrder
+import models.entities.Order
+import be.studiocredo.reservations.CapacityExceededException
+import be.studiocredo.auth.SecuredDBRequest
+import be.studiocredo.reservations.FloorProtocol.Response
+import be.studiocredo.reservations.MissingOrderException
+import models.entities.SeatId
+import controllers.StartSeatOrderForm
+import scala.Some
+import play.api.mvc.SimpleResult
+import be.studiocredo.reservations.FloorProtocol.StartOrder
+import models.entities.Identity
+import models.entities.Order
+import be.studiocredo.reservations.CapacityExceededException
+import be.studiocredo.auth.SecuredDBRequest
 
 
-case class StartSeatOrderForm(quantity: Int)
+case class StartSeatOrderForm(quantity: Int, priceCategory: String, availableSeatTypes: List[SeatType])
 
 class Orders @Inject()(eventService: EventService, orderService: OrderService, showService: ShowService, preReservationService: PreReservationService, venueService: VenueService, val authService: AuthenticatorService, val notificationService: NotificationService, val userService: UserService, orderEngine: ReservationEngineMonitorService) extends Controller with Secure with UserContextSupport {
   val logger = Logger("be.studiocredo.orders")
@@ -36,7 +59,9 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
 
   val startSeatOrderForm: Form[StartSeatOrderForm] = Form(
     mapping(
-      "quantity" -> number(min = 0)
+      "quantity" -> number(min = 0),
+      "priceCategory" -> text(),
+      "seatTypes" -> list(of[SeatType])
     )(StartSeatOrderForm.apply)(StartSeatOrderForm.unapply)
   )
 
@@ -67,7 +92,7 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
       case None => BadRequest(s"Bestelling $id niet gevonden")
       case Some(order)  => {
         val currentUser = rs.currentUser.get
-        //TODO: set ordered processed -> true in orderservice
+        orderService.close(id)
         Mailer.sendOrderConfirmationEmail(currentUser.user, order)
         Redirect(routes.Orders.overview(id))
       }
@@ -84,7 +109,15 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
   }
   
   def cancel(id: OrderId) = AuthDBAction { implicit rs =>
-    ???
+    import FloorProtocol._
+
+    orderService.destroy(id) match {
+      case 0 => BadRequest(s"Bestelling $id niet gevonden")
+      case _ => {
+        (orderEngine.floors) ! ReloadState
+        Redirect(routes.Application.index())
+      }
+    }
   }
 
   def startSeatOrder(id: ShowId, order: OrderId, event: EventId) = AuthDBAction.async {
@@ -97,8 +130,10 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
           formWithErrors => Future.successful(Redirect(routes.Orders.view(order, event))),
           res => {
 
-            val money = Money(10) // todo
-            val avail = Set(SeatType.Normal) // todo
+            val money = Cache.getOrElse[Money]("event." + event.id + "." + res.priceCategory, 300) {
+              eventService.getPricing(event, res.priceCategory).get
+            } //TODO error handling if not found
+            val avail = res.availableSeatTypes.toSet
 
             implicit val timeout = Timeout(30.seconds)
 
@@ -117,6 +152,27 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
             })
           }
         )
+      }
+  }
+
+  def cancelSeatOrder(showId: ShowId, orderId: OrderId) = AuthDBAction.async {
+    implicit rs =>
+      import FloorProtocol._
+
+      ensureOrderAccess(showId, orderId) {
+        implicit val timeout = Timeout(30.seconds)
+
+        (orderEngine.floors ? Cancel(showId, orderId)).map {
+          case status: Response => {
+
+            Redirect(routes.Orders.view(orderId, toEventId(showId)))
+          }
+        }.recover({
+          case error =>
+            logger.error(s"$showId $orderId: Failed to cancel order", error)
+            InternalServerError
+        })
+
       }
   }
 
@@ -173,32 +229,16 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
     }
   }
 
- def cancelSeatOrder(id: ShowId) = AuthDBAction { implicit rs =>
-    ???
-  }
+ def cancelTicketOrder(id: TicketOrderId) = AuthDBAction { implicit rs =>
+   import FloorProtocol._
 
-  def saveSeatOrder(id: ShowId) = AuthDBAction { implicit rs =>
-    ???
-//    val bindedForm = reservationForm.bindFromRequest
-//    bindedForm.fold(
-//      formWithErrors => page(id, Some(formWithErrors), BadRequest),
-//      res => {
-//        val currentUser = rs.currentUser.get
-//        val userIds = currentUser.id :: userContext.get.otherUsers.map{_.id}
-//        validateReservations(bindedForm, res, reservationService.totalQuotaByUsersAndEvent(userIds, id)).fold(
-//          formWithErrors => page(id, Some(formWithErrors), BadRequest),
-//          success => {
-//            reservationService.updateOrInsert(id, preres.showPrereservations.map{ spr => ShowPrereservationUpdate(spr.showId, spr.quantity) }, userIds ).fold(
-//              failure => page(id, Some(bindedForm.withGlobalError(serviceMessage(failure))), BadRequest),
-//              success => {
-//                Mailer.sendPrereservationSavedEmail(currentUser.user, eventService.eventPrereservationDetails(id, userIds))
-//                Redirect(routes.Application.index).flashing("success" -> serviceMessage(success))
-//              }
-//            )
-//          }
-//        )
-//      }
-//    )
+   orderService.destroyTicketOrders(id) match {
+     case 0 => BadRequest(s"Bestelling $id niet gevonden")
+     case _ => {
+       (orderEngine.floors) ! ReloadState
+       Redirect(routes.Application.index())         //TODO redirect to same page (need order id and event id)
+     }
+   }
   }
 
 
@@ -283,14 +323,19 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
         orderService.get(id) match {
           case None => BadRequest(s"Bestelling $id niet gevonden")
           case Some(order) if !order.order.processed => {
-
-                status(views.html.order(event, order, userContext))
-              }
-
-
+            status(views.html.order(event, order, getSeatTypes(rs.user), userContext))
+          }
           case _ => BadRequest(s"Bestelling $id is afgesloten")
         }
       }
+    }
+  }
+
+  private def getSeatTypes(user: Identity): Set[SeatType] = {
+    if (Authorization.ADMIN.isAuthorized(user)) {
+      SeatType.values
+    } else {
+      Set(SeatType.Normal)
     }
   }
 }

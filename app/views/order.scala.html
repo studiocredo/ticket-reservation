@@ -1,16 +1,7 @@
-@(info: models.admin.EventReservationsDetail, order: models.entities.OrderDetail, userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
+@(info: models.admin.EventReservationsDetail, order: models.entities.OrderDetail, seatTypes: Set[models.entities.SeatType.SeatType], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
 @import helper._
 @import be.studiocredo.util.Joda._
-
-@pageScripts = {
-<script>
-$(document).ready(function() {
-    $('body').on('click', '#order-more-button', function(e) {
-        $('#order-more').attr('class', 'show');
-    });
-});
-</script>
-}
+@import play.api.libs.json._
 
 @orderRowInactive(ticketOrder: models.entities.TicketOrderDetail)= {
     <tr class="active">
@@ -46,29 +37,23 @@ $(document).ready(function() {
         <td>@ticketOrder.ticketSeatOrders.length</td>
         <td>@CurrencyFormat.format(ticketOrder.price)</td>
         <td>
-            <a class="btn btn-danger btn-sm" href="@routes.Orders.cancelSeatOrder(ticketOrder.show.id)">Verwijderen</a>
+            <a class="btn btn-danger btn-sm" href="@routes.Orders.cancelTicketOrder(ticketOrder.id)">Verwijderen</a>
         </td>
     </tr>
 }
 
-@orderRowNew(show: models.entities.Show, venue: models.entities.Venue)= {
-    @defining(show.id) { ngModelIndex =>
+@orderRowNew(event: models.admin.EventDetail, show: models.entities.Show, venue: models.entities.Venue)= {
     @defining(info.totalQuota) { max =>
     @defining(info.pendingPrereservationsByShow(show.id)) { startValue =>
-    <div class="row" data-ng-init="values[@ngModelIndex] = @startValue">
+    @defining(Json.toJson(seatTypes.map(_.toString))) { seatTypesJ =>
+    <div class="row">
         <div class="col-md-6">
             <p class="text-info h4">@HumanDateTime.formatDateTime(show.date)</p>
             <p class="text-muted h5">@venue.name</p>
         </div>
         <div class="col-md-6">
             @form(action = controllers.routes.Orders.startSeatOrder(show.id, order.id, info.id), 'class -> "form form-horizontal", 'name -> "orderForm") {
-            <input id="seattype-disabled-input" name="seattype-disabled" type="hidden" value="false">
-            <input name="price" type="hidden" value="32">
-            <div data-counter-input name="quantity" max="@info.totalQuota" class="quantity-input-sm div-inline"></div>
-
-            <div class="div-inline">
-                <button type="submit" class="btn btn-primary btn-sm" data-ng-disabled="orderForm.$invalid">Plaatsen kiezen &raquo;</button>
-            </div>
+                <div data-order-input quantity="@startValue" max="@info.totalQuota" price-category="@event.pricing.get.prices.head.category" seat-types='@seatTypesJ' class="quantity-input-sm div-inline"></div>
             }
         </div>
     </div>
@@ -77,7 +62,7 @@ $(document).ready(function() {
     }
 }
 
-@base("Overzicht bestelling", pageScripts)(userContext) {
+@base("Overzicht bestelling")(userContext) {
     <div class="page-header">
         <h1>Bestelling @info.event.name <small>@order.user.name</small></h1>
     </div>
@@ -115,7 +100,7 @@ $(document).ready(function() {
                 </thead>
                 <tbody>
 
-                    @for((ticketOrder) <- order.ticketOrders.filter( _.show.eventId == info.id).sortBy(r => (r.show.date, r.ticketOrder.id.toInt))) {
+                    @for((ticketOrder) <- order.ticketOrders.filter( _.show.eventId == info.id).sortBy(r => (r.show.date, r.id.toInt))) {
                         @orderRowActive(ticketOrder)
                     }
                     @for((ticketOrder) <- order.ticketOrders.filterNot(to => to.show.eventId == info.id)) {
@@ -134,22 +119,23 @@ $(document).ready(function() {
 
             }
 
+            <div data-ng-init="showOrderMore = @if(order.numberOfSeats > 0) { false } else { true }">
             @if(order.numberOfSeats > 0) {
                     @form(action = routes.Orders.confirm(order.id), 'class -> "form form-inline form-no-feedback") {
                         <p>
                             <button type="submit" class="btn btn-primary">Bestelling afronden</button>
                             <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#cancelModal">Annuleren</button>
-                            <button type="button" id="order-more-button" class="btn btn-success @if(order.numberOfSeats == 0) { hidden }">Meer tickets bestellen &raquo;</button>
+                            <button type="button" id="order-more-button" class="btn btn-success" data-ng-click="showOrderMore = true">Meer tickets bestellen &raquo;</button>
                         </p>
                     }
             } else {
                 <p>
                     <button class="btn btn-warning" data-toggle="modal" data-target="#cancelModal">Annuleren</button>
-                    <button id="order-more-button" class="btn btn-success @if(order.numberOfSeats == 0) { hidden }">Meer tickets bestellen &raquo;</button>
                 </p>
             }
+            </div>
 
-            <div id="order-more" class="@if(order.numberOfSeats > 0) { hidden }" data-ng-controller="CounterInputCtrl" data-ng-init="maxQuota = @info.totalQuota; usedQuota = @order.numberOfSeats">
+            <div data-ng-show="showOrderMore" data-ng-controller="OrderCtrl">
 
             <h2>@if(order.numberOfSeats > 0) { Extra bestelling } else { Nieuwe bestelling }</h2>
 
@@ -168,7 +154,7 @@ $(document).ready(function() {
             <div class="alert alert-success">
                 <div class="checkbox">
                     <label>
-                        <input id="seattype-disabled" type="checkbox" value="">
+                        <input id="seattype-disabled" type="checkbox" data-ng-change="updateDisabledSeatType()" data-ng-model="disabledSeatType" data-ng-init="disabledSeatType = @seatTypes.contains(models.entities.SeatType.Disabled)">
                         Ik wens plaatsen voor rolstoelgebruikers indien beschikbaar.
                     </label>
                 </div>
@@ -176,7 +162,7 @@ $(document).ready(function() {
 
              @defining(info.shows.map{ vs => vs.shows.map{(vs.venue, _)}}.flatten) { venueShows =>
                 @for(((venue, show), index) <- venueShows.zipWithIndex) {
-                    @orderRowNew(show, venue)
+                    @orderRowNew(info.event, show, venue)
                 }
              }
 

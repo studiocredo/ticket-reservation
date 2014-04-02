@@ -14,17 +14,18 @@
 
 <div class="row" data-ng-controller="ReservationFloorplanCtrl">
     <div class="col-xs-12 col-md-3 col-md-push-9" id="sidebar" role="navigation">
-        <div class="panel panel-default" >
-            <div class="panel-heading">Timeout</div>
-            <div class="panel-body fp fp-fancy-legend">
-                <div ng-show="millis > 0">{{humanTimeout(millis)}}</div>
+        <div class="panel panel-default" ng-show="millis > 0">
+            <div class="panel-heading">Beschikbare tijd</div>
+            <div class="panel-body">
+                <div class="h2 text-center text-danger">{{humanTimeout(millis)}}</div>
             </div>
         </div>
 
         <div class="panel panel-default">
             <div class="panel-heading">Legende</div>
             <div class="panel-body fp fp-fancy-legend">
-                <div class="text-info legend-label legend-label-mine">Mijn selectie</div>
+                <div class="text-info legend-label legend-label-mine">Mijn plaatsen</div>
+                <div class="text-info legend-label legend-label-selected">Mijn geselecteerde plaatsen</div>
                 <div class="text-info legend-label legend-label-free">Beschikbaar</div>
                 <div class="text-info legend-label legend-label-unavailable">Onbeschikbaar</div>
             </div>
@@ -32,16 +33,24 @@
 
         <div class="panel panel-default">
             <div class="panel-heading">Selectie</div>
-            <div class="panel-body">
-                <ul>
-                    <li data-ng-repeat="seat in selected">{{seat}}</li>
-                </ul>
-                <button class="btn btn-sm btn-warning" ng-click="clearSelection()">Selectie Leegmaken</button>
-                <button class="btn btn-sm btn-info" ng-click="moveBest()">Nieuwe suggestie</button>
+            <div class="panel-body fp-fancy-selection">
+                <div class="text-center">
+                    <div class="btn-group">
+                        <button class="btn btn-default" ng-click="selectAll()" title="Alles selecteren"><span class="glyphicon glyphicon-th"></span></button>
+                        <button class="btn btn-default" ng-click="clearSelection()" title="Selectie leegmaken"><span class="glyphicon glyphicon-remove-circle"></span></button>
+                        <button class="btn btn-default" ng-click="moveBest()" title="Nieuwe suggestie"><span class="glyphicon glyphicon-refresh"></span></button>
+                    </div>
+                </div>
+                <div>
+                    <ul class="list-inline">
+                        <li data-ng-repeat="seat in selected" class="seat">{{seat}}</li>
+                    </ul>
+                </div>
             </div>
         </div>
 
         <a class="btn btn-success btn-block btn-lg" href="@routes.Orders.commitSeatOrder(show.id, orderId)">Bevestigen</a>
+        <a class="btn btn-warning btn-block btn-lg" href="@routes.Orders.cancelSeatOrder(show.id, orderId)">Annuleren</a>
     </div>
 
     <div class="col-xs-12 col-md-9 col-md-pull-3">
