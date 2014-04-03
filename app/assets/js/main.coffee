@@ -289,11 +289,9 @@ Floorplan.directive 'reservationFloorplan', () ->
         $scope.$emit(UPDATE_SEAT_SELECTION, $scope.selected)
       $scope.$on(SELECT_ALL, () -> $scope.selectAll())
       $scope.selectAll = () ->
-        console.log($scope.selected)
         allSelected = []
         (allSelected.push contentItem.id.name for contentItem in row.content when (contentItem.ct == 'seat-status' && contentItem.status == 'mine')) for row in $scope.rows
         $scope.selected = allSelected
-        console.log($scope.selected)
         $scope.$emit(UPDATE_SEAT_SELECTION, $scope.selected)
 
       $scope.seatStatus = (seat) ->

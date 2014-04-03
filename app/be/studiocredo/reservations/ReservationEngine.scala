@@ -658,7 +658,7 @@ object SeatState {
     override def toContent(implicit order: OrderInfo): RowContent = {
 
       val planStatus = status match {
-        case reserved:Reserved => SeatStatus.Reserved
+        case reserved:Reserved => if (order.isAvailable(seat.kind)) SeatStatus.Reserved else SeatStatus.Unavailable
         case Free =>  if (order.isAvailable(seat.kind)) SeatStatus.Free else SeatStatus.Unavailable
         case Pending(info) => if (order == info) SeatStatus.Mine else SeatStatus.Reserved
       }

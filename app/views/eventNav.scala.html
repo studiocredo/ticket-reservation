@@ -1,4 +1,4 @@
-@(info: models.admin.EventDetail, active: Option[ids.ShowId] = None)(implicit request: be.studiocredo.auth.SecureRequest[_])
+@(info: models.admin.EventDetail, active: ids.ShowId)(implicit request: be.studiocredo.auth.SecureRequest[_])
 
 @info.shows.map { sv =>
     <div class="panel panel-default">
@@ -6,7 +6,7 @@
 
         <div class="list-group">
             @sv.shows.map { show =>
-                <a href="@routes.Events.viewShow(info.id, show.id)" class="list-group-item @views.Utils.active(active, show.id)" >
+                <a href="@routes.Events.viewShow(info.id, show.id)" class="list-group-item @views.Utils.active(Some(active), show.id)" >
                 @HumanDateTime.formatDateTime(show.date)
                 </a>
             }

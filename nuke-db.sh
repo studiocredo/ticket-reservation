@@ -1,3 +1,3 @@
 #!/bin/bash
-dropdb credo -U postgres -h localhost
-createdb credo -U postgres -W -h localhost
+dropdb credo -U vhs -h localhost
+createdb credo -U vhs -W -h localhost
