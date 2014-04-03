@@ -52,7 +52,7 @@ class Test @Inject()(es: EventService, ss: ShowService, vs: VenueService, os: Or
     val availability = prs.availability(ss.getEventShow(show.id), users)
     val seats = AvailableSeats(floorplan, availability.byType)
 
-    val random =  Random.shuffle(seats.get.filter(seats.isAvailable(_))).take(quantity.getOrElse(1)).collect{case seat:SeatWithStatus => seat.id}
+    val random =  Random.shuffle(seats.get.filter(AvailableSeats.isAvailable(_))).take(quantity.getOrElse(1)).collect{case seat:SeatWithStatus => seat.id}
 
     val u = us.find(users.head).get
     val orderId = os.insert(OrderEdit(u.id, org.joda.time.DateTime.now, u.name, u.address.getOrElse("n/a"), true))

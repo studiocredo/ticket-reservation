@@ -36,10 +36,11 @@
             </div>
         </div>
 
-        <div class="panel panel-default" ng-show="millis > 0">
+        <div class="panel panel-default">
             <div class="panel-heading">Beschikbare tijd</div>
             <div class="panel-body">
-                <div class="h2 text-center text-danger">{{humanTimeout(millis)}}</div>
+                <div class="h2 text-center text-danger" ng-show="millis > 0">{{humanTimeout(millis)}}</div>
+                <div class="h4 text-center text-danger" ng-show="millis &lt;= 0 && timeoutLatch">De tijd is verstreken</div>
             </div>
         </div>
 

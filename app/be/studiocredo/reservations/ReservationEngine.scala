@@ -28,6 +28,7 @@ import models.entities.Seat
 import be.studiocredo.util.Money
 import java.util.concurrent.atomic.{AtomicLong, AtomicInteger}
 import controllers.auth.Mailer
+import scala.collection.mutable.ListBuffer
 
 
 object SeatScore {
@@ -38,7 +39,10 @@ object SeatScore {
   }
 }
 case class SeatScore(seat: SeatId, score: Int)
-
+case class SuggestionScore(partialScore: Int, separationScore: Int, orphanScore: Int, missingSeatTypeScore: Int) {
+  val value = partialScore + separationScore + orphanScore + missingSeatTypeScore
+  override def toString() = s"P$partialScore S$separationScore O$orphanScore M$missingSeatTypeScore T$value"
+}
 
 case class PartialSeatSuggestion(seats: List[SeatScore]) {
   def size: Int = seats.length
@@ -46,19 +50,28 @@ case class PartialSeatSuggestion(seats: List[SeatScore]) {
   def seatIds: List[SeatId] = seats.map(_.seat)
 }
 
-case class SeatSuggestion(partials: List[PartialSeatSuggestion]) {
-  val SeparationPenalty = 20
-  val OrphanSeatPenalty = 5
+case class SeatSuggestion(partials: List[PartialSeatSuggestion], initialSeats: AvailableSeats, availableTypes: Set[SeatType]) {
+  val SeparationPenalty = 10
+  val OrphanSeatPenalty = 20
+  val MissingSeatTypePenalty = 100
 
   val size: Int = partials.map(_.size).sum
-  val score: Int = partials.map(_.score).sum + partials.length * SeparationPenalty // TODO + partials.slide(3).collect{seats.isOrphanSeat(_) => 1}.sum * OrphanSeatPenalty
-  //TODO: if disabled seats are requested -> solutions that don't have this type get a penalty
   val seatIds: List[SeatId] = partials.map(_.seatIds).flatten
+  val seats = initialSeats.getWithSelected(seatIds)
+
+  val score = {
+    import AvailableSeats._
+    val partialScore = partials.map(_.score).sum
+    val separationScore = (partials.length-1) * SeparationPenalty
+    val orphanScore = seats.sliding(3).count{case l :: m :: r :: Nil => isOrphanSeat(l,m,r); case _ => false}*OrphanSeatPenalty
+
+    val typesInSuggestion = seats.collect{case seat: Seat if seatIds.contains(seat.id) => seat.kind; case seat: SeatWithStatus if seatIds.contains(seat.id) => seat.kind}.distinct
+    val missingSeatTypeScore = (availableTypes - SeatType.Normal -- typesInSuggestion).size*MissingSeatTypePenalty
+    SuggestionScore(partialScore, separationScore, orphanScore, missingSeatTypeScore)
+  }
 }
 
-case class AvailableSeats(fp: FloorPlan, availabilityByType: Map[SeatType, Int]) {
-  val get: List[RowContent] = fp.rows.foldLeft(Nil: List[RowContent])(_ ++ List(Spacer(100)) ++ _.content )
-  
+object AvailableSeats {
   def isAvailable(rc: RowContent): Boolean = rc match {
     case seat: Seat => true
     case seat: SeatWithStatus if seat.status == SeatStatus.Free => true
@@ -71,10 +84,21 @@ case class AvailableSeats(fp: FloorPlan, availabilityByType: Map[SeatType, Int])
     case _ => false
   }
 
+  def toSeatType (rc: RowContent): Option[SeatType] = rc match {
+    case seat: Seat => Some(seat.kind)
+    case seat: SeatWithStatus => Some(seat.kind)
+    case _ => None
+  }
+
   def isOrphanSeat(left: RowContent, middle: RowContent, right: RowContent): Boolean = (left, middle, right) match {
     case (l, m, r) if isSeat(l) && !isAvailable(l) && isSeat(m) && isAvailable(m) && isSeat(r) && !isAvailable(r) => true
     case _ => false
   }
+}
+
+case class AvailableSeats(fp: FloorPlan, availabilityByType: Map[SeatType, Int]) {
+  import AvailableSeats._
+  val get: List[RowContent] = fp.rows.foldLeft(Nil: List[RowContent])(_ ++ List(Spacer(100)) ++ _.content )
 
   def totalAvailable: Int = get.count(isAvailable)
 
@@ -82,16 +106,20 @@ case class AvailableSeats(fp: FloorPlan, availabilityByType: Map[SeatType, Int])
     get.filter(isAvailable).map(SeatScore.fromRowContent).sortBy(_.score).take(quantity).map(_.seat)
   }
 
-  def validate(suggestion: SeatSuggestion): Option[SeatSuggestion] = {
+  def validateCapacityByType(suggestion: SeatSuggestion): Boolean = {
     val seatTypeMap = mutable.Map[SeatType, Int]()
     SeatType.values.foreach { st => seatTypeMap(st) = 0 }
 
     suggestion.seatIds.flatMap(sid => fp.seat(sid)).foreach(seat => seatTypeMap(seat.kind) += 1)
 
-    if (SeatType.values.forall(st => seatTypeMap(st) <= availabilityByType.getOrElse(st, 0)))
-      Some(suggestion)
-    else
-      None
+    SeatType.values.forall(st => seatTypeMap(st) <= availabilityByType.getOrElse(st, 0))
+  }
+
+  def getWithSelected(selected: List[SeatId]): List[RowContent] = {
+    get.map {
+      case seat: SeatWithStatus if selected.contains(seat.id) => SeatWithStatus(seat.id, seat.kind, SeatStatus.Mine, seat.preference, seat.comment)
+      case rc: RowContent => rc
+    }
   }
 }
 
@@ -114,18 +142,28 @@ object ReservationEngine {
         val groupSizesList = groupSizes(quantity)
         val adjacentSolutionsBySize = calculateAllAdjacentSuggestions(seats, groupSizesList.flatten.distinct.sorted.reverse)
 
-        def getSolutionForSize(size: Int) = adjacentSolutionsBySize.getOrElse(size, mutable.Set()).toSet
+        def getSolutionForSize(size: Int) = adjacentSolutionsBySize.getOrElse(size, Nil)
 
         // If first exists use it, else calc all others & use best scoring
-        calculateBestSuggestion(groupSizesList.head.map(getSolutionForSize), seats) match {
+        calculateBestSuggestion(groupSizesList.head.map(getSolutionForSize), seats, availableTypes) match {
           //if the first element produces a solution, then this is always considered the best (all on one row and next to each other)
-          case Some(solution) => Right(solution.seatIds)
+          case Some(solution) => {
+            logger.debug(s"Best suggestion for adjacent seats (${groupSizesList.head.mkString(",")}) -> [${solution.seatIds.map(_.name).mkString(",")}}] score=${solution.score}")
+            Right(solution.seatIds)
+          }
           case None => {
-            groupSizesList.drop(1).map(sizes => calculateBestSuggestion(sizes.map(getSolutionForSize), seats)).flatten match {
+            groupSizesList.drop(1).map(sizes => calculateBestSuggestion(sizes.map(getSolutionForSize), seats, availableTypes)).flatten match {
               //nevermind, just take individual best seats
-              case Nil => Right(seats.takeBest(quantity))
-              case solutions =>
-                Right(solutions.minBy(_.score).seatIds)
+              case Nil => {
+                val solution = seats.takeBest(quantity)
+                logger.debug(s"Suggestion for individual best seats -> [${solution.map(_.name).mkString(",")}}]")
+                Right(solution)
+              }
+              case solutions => {
+                val bestSolution = solutions.minBy(_.score.value)
+                logger.debug(s"Best suggestion for multiple adjacent seats (${groupSizesList.head.mkString(",")}) -> [${bestSolution.seatIds.map(_.name).mkString(",")}}] score=${bestSolution.score}")
+                Right(bestSolution.seatIds)
+              }
             }
           }
         }
@@ -145,51 +183,55 @@ object ReservationEngine {
     result.reverse
   }
 
-  private def calculateBestSuggestion(solutions: List[Set[PartialSeatSuggestion]], seats: AvailableSeats): Option[SeatSuggestion] = solutions match {
+  private def calculateBestSuggestion(solutions: List[List[PartialSeatSuggestion]], seats: AvailableSeats, availableTypes: Set[SeatType]): Option[SeatSuggestion] = solutions match {
     case Nil => None
-    case head :: tail => tail.foldLeft(toSeatSuggestion(calculateBestAdjacentSuggestion(head), None, seats))((sg, psg) =>
+    case head :: tail => tail.foldLeft(addBestPartialSuggestion(head, None, seats, availableTypes))((sg, psg) =>
       sg match {
         case None => None
-        case Some(suggestion) => toSeatSuggestion(calculateBestAdjacentSuggestion(psg, suggestion.partials.map(_.seatIds).flatten), sg, seats)
+        case Some(suggestion) => addBestPartialSuggestion(psg, Some(suggestion), seats, availableTypes)
       }
-
     )
   }
 
-  private def toSeatSuggestion(psg: Option[PartialSeatSuggestion], sg: Option[SeatSuggestion], seats: AvailableSeats): Option[SeatSuggestion] = psg match {
-    case None => None
-    case Some(psg) => {
-      sg match {
-        case None => seats.validate(SeatSuggestion(List(psg)))
-        case Some(sg) => seats.validate(SeatSuggestion(psg :: sg.partials))
-      }
+  private def addBestPartialSuggestion(psgs: List[PartialSeatSuggestion], sg: Option[SeatSuggestion], seats: AvailableSeats, availableTypes: Set[SeatType]): Option[SeatSuggestion] = {
+    val taken = sg.map(_.seatIds).getOrElse(Nil)
+    val sgs = psgs.filter(filterNotTaken(taken)).map(toSeatSuggestion(sg, seats, availableTypes)).filter(filterValid(seats))
+    sgs match {
+      case Nil => None
+      case _ => Some(sgs.minBy(_.score.value))
     }
   }
 
-  private def calculateBestAdjacentSuggestion(suggestions: Set[PartialSeatSuggestion], taken: List[SeatId] = Nil): Option[PartialSeatSuggestion] = suggestions.toSeq match {
-    case Seq() => None
-    case _ => {
-      suggestions.filter(x => taken.intersect(x.seatIds).isEmpty).toSeq match {
-        case Seq() => None
-        case suggestions => Some(suggestions.minBy(_.score))
-      }
+  private def toSeatSuggestion(sg: Option[SeatSuggestion], seats: AvailableSeats, availableTypes: Set[SeatType]) = (psg: PartialSeatSuggestion) => {
+    sg match {
+      case None => SeatSuggestion(List(psg), seats, availableTypes)
+      case Some(sg) => SeatSuggestion(psg :: sg.partials, seats, availableTypes)
     }
   }
 
-  //TODO this can be done faster with two pointer looping over the list
-  private def calculateAllAdjacentSuggestions(seats: AvailableSeats, sizes: List[Int]): mutable.MultiMap[Int, PartialSeatSuggestion] = {
-    val map = new mutable.HashMap[Int, mutable.Set[PartialSeatSuggestion]] with mutable.MultiMap[Int, PartialSeatSuggestion]
+  private def filterValid(seats: AvailableSeats) = (sg: SeatSuggestion) => {
+    seats.validateCapacityByType(sg)
+  }
+
+  private def filterNotTaken(taken: List[SeatId] = Nil) = (psg: PartialSeatSuggestion) => {
+    taken.intersect(psg.seatIds).isEmpty
+  }
+
+  private def calculateAllAdjacentSuggestions(seats: AvailableSeats, sizes: List[Int]): Map[Int, List[PartialSeatSuggestion]] = {
+    import AvailableSeats._
+    val result = sizes.map((_, new ListBuffer[PartialSeatSuggestion])).toMap
     if (!sizes.isEmpty) {
-      val maxSize = sizes.max
-      seats.get.sliding(maxSize).foreach {
-        rowPart =>
-          val maxAdjacentAvailableCount = rowPart.takeWhile(seats.isAvailable).length
-          sizes.collect {
-            case size if size <= maxAdjacentAvailableCount => map.addBinding(size, PartialSeatSuggestion(rowPart.take(size).map(SeatScore.fromRowContent)))
+      val it = seats.get.iterator
+      while (it.hasNext) {
+        val adjacentAvailableSeats = it.dropWhile(!isAvailable(_)).takeWhile(isAvailable)
+        sizes.foreach{ size =>
+          adjacentAvailableSeats.sliding(size).withPartial(false).foreach{ rcList =>
+            result(size) += PartialSeatSuggestion(rcList.map(SeatScore.fromRowContent).toList)
           }
+        }
       }
     }
-    map
+    result.map{ case (key, value) => (key, value.toList) }.toMap
   }
 }
 
@@ -347,7 +389,7 @@ case class OrderInfo(orderId: OrderId, availableTypes: Set[SeatType], users: Lis
   def isAvailable(seatType: SeatType) = availableTypes.contains(seatType)
 
 
-  val TIMEOUT = Duration(5, TimeUnit.MINUTES)
+  val TIMEOUT = Duration(3, TimeUnit.MINUTES)
   var timeout: Long = newTimeout
   def touch() =  this.timeout = newTimeout
 
@@ -658,7 +700,7 @@ object SeatState {
     override def toContent(implicit order: OrderInfo): RowContent = {
 
       val planStatus = status match {
-        case reserved:Reserved => if (order.isAvailable(seat.kind)) SeatStatus.Reserved else SeatStatus.Unavailable
+        case reserved:Reserved => SeatStatus.Unavailable
         case Free =>  if (order.isAvailable(seat.kind)) SeatStatus.Free else SeatStatus.Unavailable
         case Pending(info) => if (order == info) SeatStatus.Mine else SeatStatus.Reserved
       }

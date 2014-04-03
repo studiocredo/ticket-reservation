@@ -3,17 +3,15 @@ package controllers
 import com.google.inject.Inject
 import be.studiocredo._
 import be.studiocredo.auth._
-import play.api.mvc.{SimpleResult, Controller}
+import play.api.mvc.Controller
 import models.ids._
 import models.entities.FloorPlanJson._
 import play.api.data.Form
 import play.api.data.Forms._
 import controllers.auth.Mailer
 import scala.Some
-import be.studiocredo.auth.SecuredDBRequest
 import play.api.libs.json.{JsError, Json}
-import models.entities._
-import be.studiocredo.reservations.{MissingOrderException, CapacityExceededException, FloorProtocol, ReservationEngineMonitorService}
+import be.studiocredo.reservations.{MissingOrderException, FloorProtocol, ReservationEngineMonitorService}
 import scala.collection.immutable.Set
 import be.studiocredo.util.Money
 import scala.concurrent.duration._
@@ -21,29 +19,14 @@ import akka.util.Timeout
 import akka.pattern.ask
 import play.api.Play.current
 import scala.concurrent.Future
-import be.studiocredo.reservations.FloorProtocol.{Response, StartOrder}
+import be.studiocredo.reservations.FloorProtocol.StartOrder
 import play.api.Logger
 import play.api.cache.Cache
-import play.api.db.slick._
 import models.entities.SeatType.SeatType
 import models.entities.SeatType
-import be.studiocredo.reservations.FloorProtocol.Response
-import be.studiocredo.reservations.MissingOrderException
 import models.entities.SeatId
-import controllers.StartSeatOrderForm
-import scala.Some
-import play.api.mvc.SimpleResult
-import be.studiocredo.reservations.FloorProtocol.StartOrder
-import models.entities.Order
-import be.studiocredo.reservations.CapacityExceededException
-import be.studiocredo.auth.SecuredDBRequest
 import be.studiocredo.reservations.FloorProtocol.Response
-import be.studiocredo.reservations.MissingOrderException
-import models.entities.SeatId
-import controllers.StartSeatOrderForm
-import scala.Some
 import play.api.mvc.SimpleResult
-import be.studiocredo.reservations.FloorProtocol.StartOrder
 import models.entities.Identity
 import models.entities.Order
 import be.studiocredo.reservations.CapacityExceededException

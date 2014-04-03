@@ -199,12 +199,15 @@ Floorplan.controller "ReservationFloorplanCtrl", ($scope, $http, $timeout) ->
 
   $scope.timeout = 0
   $scope.millis = 0
+  $scope.timeoutLatch = false
   $scope.$on(UPDATE_TIMEOUT, (event, timeout) ->
     $scope.timeout = timeout
   )
 
   updateTime = () ->
     $scope.millis = new Date($scope.timeout) - new Date();
+    if ($scope.millis > 0)
+        $scope.timeoutLatch = true
     $scope.ticker = $timeout(updateTime, 1000)
 
   updateTime()
