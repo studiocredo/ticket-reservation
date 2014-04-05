@@ -167,7 +167,7 @@ class PreReservationService @Inject()(orderService: OrderService, venueService: 
     val prd = preReservationsByUsersAndEvent(ids, event)
 
     prd.foreach { pr: ShowPrereservationDetail => showMap(pr.show.id) = showMap(pr.show.id) + pr.quantity }
-    orderService.seatsByUsers(ids).foreach { o: TicketSeatOrderDetail => if (showMap(o.show.id) > 0) showMap(o.show.id) -= 1 }
+    orderService.prereservationSeatsByUsers(ids).foreach { o: TicketSeatOrderDetail => if (showMap(o.show.id) > 0) showMap(o.show.id) -= 1 }
 
     showMap.toMap.withDefaultValue(0)
   }
@@ -176,9 +176,28 @@ class PreReservationService @Inject()(orderService: OrderService, venueService: 
     val showMap = mutable.Map[EventShow, Int]().withDefaultValue(0)
 
     prd.foreach { pr: ShowPrereservationDetail => showMap(pr.show) = showMap(pr.show) + pr.quantity }
-    orderService.seatsByUsers(ids).foreach { o: TicketSeatOrderDetail => if (showMap(o.show) > 0) showMap(o.show) -= 1 }
+    orderService.prereservationSeatsByUsers(ids).foreach { o: TicketSeatOrderDetail => if (showMap(o.show) > 0) showMap(o.show) -= 1 }
 
     PendingPrereservationDisplay(showMap.filter(_._2 > 0).toMap)
+  }
+
+  def cleanupPrereservationsAndCloseOrder(order: OrderId, comments: Option[String], event: EventId, users: List[UserId])(implicit  s: Session): Boolean = {
+    val preres = mutable.Map[(ShowId, UserId), Int]()
+    preReservationsByUsersAndEvent(users, event).foreach(prd => preres.put((prd.show.id, prd.user.id), 0))
+    orderService.prereservationSeatsByUsers(users).foreach { tsod =>
+      if (tsod.ticketSeatOrder.userId.isDefined) {
+        val key = (tsod.show.id, tsod.ticketSeatOrder.userId.get)
+        if (preres.contains(key)) {
+          preres.update(key, preres.getOrElse(key, 0)+1)
+        }
+      }
+    }
+    s.withTransaction {
+      preres.toMap.foreach { case ((showId: ShowId, userId: UserId), quantity: Int) =>
+        updateQuantity(ShowPrereservation(showId, userId, quantity))
+      }
+      orderService.close(order, comments)
+    }
   }
 
   //TODO: validate prereservation should not exceed user quotum for show and total should not exceed show capacity

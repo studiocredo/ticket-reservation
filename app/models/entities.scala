@@ -169,7 +169,7 @@ object entities {
     implicit val floorPlanFmt = Json.format[FloorPlan]
   }
 
-  case class Order(id: OrderId, userId: UserId, date: DateTime, billingName: String, billingAddress: String, processed: Boolean) {
+  case class Order(id: OrderId, userId: UserId, date: DateTime, billingName: String, billingAddress: String, processed: Boolean, comments: Option[String]) {
     def reference: String = {
       val userString = s"${userId}".toInt
       val orderString = s"${id}".toInt
@@ -177,11 +177,17 @@ object entities {
       s"+++${"%03d".format(remainder)}/${"%04d".format(userString)}/${"%05d".format(orderString)}+++"
     }
   }
-  case class OrderEdit(         userId: UserId, date: DateTime, billingName: String, billingAddress: String, processed: Boolean)
+  case class OrderEdit(         userId: UserId, date: DateTime, billingName: String, billingAddress: String, processed: Boolean, comments: Option[String])
   case class OrderDetail(order: Order, user: User, ticketOrders: List[TicketOrderDetail]) {
     def id = order.id
     def price = ticketOrders.map(_.price).foldLeft(Money(0))((total, amount) => total.plus(amount))
+    def quantity = ticketOrders.map(_.quantity).sum
+    def quantityByShow(id: ShowId) = ticketSeatOrders.count(_.ticketSeatOrder.showId == id)
     def ticketSeatOrders = ticketOrders.flatMap(_.ticketSeatOrders)
+    def commentLines: List[String] = order.comments match {
+      case None => List()
+      case Some(comments) => comments.split("\n").toList
+    }
     val numberOfSeats = ticketOrders.map(_.ticketSeatOrders.length).sum
     //val numberOfSeatsByShow = ticketOrders.flatMap(_.ticketSeatOrders.map((_.show.id, )))
   }
@@ -189,6 +195,7 @@ object entities {
   case class TicketOrder(id: TicketOrderId, orderId: OrderId, showId: ShowId)
   case class TicketOrderDetail(ticketOrder: TicketOrder, order: Order, show: EventShow, ticketSeatOrders: List[TicketSeatOrderDetail]) {
     def id = ticketOrder.id
+    def quantity = ticketSeatOrders.length
     def price = ticketSeatOrders.map(_.price).foldLeft(Money(0))((total, amount) => total.plus(amount))
   }
 

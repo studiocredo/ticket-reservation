@@ -43,7 +43,7 @@
 }
 
 @orderRowNew(event: models.admin.EventDetail, show: models.entities.Show, venue: models.entities.Venue)= {
-    @defining(info.totalQuota) { max =>
+    @defining(info.totalQuota - order.numberOfSeats) { max =>
     @defining(info.pendingPrereservationsByShow(show.id)) { startValue =>
     @defining(Json.toJson(seatTypes.map(_.toString))) { seatTypesJ =>
     <div class="row">
@@ -53,7 +53,7 @@
         </div>
         <div class="col-md-6">
             @form(action = controllers.routes.Orders.startSeatOrder(show.id, order.id, info.id), 'class -> "form form-horizontal", 'name -> "orderForm") {
-                <div data-order-input quantity="@startValue" max="@info.totalQuota" price-category="@event.pricing.get.prices.head.category" seat-types='@seatTypesJ' class="quantity-input-sm div-inline"></div>
+                <div data-order-input quantity="@startValue" max="@max" price-category="@event.pricing.get.prices.head.category" seat-types='@seatTypesJ' class="quantity-input-sm div-inline"></div>
             }
         </div>
     </div>
@@ -77,6 +77,7 @@
         }
 
         @if(!info.shows.isEmpty) {
+        <div data-ng-controller="OrderCtrl">
 
             <h2>Factuurgegevens</h2>
             <address>
@@ -86,7 +87,7 @@
 
             @if(!order.ticketOrders.isEmpty) {
 
-            <h2>Overzicht bestellingen</h2>
+            <h2>Overzicht bestelling</h2>
 
             <table class="table table-hover table-striped">
                 <thead>
@@ -119,15 +120,15 @@
 
             }
 
-            <div data-ng-init="showOrderMore = @if(order.numberOfSeats > 0) { false } else { true }">
+            @defining(order.numberOfSeats == 0 || request.flash.get("start-order").isDefined) { showOrderMore =>
+            <div data-ng-init="showOrderMore = @showOrderMore">
+            }
             @if(order.numberOfSeats > 0) {
-                    @form(action = routes.Orders.confirm(order.id), 'class -> "form form-inline form-no-feedback") {
-                        <p>
-                            <button type="submit" class="btn btn-primary">Bestelling afronden</button>
-                            <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#cancelModal">Annuleren</button>
-                            <button type="button" id="order-more-button" class="btn btn-success" data-ng-click="showOrderMore = true">Meer tickets bestellen &raquo;</button>
-                        </p>
-                    }
+                <p>
+                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#confirmModal">Bestelling afronden</button>
+                    <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#cancelModal">Annuleren</button>
+                    <button type="button" id="order-more-button" class="btn btn-success" data-ng-click="showOrderMore = true">Meer tickets bestellen &raquo;</button>
+                </p>
             } else {
                 <p>
                     <button class="btn btn-warning" data-toggle="modal" data-target="#cancelModal">Annuleren</button>
@@ -135,16 +136,16 @@
             }
             </div>
 
-            <div data-ng-show="showOrderMore" data-ng-controller="OrderCtrl">
+            <div data-ng-show="showOrderMore">
 
             <h2>@if(order.numberOfSeats > 0) { Extra bestelling } else { Nieuwe bestelling }</h2>
 
             <div class="alert alert-info">
-                <p>Selecteer het aantal gewenste tickets per show.</p>
+                <p>Selecteer het aantal gewenste tickets per show en kies vervolgens je plaatsen.</p>
                 @if(info.users.length == 1) {
-                    <p>Je kan per sessie voor elke voorstelling maximaal @info.totalQuota tickets bestellen.</p>
+                    <p>Je kan per sessie maximaal @info.totalQuota tickets bestellen.</p>
                 } else {
-                    <p>Je kan per sessie voor elke voorstelling maximaal @info.totalQuota tickets bestellen (@info.users.length gekoppelde gebruikers).</p>
+                    <p>Je kan per sessie maximaal @info.totalQuota tickets bestellen (@info.users.length gekoppelde gebruikers).</p>
                 }
                 @if(order.numberOfSeats > 0) {
                     <p>Je hebt in deze sessie al @order.numberOfSeats tickets besteld.</p>
@@ -159,6 +160,13 @@
                     </label>
                 </div>
             </div>
+
+
+            @request.flash.get("start-order").map { message =>
+                <div class="alert alert-danger">
+                    <p>@message</p>
+                </div>
+            }
 
              @defining(info.shows.map{ vs => vs.shows.map{(vs.venue, _)}}.flatten) { venueShows =>
                 @for(((venue, show), index) <- venueShows.zipWithIndex) {
@@ -188,6 +196,44 @@
                     </div>
                 </div>
             </div>
+
+            <div class="modal fade" id="confirmModal" tabindex="-1" role="dialog" aria-labelledby="confirmModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        @form(action = routes.Orders.confirm(order.id, info.id), 'class -> "form", 'role -> "form") {
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                <h4 class="modal-title" id="confirmModalLabel">Bevestiging bestelling</h4>
+                            </div>
+                            <div class="modal-body">
+                                <p>Bestelling van @{order.quantity match { case 1 => "1 ticket"; case _ => s"${order.quantity} tickets"}} voor een bedrag van @CurrencyFormat.format(order.price) op naam van @order.order.billingName</p>
+
+                                @defining(info.pendingPrereservationsByShow.values.sum) { unused =>
+                                    @if(unused > 0) {
+                                        <div class="alert alert-danger">
+                                            <p>Opgelet, je hebt @{unused match { case 1 => "1 pre-reservatie"; case _ => s"${unused} pre-reservaties"}} niet opgebruikt. Indien je je bestelling nu afrondt, vervallen alle niet gebruikte pre-reservaties.</p>
+                                        </div>
+                                    }
+                                }
+
+                                <div class="form-group">
+                                    <label for="orderComments">Opmerkingen</label>
+                                    <textarea id="orderComments" name="orderComments" class="form-control" rows="5">@order.order.comments</textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <p>
+                                    <button type="button" class="btn btn-default" data-dismiss="modal">Nee, terug naar overzicht</button>
+                                    <button type="submit" class="btn btn-primary">Ja, bevestig mijn bestelling</button>
+                                </p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
 } else {
         <div class="well">
             <p><em>Geen voorstellingen gevonden voor dit evenement.</em></p>

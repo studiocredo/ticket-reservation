@@ -34,6 +34,7 @@ import be.studiocredo.auth.SecuredDBRequest
 
 
 case class StartSeatOrderForm(quantity: Int, priceCategory: String, availableSeatTypes: List[SeatType])
+case class OrderComments(comments: Option[String])
 
 class Orders @Inject()(eventService: EventService, orderService: OrderService, showService: ShowService, preReservationService: PreReservationService, venueService: VenueService, val authService: AuthenticatorService, val notificationService: NotificationService, val userService: UserService, orderEngine: ReservationEngineMonitorService) extends Controller with Secure with UserContextSupport {
   val logger = Logger("be.studiocredo.orders")
@@ -46,6 +47,12 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
       "priceCategory" -> text(),
       "seatTypes" -> list(of[SeatType])
     )(StartSeatOrderForm.apply)(StartSeatOrderForm.unapply)
+  )
+
+  val orderCommentsForm: Form[OrderComments] = Form(
+    mapping(
+      "orderComments" -> optional(text)
+    )(OrderComments.apply)(OrderComments.unapply)
   )
 
   implicit val ec = play.api.libs.concurrent.Akka.system.dispatcher
@@ -70,16 +77,21 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
     viewPage(order, event)
   }
 
-  def confirm(id: OrderId) = AuthDBAction { implicit rs =>
-    orderService.get(id) match {
-      case None => BadRequest(s"Bestelling $id niet gevonden")
-      case Some(order)  => {
+  def confirm(order: OrderId, event: EventId) = AuthDBAction { implicit rs =>
+    val bindedForm = orderCommentsForm.bindFromRequest
+    bindedForm.fold(
+      formWithErrors => BadRequest(s"Bestelling $order niet afgesloten"),
+      comments => {
         val currentUser = rs.currentUser.get
-        orderService.close(id)
-        Mailer.sendOrderConfirmationEmail(currentUser.user, order)
-        Redirect(routes.Orders.overview(id))
+        preReservationService.cleanupPrereservationsAndCloseOrder(order, comments.comments, event, currentUser.allUsers) match {
+          case false => BadRequest(s"Bestelling $order niet afgesloten")
+          case true => {
+            Mailer.sendOrderConfirmationEmail(currentUser.user, orderService.get(order).get)
+            Redirect(routes.Orders.overview(order))
+          }
+        }
       }
-    }
+    )
   }
 
   def overview(id: OrderId) = AuthDBAction { implicit rs =>
@@ -110,32 +122,50 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
       ensureOrderAccess(id, order) {
         val bindedForm = startSeatOrderForm.bindFromRequest
         bindedForm.fold(
-          formWithErrors => Future.successful(Redirect(routes.Orders.view(order, event))),
+          formWithErrors => Future(startSeatOrderFailed(order, event)),
           res => {
 
-            val money = Cache.getOrElse[Money]("event." + event.id + "." + res.priceCategory, 300) {
-              eventService.getPricing(event, res.priceCategory).get
-            } //TODO error handling if not found
+            var validationError = false
+            val priceCategoryKey = "event." + event.id + "." + res.priceCategory
+            val money = Cache.getOrElse[Money](priceCategoryKey, 300) {
+              val dbValue = eventService.getPricing(event, res.priceCategory)
+              if (dbValue.isEmpty)
+                validationError = true
+              dbValue.getOrElse(Money(-1))
+            }
             val avail = res.availableSeatTypes.toSet
 
-            implicit val timeout = Timeout(30.seconds)
+            if (validationError) {
+              Cache.remove(priceCategoryKey)
+              Future(startSeatOrderFailed(order, event))
+            } else {
+              implicit val timeout = Timeout(30.seconds)
 
-            (orderEngine.floors ? StartOrder(id, order, res.quantity, rs.user.allUsers, money, avail)).map {
-              case status: Response => {
-
-                Redirect(routes.Orders.viewSeatOrder(id, order))
-              }
-            }.recover({
-              case ooc: CapacityExceededException =>
-                logger.debug(s"$id $order: Capacity exceeded")
-                InternalServerError("No room sorry :(")
-              case error =>
-                logger.error(s"$id $order: Failed to start seat order", error)
-                InternalServerError
-            })
+              (orderEngine.floors ? StartOrder(id, order, res.quantity, rs.user.allUsers, money, avail)).map {
+                case status: Response => {
+                  Redirect(routes.Orders.viewSeatOrder(id, order))
+                }
+              }.recover({
+                case ooc: CapacityExceededException =>
+                  logger.debug(s"$id $order: Capacity exceeded")
+                  val remaining = ooc.remaining match {
+                    case 0 => "De voorstelling is uitverkocht."
+                    case 1 => "Er is nog 1 plaats."
+                    case other => s"Er zijn nog $other plaatsen."
+                  }
+                  startSeatOrderFailed(order, event, s"Onvoldoende plaatsen beschikbaar: $remaining")
+                case error =>
+                  logger.error(s"$id $order: Failed to start seat order", error)
+                  startSeatOrderFailed(order, event)
+              })
+            }
           }
         )
       }
+  }
+
+  private def startSeatOrderFailed(order: OrderId, event: EventId ,msg: String = "Er is een fout opgetreden bij het opstarten van de reservatie"): SimpleResult = {
+    Redirect(routes.Orders.view(order, event)).flashing("start-order" -> msg)
   }
 
   def cancelSeatOrder(showId: ShowId, orderId: OrderId) = AuthDBAction.async {

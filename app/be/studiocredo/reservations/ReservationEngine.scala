@@ -29,6 +29,7 @@ import be.studiocredo.util.Money
 import java.util.concurrent.atomic.{AtomicLong, AtomicInteger}
 import controllers.auth.Mailer
 import scala.collection.mutable.ListBuffer
+import models.admin.EventReservationsDetail
 
 
 object SeatScore {
@@ -100,7 +101,11 @@ case class AvailableSeats(fp: FloorPlan, availabilityByType: Map[SeatType, Int])
   import AvailableSeats._
   val get: List[RowContent] = fp.rows.foldLeft(Nil: List[RowContent])(_ ++ List(Spacer(100)) ++ _.content )
 
-  def totalAvailable: Int = get.count(isAvailable)
+  val totalFree: Int = get.count(isAvailable)
+
+  def totalAvailable(types: Set[SeatType]): Int = {
+    types.map(availabilityByType.get(_).getOrElse(0)).sum
+  }
 
   def takeBest(quantity: Int): List[SeatId] = {
     get.filter(isAvailable).map(SeatScore.fromRowContent).sortBy(_.score).take(quantity).map(_.seat)
@@ -134,9 +139,9 @@ object ReservationEngine {
   def suggestSeats(quantity: Int, seats: AvailableSeats, availableTypes: Set[SeatType]): Either[String, List[SeatId]] = {
     val start = System.nanoTime()
     try {
-      if (quantity <= 0)
+      if (quantity <= 0 || quantity > EventReservationsDetail.maxQuantityPerReservation) //check for max is only a quick check, more robust checking requires user info and order info but that is an expensive calculation
         return Left("re.quantity.invalid")
-      val avail = availableTypes.map(seats.availabilityByType.get(_).getOrElse(0)).sum
+      val avail = seats.totalAvailable(availableTypes)
       logger.debug(s"requested $quantity have $avail available $availableTypes ${seats.availabilityByType}")
       if (avail >= quantity) {
         val groupSizesList = groupSizes(quantity)
@@ -476,10 +481,11 @@ class MaitreDActor(showId: ShowId, showService: ShowService, venueService: Venue
         val info = OrderInfo(order, availableTypes, users, price)
 
         val myAvailable = availableSeats(info)
+        val totalAvailable = myAvailable.totalAvailable(availableTypes)
 
-        logger.debug(s"$seats ${availableTypes.mkString(",")} requested have ${myAvailable.totalAvailable} available ${myAvailable.availabilityByType}")
-        if (myAvailable.totalAvailable < seats) {
-          sender ! Status.Failure(new CapacityExceededException(show, order))
+        logger.debug(s"$seats ${availableTypes.mkString(",")} requested have $totalAvailable available ${myAvailable.availabilityByType}")
+        if (totalAvailable < seats) {
+          sender ! Status.Failure(new CapacityExceededException(show, order, totalAvailable))
         } else {
           val suggested = ReservationEngine.suggestSeats(seats, myAvailable, info.availableTypes)
 
@@ -572,7 +578,7 @@ class MaitreDActor(showId: ShowId, showService: ShowService, venueService: Venue
             case class UseablePreReservation(userId: UserId, var quantity: Int)
 
             val useablePreReservations = preReservationService.findForUsers(showId, info.users).map(pre => {
-              val useable = Math.min(0, pre.quantity - state.countReservedSeats(pre.userId))
+              val useable = Math.max(0, pre.quantity - state.countReservedSeats(pre.userId))
               UseablePreReservation(pre.userId, useable)
             }).sortBy(_.quantity)
 
@@ -744,7 +750,7 @@ object SeatState {
     }
 
     def adjacentFreeSeats(target: SeatId, order: OrderInfo, quantity: Int): Either[Message, List[SeatId]] = {
-      if (quantity <= 0)
+      if (quantity <= 0 || quantity > EventReservationsDetail.maxQuantityPerReservation) //check for max is only a quick check, more robust checking requires user info and order info but that is an expensive calculation
         return Left(ErrorMessage("re.quantity.invalid"))
       val targetIdx = seatList.indexWhere({
         case state:SeatState => state.seatId == target
@@ -820,7 +826,7 @@ object SeatState {
 
 
 case class FailedToAssignInitialSeatingException(msg: String) extends RuntimeException(msg)
-case class CapacityExceededException(show :ShowId, orderId: OrderId) extends RuntimeException()
+case class CapacityExceededException(show :ShowId, orderId: OrderId, remaining: Int) extends RuntimeException()
 
 case class ReloadFailedException(show: ShowId) extends RuntimeException()
 

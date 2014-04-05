@@ -67,10 +67,18 @@ object admin {
     }
   }
 
+  object EventReservationsDetail {
+    val maxQuantityPerReservation = 20
+  }
   case class EventReservationsDetail(event: EventDetail, users: List[User], shows: List[VenueShows], pendingPrereservationsByShow: Map[ShowId, Int]) {
     def id = event.id
 
-    def totalQuota = 10*users.length //TODO: make number of tickets per session configurable
+    def totalQuota = users.length match {
+      case 0 => 0
+      case 1 => 10
+      case 2 => 15
+      case _ => EventReservationsDetail.maxQuantityPerReservation
+    } //TODO: make number of tickets per session configurable
   }
 
   case class ShowEdit(venueId: VenueId, date: DateTime)

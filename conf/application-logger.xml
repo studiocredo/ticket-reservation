@@ -4,7 +4,7 @@
     <logger name="be.studiocredo" level="debug"/>
     <logger name="be.studiocredo.requests" level="warn"/>
     <logger name="play" level="INFO" />
-    <logger name="be.studiocredo.maitred" level="info"/>
+    <logger name="be.studiocredo.maitred" level="debug"/>
     <logger name="be.studiocredo.suggester" level="debug"/>
 
     <logger name="scala.slick" level="debug"/>

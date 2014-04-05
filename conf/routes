@@ -80,7 +80,7 @@ POST        /admin/event/:id/show/:show/delete      @controllers.admin.EventDeta
 
 GET         /order/start/:id                        @controllers.Orders.start(id:EventId)
 GET         /order/:order/event/:event              @controllers.Orders.view(order:OrderId, event:EventId)
-POST        /order/:id                              @controllers.Orders.confirm(id:OrderId)
+POST        /order/:order/event/:event              @controllers.Orders.confirm(order:OrderId, event:EventId)
 GET         /order/:id/cancel                       @controllers.Orders.cancel(id:OrderId)
 GET         /order/:id/overview                     @controllers.Orders.overview(id:OrderId)
 

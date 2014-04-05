@@ -22,7 +22,7 @@
                     <th>Gebruiker</th>
                     <th>Naam</th>
                     <th>Show</th>
-                    <th>Tickets</th>
+                    <th># Tickets</th>
                     <th>Prijs</th>
                     <th/>
                 </tr>
@@ -35,19 +35,21 @@
                         <td><a href="@{routes.UserDetails.view(order.user.id)}">@order.user.username</a></td>
                         <td>@order.order.billingName</td>
                         <td>@helper.showName(ticketOrder.show)&nbsp;<a href="@{routes.Orders.show(ticketOrder.show.id)}"><span class="glyphicon glyphicon-share-alt"></span></a></td>
-                        <td><a href="#" class="seat-popovers" data-container="body" data-toggle="popover" data-placement="bottom" data-content="@{ticketOrder.ticketSeatOrders.map(_.ticketSeatOrder.seat.name).sorted.mkString(", ")}">@ticketOrder.ticketSeatOrders.length</a></td>
+                        <td><a href="#" class="seat-popovers" data-tooltip-placement="left" data-tooltip="@{ticketOrder.ticketSeatOrders.map(_.ticketSeatOrder.seat.name).sorted.mkString(", ")}"><span class="badge badge-primary">@ticketOrder.ticketSeatOrders.length</span></a></td>
                         <td>@CurrencyFormat.format(order.price)</td>
-                        <td><a class="btn btn-default btn-xs" href="@{routes.Orders.confirm(order.id)}">Bevestiging zenden</a></td>
+                        <td>
+                            <a class="btn btn-default btn-xs" href="@{routes.Orders.confirm(order.id)}">Bevestiging zenden</a>
+                            @if(order.order.comments.isDefined) {
+                                <button type="button" class="btn btn-warning btn-xs" data-popover-placement="left" data-popover="@order.order.comments">
+                                    <span class="glyphicon glyphicon-comment"></span>
+                                </button>
+                            }
+                        </td>
                     </tr>
                 }
             }
             </tbody>
         </table>
-        <script type='text/javascript'>
-            $(".seat-popovers").each(function( index ) {
-                $( this ).popover();
-            });
-        </script>
 
         @helper.paging(currentPage, (page:Int) => routes.Orders.list(page))
     } else {

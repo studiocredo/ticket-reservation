@@ -97,5 +97,11 @@
     </tfoot>
 </table>
 
+@if(order.order.comments.isDefined) {
+<h2>Opmerkingen</h2>
+
+<p>@newlines(order.commentLines)</p>
+}
+
 <a href="@routes.Application.index" class="btn btn-primary">OK</a>
 }

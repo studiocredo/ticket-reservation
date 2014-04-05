@@ -21,7 +21,7 @@
 
         <p>Dit is het overzicht van je bestelling.</p>
 
-        <h1>Facturatie gegevens</h1>
+        <h1>Factuurgegevens</h1>
         <p>
             <strong>@order.order.billingName</strong><br>
             @order.order.billingAddress
@@ -45,7 +45,7 @@
             <dd><strong>@order.order.reference</strong></dd>
         </dl>
 
-        <h1>Overzicht bestelling</h1>
+        <h1>Bestelling</h1>
         <table cellpadding="3px">
             <thead>
             <tr>
@@ -87,6 +87,12 @@
             </tr>
             </tfoot>
         </table>
+
+        @if(order.order.comments.isDefined) {
+        <h1>Opmerkingen</h1>
+
+        <p>@newlines(order.commentLines)</p>
+        }
 
         <p>Gelieve het verschuldigde bedrag zo snel mogelijk over te schrijven op onze rekening.</p>
         <p>Na ontvangst van de betaling worden de tickets je via e-mail toegestuurd.</p>

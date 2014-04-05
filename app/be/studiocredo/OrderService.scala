@@ -150,11 +150,11 @@ class OrderService @Inject()(venueService: VenueService) {
     Page(values, page, pageSize, offset, total)
   }
 
-  def seatsByUser(id: UserId)(implicit s: Session): List[TicketSeatOrderDetail] = {
-    seatsByUsers(List(id))
+  def prereservationSeatsByUser(id: UserId)(implicit s: Session): List[TicketSeatOrderDetail] = {
+    prereservationSeatsByUsers(List(id))
   }
 
-  def seatsByUsers(ids: List[UserId])(implicit s: Session): List[TicketSeatOrderDetail] = {
+  def prereservationSeatsByUsers(ids: List[UserId])(implicit s: Session): List[TicketSeatOrderDetail] = {
     val query = for {
       (((ticketSeatOrder, show), event), venue) <- TicketSeatOrders.leftJoin(Shows).on(_.showId === _.id).leftJoin(Events).on(_._2.eventId === _.id).leftJoin(Venues).on(_._1._2.venueId === _.id)
       if ticketSeatOrder.userId inSet ids
@@ -233,7 +233,7 @@ class OrderService @Inject()(venueService: VenueService) {
   }
 
   def createDetailed(user: RichUser)(implicit s:Session): OrderDetail = get(create(user)).get
-  def create(user: RichUser)(implicit s:Session): OrderId = insert(OrderEdit(user.id, org.joda.time.DateTime.now, user.name, user.address.getOrElse("n/a"), false))
+  def create(user: RichUser)(implicit s:Session): OrderId = insert(OrderEdit(user.id, org.joda.time.DateTime.now, user.name, user.address.getOrElse("n/a"), false, None))
   def insert(order: OrderEdit)(implicit s: Session): OrderId = Orders.autoInc.insert(order)
   def update(id: OrderId, billingName: String, billingAddress: String)(implicit s: Session) = byId(id).map(_.billingEdit).update((billingName, billingAddress))
 
@@ -268,8 +268,12 @@ class OrderService @Inject()(venueService: VenueService) {
     }
   }
 
-  def close(id: OrderId)(implicit s: Session) = {
-    OQ.where(_.id === id).map(_.processed).update(true)
+  def close(id: OrderId, comments: Option[String] = None)(implicit s: Session): Boolean = {
+    s.withTransaction {
+      (for {
+        o <- OQ if o.id === id
+      } yield o.processed ~ o.comments).update((true, comments)) == 1
+    }
   }
 
   def closeStale()(implicit s: Session): List[OrderDetail] = {
