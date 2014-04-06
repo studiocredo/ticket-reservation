@@ -13,6 +13,7 @@ import models.entities.OrderDetail
 object Mailer {
   val fromAddress = current.configuration.getString("smtp.from").get
   val subjectPrefix = "[Studio Credo Ticket Reservatie]"
+  val adminAddress = current.configuration.getString("mail.admin")
 
   def sendSignUpEmail(to: String, token: EmailToken)(implicit request: RequestHeader)  {
     val txtAndHtml  = (None, Some(views.html.mails.signUpEmail(token.id)))
@@ -75,6 +76,16 @@ object Mailer {
       case Some(email) => {
         val txtAndHtml = (None, Some(views.html.mails.orderConfirmation(user, order)))
         sendEmail(s"$subjectPrefix Overzicht bestelling", email, txtAndHtml)
+      }
+      case None => ()
+    }
+  }
+
+  def sendOrderWithCommentsToAdmin(order: OrderDetail) = {
+    adminAddress match {
+      case Some(email) => {
+        val txtAndHtml = (None, Some(views.html.mails.orderWithComments(order)))
+        sendEmail(s"$subjectPrefix Bestelling met commentaar", email, txtAndHtml)
       }
       case None => ()
     }

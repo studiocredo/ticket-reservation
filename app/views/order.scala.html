@@ -37,7 +37,7 @@
         <td>@ticketOrder.ticketSeatOrders.length</td>
         <td>@CurrencyFormat.format(ticketOrder.price)</td>
         <td>
-            <a class="btn btn-danger btn-sm" href="@routes.Orders.cancelTicketOrder(ticketOrder.id)">Verwijderen</a>
+            <a class="btn btn-danger btn-sm" href="@routes.Orders.cancelTicketOrder(order.id, info.id, ticketOrder.id)">Verwijderen</a>
         </td>
     </tr>
 }
@@ -79,11 +79,30 @@
         @if(!info.shows.isEmpty) {
         <div data-ng-controller="OrderCtrl">
 
-            <h2>Factuurgegevens</h2>
-            <address>
+            <h2 data-ng-init="billingEdit = false">
+                Factuurgegevens
+                <button type="button" class="btn btn-default btn-xs" title="Bewerken" data-ng-click="billingEdit = !billingEdit" data-ng-show="!billingEdit"><span class="glyphicon glyphicon-pencil"></span></button>
+            </h2>
+            <address data-ng-show="!billingEdit">
                 <strong>@order.order.billingName</strong><br>
-                @order.order.billingAddress
+                @newlines(order.billingAddressLines)
             </address>
+            <div data-ng-show="billingEdit" style="margin-bottom: 15px;" class="panel panel-primary">
+                <div class="panel-body">
+                    @form(action = routes.Orders.updateBillingData(order.id, info.id), 'class -> "form", 'role -> "form") {
+                        <div class="form-group">
+                            <label for="billingName">Naam</label>
+                            <input id="billingName" class="form-control" name="billingName" type="text" value="@order.order.billingName"/>
+                        </div>
+                        <div class="form-group">
+                            <label for="billingAddress">Adres</label>
+                            <textarea id="billingAddress" name="billingAddress" class="form-control" rows="3">@order.order.billingAddress</textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm">Opslaan</button>
+                        <button type="button" class="btn btn-warning btn-sm" data-ng-click="billingEdit = false">Annuleren</button>
+                    }
+                </div>
+            </div>
 
             @if(!order.ticketOrders.isEmpty) {
 

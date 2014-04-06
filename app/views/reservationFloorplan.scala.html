@@ -14,8 +14,8 @@
 
 <div class="row" data-ng-controller="ReservationFloorplanCtrl">
     <div class="col-xs-12 col-md-3 col-md-push-9" id="sidebar" role="navigation">
-        <a class="btn btn-success btn-block btn-lg" href="@routes.Orders.commitSeatOrder(show.id, orderId)">Bevestigen</a>
-        <a class="btn btn-warning btn-block btn-lg" href="@routes.Orders.cancelSeatOrder(show.id, orderId)" style="margin-bottom: 10px;">Annuleren</a>
+        <a class="btn btn-success btn-block btn-lg" href="@routes.Orders.commitSeatOrder(show.id, orderId)" data-loading-text="Bezig..." onclick="$(this).button('loading');">Bevestigen</a>
+        <a class="btn btn-warning btn-block btn-lg" href="@routes.Orders.cancelSeatOrder(show.id, orderId)" data-loading-text="Bezig..." onclick="$(this).button('loading');" style="margin-bottom: 10px;">Annuleren</a>
 
         <div class="panel panel-default">
             <div class="panel-heading">Selectie</div>

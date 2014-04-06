@@ -95,7 +95,7 @@ class Events @Inject()(venueService: VenueService, eventService: EventService, s
           case None => Nil
           case Some(identity) => identity.allUsers
         }
-        Ok(Json.toJson(venueService.fillFloorplan(plan, orderService.byShowId(id), users)))
+        Ok(Json.toJson(venueService.fillFloorplan(plan, orderService.detailsByShowId(id), users)))
       }
     }
   }

@@ -29,7 +29,7 @@ class Test @Inject()(es: EventService, ss: ShowService, vs: VenueService, os: Or
     val venue = vs.get(show.venueId).get
     val venueFloorplan = venue.floorplan.get
 
-    val floorplan = vs.fillFloorplan(venueFloorplan, os.byShowId(show.id), users)
+    val floorplan = vs.fillFloorplan(venueFloorplan, os.detailsByShowId(show.id), users)
     val availability = prs.availability(ss.getEventShow(show.id), users)
 
     ReservationEngine.suggestSeats(quantity.getOrElse(6), floorplan, availability).fold(
@@ -47,7 +47,7 @@ class Test @Inject()(es: EventService, ss: ShowService, vs: VenueService, os: Or
     val venue = vs.get(show.venueId).get
     val venueFloorplan = venue.floorplan.get
 
-    val floorplan = vs.fillFloorplan(venueFloorplan, os.byShowId(show.id), users, List(SeatType.Disabled, SeatType.Normal, SeatType.Vip))
+    val floorplan = vs.fillFloorplan(venueFloorplan, os.detailsByShowId(show.id), users, List(SeatType.Disabled, SeatType.Normal, SeatType.Vip))
 
     val availability = prs.availability(ss.getEventShow(show.id), users)
     val seats = AvailableSeats(floorplan, availability.byType)
@@ -64,7 +64,7 @@ class Test @Inject()(es: EventService, ss: ShowService, vs: VenueService, os: Or
 
   def prereserve(quantity: Option[Int], showId: Option[ShowId] ) = AuthDBAction { implicit request =>
     val us = userService
-    val u = us.findByUserName("u1019").get
+    val u = us.findByUserName("u0").get
     val sid = showId.getOrElse(ShowId(1))
     val uid = u.id
     prs.findByShowAndUser(sid, uid) match {

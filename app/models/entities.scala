@@ -188,6 +188,7 @@ object entities {
       case None => List()
       case Some(comments) => comments.split("\n").toList
     }
+    def billingAddressLines: List[String] = order.billingAddress.split("\n").toList
     val numberOfSeats = ticketOrders.map(_.ticketSeatOrders.length).sum
     //val numberOfSeatsByShow = ticketOrders.flatMap(_.ticketSeatOrders.map((_.show.id, )))
   }

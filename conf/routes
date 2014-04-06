@@ -83,13 +83,14 @@ GET         /order/:order/event/:event              @controllers.Orders.view(ord
 POST        /order/:order/event/:event              @controllers.Orders.confirm(order:OrderId, event:EventId)
 GET         /order/:id/cancel                       @controllers.Orders.cancel(id:OrderId)
 GET         /order/:id/overview                     @controllers.Orders.overview(id:OrderId)
+POST        /order/:order/event/:event/updateBillingData @controllers.Orders.updateBillingData(order:OrderId, event:EventId)
 
 POST        /order/:order/event/:event/show/:id     @controllers.Orders.startSeatOrder(id:ShowId, order: OrderId, event: EventId)
 GET         /order/:order/show/:id                  @controllers.Orders.viewSeatOrder(id:ShowId, order: OrderId)
 GET         /order/:order/show/:id/commit           @controllers.Orders.commitSeatOrder(id:ShowId, order: OrderId)
 GET         /order/:order/show/:id/cancel           @controllers.Orders.cancelSeatOrder(id:ShowId, order: OrderId)
 
-GET         /order/ticket/:id/cancel                @controllers.Orders.cancelTicketOrder(id:TicketOrderId)
+GET         /order/:order/event/:event/ticket/:ticket/cancel @controllers.Orders.cancelTicketOrder(order: OrderId, event: EventId, ticket:TicketOrderId)
 POST        /order/:order/show/:id/floorplan        @controllers.Orders.ajaxFloorplan(id:ShowId, order: OrderId)
 POST        /order/:order/show/:id/move             @controllers.Orders.ajaxMove(id:ShowId, order: OrderId)
 POST        /order/:order/show/:id/moveBest         @controllers.Orders.ajaxMoveBest(id:ShowId, order: OrderId)

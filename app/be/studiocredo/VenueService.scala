@@ -80,9 +80,11 @@ class VenueService @Inject()() {
 
   }
 
-  def fillFloorplan(fp: FloorPlan, tickets: List[TicketSeatOrder], users: List[UserId] = List(), availableTypes: List[SeatType] = List(SeatType.Normal)): FloorPlan = {
-   val (mine, notmine) = tickets.partition(ticket => ticket.userId match { case Some(userId) => users.contains(userId); case None => false})
-   FloorPlan(fp.rows.map{row => Row(row.content.map{ case seat: Seat => SeatWithStatus(seat.id, seat.kind, getSeatStatus(seat, mine.map{_.seat}, notmine.map{_.seat}, availableTypes), seat.preference); case seat:SeatWithStatus => seat; case spacer:Spacer => spacer }, row.vspace) })
+  def fillFloorplan(fp: FloorPlan, orders: List[OrderDetail], users: List[UserId] = List(), availableTypes: List[SeatType] = List(SeatType.Normal)): FloorPlan = {
+    val (myOrders, otherOrders) = orders.partition(order => users.contains(order.order.userId))
+    val mySeats = myOrders.flatMap(_.ticketSeatOrders.map(_.ticketSeatOrder.seat))
+    val otherSeats = otherOrders.flatMap(_.ticketSeatOrders.map(_.ticketSeatOrder.seat))
+   FloorPlan(fp.rows.map{row => Row(row.content.map{ case seat: Seat => SeatWithStatus(seat.id, seat.kind, getSeatStatus(seat, mySeats, otherSeats, availableTypes), seat.preference); case seat:SeatWithStatus => seat; case spacer:Spacer => spacer }, row.vspace) })
   }
 
   def fillFloorplanDetailed(fp: FloorPlan, orders: List[OrderDetail], users: List[UserId] = List(), availableTypes: List[SeatType] = List(SeatType.Normal)): FloorPlan = {

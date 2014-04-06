@@ -1,0 +1,77 @@
+@(order: models.entities.OrderDetail)
+@import helper._
+@import models.CurrencyFormat
+
+@orderRow(user: models.entities.User, ticketOrder: models.entities.TicketOrderDetail)= {
+<td>@showName(ticketOrder.show)</td>
+<td>
+    @defining(ticketOrder.ticketSeatOrders.map(_.ticketSeatOrder.seat.name).sorted.grouped(5).map(_.mkString(", ")).toSeq) { groupedSeats =>
+    @groupedSeats.tail.foldLeft(Html(groupedSeats.head)) { (result, seat) =>
+    @result<br/>@seat
+    }
+    }
+</td>
+<td>@ticketOrder.ticketSeatOrders.length</td>
+<td>@CurrencyFormat.format(ticketOrder.price)</td>
+}
+
+<html>
+    <body>
+        <p>Er is een bestelling uitgevoerd met een opmerking.</p>
+
+        <h1>Factuurgegevens</h1>
+        <p>
+            <strong>@order.order.billingName</strong><br>
+            @order.order.billingAddress
+        </p>
+
+        @if(order.order.comments.isDefined) {
+        <h1>Opmerkingen</h1>
+
+        <p>@newlines(order.commentLines)</p>
+        }
+
+        <h1>Bestelling</h1>
+        <table cellpadding="3px">
+            <thead>
+            <tr>
+                <th>Datum</th>
+                <th>Voorstelling</th>
+                <th>Plaatsen</th>
+                <th>Aantal</th>
+                <th>Prijs</th>
+            </tr>
+            </thead>
+            <tbody>
+
+            @defining(order.ticketOrders match { case head :: tail => (Some(head), tail); case _ => (None, Nil) }) { tuple =>
+            @defining(tuple._1) { first =>
+            @defining(tuple._2) { tail =>
+            @first match {
+            case Some(first) => {
+            <tr>
+                <td>@HumanDateTime.formatDateCompact(order.order.date)</td>
+                @orderRow(order.user, first)
+            </tr>
+            }
+            case None => { }
+            }
+            @tail.map { ticketOrder =>
+            <tr>
+                <td/>
+                @orderRow(order.user, ticketOrder)
+            </tr>
+            }
+            }
+            }
+            }
+            </tbody>
+            <tfoot>
+            <tr>
+                <td colspan="4"><strong>Totaal</strong></td>
+                <td><strong>@CurrencyFormat.format(order.price)</strong></td>
+            </tr>
+            </tfoot>
+        </table>
+    </body>
+</html>

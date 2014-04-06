@@ -35,6 +35,7 @@ import be.studiocredo.auth.SecuredDBRequest
 
 case class StartSeatOrderForm(quantity: Int, priceCategory: String, availableSeatTypes: List[SeatType])
 case class OrderComments(comments: Option[String])
+case class OrderBillingData(billingName: String, billingAddress: String)
 
 class Orders @Inject()(eventService: EventService, orderService: OrderService, showService: ShowService, preReservationService: PreReservationService, venueService: VenueService, val authService: AuthenticatorService, val notificationService: NotificationService, val userService: UserService, orderEngine: ReservationEngineMonitorService) extends Controller with Secure with UserContextSupport {
   val logger = Logger("be.studiocredo.orders")
@@ -53,6 +54,13 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
     mapping(
       "orderComments" -> optional(text)
     )(OrderComments.apply)(OrderComments.unapply)
+  )
+
+  val orderBillingDataForm: Form[OrderBillingData] = Form(
+    mapping(
+      "billingName" -> text(),
+      "billingAddress" -> text()
+    )(OrderBillingData.apply)(OrderBillingData.unapply)
   )
 
   implicit val ec = play.api.libs.concurrent.Akka.system.dispatcher
@@ -86,10 +94,25 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
         preReservationService.cleanupPrereservationsAndCloseOrder(order, comments.comments, event, currentUser.allUsers) match {
           case false => BadRequest(s"Bestelling $order niet afgesloten")
           case true => {
-            Mailer.sendOrderConfirmationEmail(currentUser.user, orderService.get(order).get)
+            val orderDetail = orderService.get(order).get
+            if (orderDetail.order.comments.isDefined) {
+              Mailer.sendOrderWithCommentsToAdmin(orderDetail)
+            }
+            Mailer.sendOrderConfirmationEmail(currentUser.user, orderDetail)
             Redirect(routes.Orders.overview(order))
           }
         }
+      }
+    )
+  }
+
+  def updateBillingData(order: OrderId, event: EventId) = AuthDBAction { implicit rs =>
+    val bindedForm = orderBillingDataForm.bindFromRequest
+    bindedForm.fold(
+      formWithErrors => Redirect(controllers.routes.Orders.view(order, event)),
+      billingData => {
+        orderService.update(order, billingData.billingName, billingData.billingAddress)
+        Redirect(controllers.routes.Orders.view(order, event))
       }
     )
   }
@@ -242,14 +265,14 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
     }
   }
 
- def cancelTicketOrder(id: TicketOrderId) = AuthDBAction { implicit rs =>
+ def cancelTicketOrder(order: OrderId, event: EventId, ticket: TicketOrderId) = AuthDBAction { implicit rs =>
    import FloorProtocol._
 
-   orderService.destroyTicketOrders(id) match {
-     case 0 => BadRequest(s"Bestelling $id niet gevonden")
+   orderService.destroyTicketOrders(ticket) match {
+     case 0 => BadRequest(s"Bestelling $ticket niet gevonden")
      case _ => {
        (orderEngine.floors) ! ReloadState
-       Redirect(routes.Application.index())         //TODO redirect to same page (need order id and event id)
+       Redirect(routes.Orders.view(order, event))
      }
    }
   }
