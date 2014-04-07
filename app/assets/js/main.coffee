@@ -262,6 +262,10 @@ Floorplan.directive 'reservationFloorplan', () ->
           $scope.rows = response.plan.rows
           $scope.$emit(UPDATE_TIMEOUT, response.timeout)
 
+       updateAndClearSelected = (response) ->
+         update(response)
+         $scope.clearSelected()
+
       $scope.claim = (seat) ->
         payload = {target: {name:seat}}
         if ($scope.selected.length > 0)
@@ -269,12 +273,10 @@ Floorplan.directive 'reservationFloorplan', () ->
             angular.forEach($scope.selected, (seat) ->
                 payload.seats.push({name: seat})
             )
-            $http.post(jsRoutes.controllers.Orders.ajaxMove($scope.showId, $scope.orderId).url, payload).success(update).error(errorHandler)
-        $scope.clearSelected()
+            $http.post(jsRoutes.controllers.Orders.ajaxMove($scope.showId, $scope.orderId).url, payload).success(updateAndClearSelected).error(errorHandler)
 
       $scope.$on(MOVE_BEST, () ->
-        $http.post(jsRoutes.controllers.Orders.ajaxMoveBest($scope.showId, $scope.orderId).url).success(update).error(errorHandler)
-        $scope.clearSelected()
+        $http.post(jsRoutes.controllers.Orders.ajaxMoveBest($scope.showId, $scope.orderId).url).success(updateAndClearSelected).error(errorHandler)
       )
 
       $scope.selected = []
@@ -365,7 +367,7 @@ Floorplan.directive 'orderInput', () ->
       if ($scope.quantity > 0)
         $scope.quantity -= 1
     $scope.validQuantity = ->
-      $scope.quantity > 0 && $scope.quantity <= $scope.max
+      parseInt($scope.quantity) > 0 && parseInt($scope.quantity) <= parseInt($scope.max)
     $scope.$on(UPDATE_DISABLED_SEAT_TYPE, (event, addDisabledSeatType) -> $scope.updateDisabledSeatType(addDisabledSeatType))
     $scope.updateDisabledSeatType = (addDisabledSeatType) ->
       idx = $scope.seatTypesArray.indexOf("disabled")
