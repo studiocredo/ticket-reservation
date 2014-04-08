@@ -121,8 +121,8 @@ Floorplan.directive 'floorplan', () ->
     <div class="row seat-row vspacer-{{row.vspace}}" data-ng-repeat="row in rows">
         <div data-ng-model="row.content">
             <div class="content" data-ng-repeat="content in row.content">
-                <div class="spacer spacer-{{content.width}}" data-ng-if="content.ct == 'spacer'"></div>
-                <div class="clickable seat seat-{{content.kind}}" data-ng-if="content.ct == 'seat'">{{content.id.name}}</div>
+                <div class="spacer spacer-{{content.width}} no-select" data-ng-if="content.ct == 'spacer'"></div>
+                <div class="clickable seat seat-{{content.kind}} no-select" data-ng-if="content.ct == 'seat'">{{content.id.name}}</div>
             </div>
         </div>
     </div>
@@ -145,9 +145,9 @@ Floorplan.directive 'availabilityFloorplan', () ->
     <div class="row seat-row vspacer-{{row.vspace}}" data-ng-repeat="row in rows">
         <div data-ng-model="row.content" class="span-12">
             <div class="content" data-ng-repeat="content in row.content">
-                <div class="spacer spacer-{{content.width}}" data-ng-if="content.ct == 'spacer'"></div>
-                <div class="seat seat-{{content.kind}}" data-ng-if="content.ct == 'seat'">{{content.id.name}}</div>
-                <div class="seat seat-status-{{content.status}}" data-ng-if="content.ct == 'seat-status'">{{content.id.name}}</div>
+                <div class="spacer spacer-{{content.width}} no-select" data-ng-if="content.ct == 'spacer'"></div>
+                <div class="seat seat-{{content.kind}} no-select" data-ng-if="content.ct == 'seat'">{{content.id.name}}</div>
+                <div class="seat seat-status-{{content.status}} no-select" data-ng-if="content.ct == 'seat-status'">{{content.id.name}}</div>
             </div>
         </div>
     </div>
@@ -170,9 +170,9 @@ Floorplan.directive 'orderAdminFloorplan', () ->
     <div class="row seat-row vspacer-{{row.vspace}}" data-ng-repeat="row in rows">
         <div data-ng-model="row.content" class="span-12">
             <div class="content" data-ng-repeat="content in row.content">
-                <div class="spacer spacer-{{content.width}}" data-ng-if="content.ct == 'spacer'"></div>
-                <div class="seat seat-{{content.kind}}" data-ng-if="content.ct == 'seat'">{{content.id.name}}</div>
-                <div class="seat seat-status-{{content.status}}" data-ng-if="content.ct == 'seat-status'" data-tooltip-placement="top" data-tooltip="{{content.comment}}" data-tooltip-trigger="mouseenter">{{content.id.name}}</div>
+                <div class="spacer spacer-{{content.width}} no-select" data-ng-if="content.ct == 'spacer'"></div>
+                <div class="seat seat-{{content.kind}} no-select" data-ng-if="content.ct == 'seat'">{{content.id.name}}</div>
+                <div class="seat seat-status-{{content.status}} no-select" data-ng-if="content.ct == 'seat-status'" data-tooltip-placement="top" data-tooltip="{{content.comment}}" data-tooltip-trigger="mouseenter">{{content.id.name}}</div>
             </div>
         </div>
     </div>
@@ -235,11 +235,11 @@ Floorplan.directive 'reservationFloorplan', () ->
     <div class="row seat-row vspacer-{{row.vspace}}" data-ng-repeat="row in rows">
         <div data-ng-model="row.content" class="span-12">
             <div class="content" data-ng-repeat="content in row.content">
-                <div class="spacer spacer-{{content.width}}" data-ng-if="content.ct == 'spacer'"></div>
-                <div class="seat seat-{{content.kind}}" data-ng-if="content.ct == 'seat'">{{content.id.name}}</div>
-                <div class="seat seat-status-{{content.status}}" data-ng-if="content.ct == 'seat-status' && content.status == 'free'" data-ng-click="claim(content.id.name)">{{content.id.name}}</div>
-                <div class="seat seat-status-{{seatStatus(content.id.name)}}" data-ng-if="content.ct == 'seat-status' && content.status == 'mine'" data-ng-click="toggleSelect(content.id.name)">{{content.id.name}}</div>
-                <div class="seat seat-status-{{content.status}}" data-ng-if="content.ct == 'seat-status' && content.status != 'free' && content.status != 'mine'">{{content.id.name}}</div>
+                <div class="spacer spacer-{{content.width}} no-select" data-ng-if="content.ct == 'spacer'"></div>
+                <div class="seat seat-{{content.kind}} no-select" data-ng-if="content.ct == 'seat'">{{content.id.name}}</div>
+                <div class="seat seat-status-{{content.status}} no-select" data-ng-if="content.ct == 'seat-status' && content.status == 'free'" data-ng-click="claim(content.id.name)">{{content.id.name}}</div>
+                <div class="seat seat-status-{{seatStatus(content.id.name)}} no-select" data-ng-if="content.ct == 'seat-status' && content.status == 'mine'" data-ng-click="toggleSelect(content.id.name)">{{content.id.name}}</div>
+                <div class="seat seat-status-{{content.status}} no-select" data-ng-if="content.ct == 'seat-status' && content.status != 'free' && content.status != 'mine'">{{content.id.name}}</div>
             </div>
         </div>
     </div>
