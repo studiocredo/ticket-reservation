@@ -109,7 +109,3 @@ GET         /events/availability/:id                @controllers.Events.ajaxAvai
 GET         /assets/javascripts/routes              @controllers.Application.javascriptRoutes
 GET         /assets/*file                           controllers.Assets.at(path="/public", file)
 GET         /webjars/*file                          controllers.WebJarAssets.at(file)
-
-GET /suggest  @controllers.admin.Test.suggest(quantity:Option[Int], showId:Option[ShowId])
-GET /reserve  @controllers.admin.Test.reserve(quantity:Option[Int], showId:Option[ShowId])
-GET /prereserve  @controllers.admin.Test.prereserve(quantity:Option[Int], showId:Option[ShowId])
