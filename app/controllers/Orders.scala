@@ -82,46 +82,54 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
   }
 
   def view(order: OrderId, event: EventId) = AuthDBAction { implicit rs =>
-    viewPage(order, event)
+    ensureOrderAccess(order) {
+      viewPage(order, event)
+    }
   }
 
   def confirm(order: OrderId, event: EventId) = AuthDBAction { implicit rs =>
-    val bindedForm = orderCommentsForm.bindFromRequest
-    bindedForm.fold(
-      formWithErrors => BadRequest(s"Bestelling $order niet afgesloten"),
-      comments => {
-        val currentUser = rs.currentUser.get
-        preReservationService.cleanupPrereservationsAndCloseOrder(order, comments.comments, event, currentUser.allUsers) match {
-          case false => BadRequest(s"Bestelling $order niet afgesloten")
-          case true => {
-            val orderDetail = orderService.get(order).get
-            if (orderDetail.order.comments.isDefined) {
-              Mailer.sendOrderWithCommentsToAdmin(orderDetail)
+    ensureOrderAccess(order) {
+      val bindedForm = orderCommentsForm.bindFromRequest
+      bindedForm.fold(
+        formWithErrors => BadRequest(s"Bestelling $order niet afgesloten"),
+        comments => {
+          val currentUser = rs.currentUser.get
+          preReservationService.cleanupPrereservationsAndCloseOrder(order, comments.comments, event, currentUser.allUsers) match {
+            case false => BadRequest(s"Bestelling $order niet afgesloten")
+            case true => {
+              val orderDetail = orderService.get(order).get
+              if (orderDetail.order.comments.isDefined) {
+                Mailer.sendOrderWithCommentsToAdmin(orderDetail)
+              }
+              Mailer.sendOrderConfirmationEmail(currentUser.user, orderDetail)
+              Redirect(routes.Orders.overview(order))
             }
-            Mailer.sendOrderConfirmationEmail(currentUser.user, orderDetail)
-            Redirect(routes.Orders.overview(order))
           }
         }
-      }
-    )
+      )
+    }
   }
 
   def updateBillingData(order: OrderId, event: EventId) = AuthDBAction { implicit rs =>
-    val bindedForm = orderBillingDataForm.bindFromRequest
-    bindedForm.fold(
-      formWithErrors => Redirect(controllers.routes.Orders.view(order, event)),
-      billingData => {
-        orderService.update(order, billingData.billingName, billingData.billingAddress)
-        Redirect(controllers.routes.Orders.view(order, event))
-      }
-    )
+    ensureOrderAccess(order) {
+      val bindedForm = orderBillingDataForm.bindFromRequest
+      bindedForm.fold(
+        formWithErrors => Redirect(controllers.routes.Orders.view(order, event)),
+        billingData => {
+          orderService.update(order, billingData.billingName, billingData.billingAddress)
+          Redirect(controllers.routes.Orders.view(order, event))
+        }
+      )
+    }
   }
 
   def overview(id: OrderId) = AuthDBAction { implicit rs =>
-    orderService.get(id) match {
-      case None => BadRequest(s"Bestelling $id niet gevonden")
-      case Some(order)  => {
-        Ok(views.html.orderOverview(order, userContext))
+    ensureOrderAccess(id) {
+      orderService.get(id) match {
+        case None => BadRequest(s"Bestelling $id niet gevonden")
+        case Some(order) => {
+          Ok(views.html.orderOverview(order, userContext))
+        }
       }
     }
   }
@@ -129,11 +137,13 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
   def cancel(id: OrderId) = AuthDBAction { implicit rs =>
     import FloorProtocol._
 
-    orderService.destroy(id) match {
-      case 0 => BadRequest(s"Bestelling $id niet gevonden")
-      case _ => {
-        (orderEngine.floors) ! ReloadState
-        Redirect(routes.Application.index())
+    ensureOrderAccess(id) {
+      orderService.destroy(id) match {
+        case 0 => BadRequest(s"Bestelling $id niet gevonden")
+        case _ => {
+          (orderEngine.floors) ! ReloadState
+          Redirect(routes.Application.index())
+        }
       }
     }
   }
@@ -142,7 +152,7 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
     implicit rs =>
       import FloorProtocol._
 
-      ensureOrderAccess(id, order) {
+      ensureOrderAccessAsync(order) {
         val bindedForm = startSeatOrderForm.bindFromRequest
         bindedForm.fold(
           formWithErrors => Future(startSeatOrderFailed(order, event)),
@@ -195,7 +205,7 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
     implicit rs =>
       import FloorProtocol._
 
-      ensureOrderAccess(showId, orderId) {
+      ensureOrderAccessAsync(orderId) {
         implicit val timeout = Timeout(30.seconds)
 
         (orderEngine.floors ? Cancel(showId, orderId)).map {
@@ -216,7 +226,7 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
     implicit rs =>
       import FloorProtocol._
 
-      ensureOrderAccess(showId, orderId) {
+      ensureOrderAccessAsync(orderId) {
         implicit val timeout = Timeout(30.seconds)
 
         (orderEngine.floors ? Commit(showId, orderId)).map {
@@ -239,28 +249,45 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
     }
   }
 
-  def ensureOrderAccess(showID: ShowId, orderId: OrderId)(action: => Future[SimpleResult])(implicit rs: SecuredDBRequest[_]): Future[SimpleResult] = {
+  def ensureOrderAccess(orderId: OrderId)(action: => SimpleResult)(implicit rs: SecuredDBRequest[_]): SimpleResult = {
     Cache.getOrElse[Option[Order]]("order." + orderId.id, 300) {
       orderService.find(orderId)
     }.fold({
-      logger.warn(s"$showID $orderId: Order not found")
+      logger.warn(s"$orderId: Order not found")
+      BadRequest(s"Order $orderId niet gevonden")
+    })(
+        order => {
+          if (order.userId == rs.user.id)
+            action
+          else {
+            logger.warn(s"$order: Order for user ${order.userId} but ${rs.user.id} attempted to use it")
+            BadRequest(s"Geen toegang tot order $order")
+          }
+        }
+      )
+  }
+
+
+  def ensureOrderAccessAsync(orderId: OrderId)(action: => Future[SimpleResult])(implicit rs: SecuredDBRequest[_]): Future[SimpleResult] = {
+    Cache.getOrElse[Option[Order]]("order." + orderId.id, 300) {
+      orderService.find(orderId)
+    }.fold({
+      logger.warn(s"$orderId: Order not found")
       Future.successful(BadRequest(s"Order $orderId niet gevonden"))
     })(
           order => {
             if (order.userId == rs.user.id)
               action
             else {
-              logger.warn(s"$showID $order: Order for user ${order.userId} but ${rs.user.id} attempted to use it")
+              logger.warn(s"$order: Order for user ${order.userId} but ${rs.user.id} attempted to use it")
               Future.successful(BadRequest(s"Geen toegang tot order $order"))
             }
           }
         )
   }
 
-
-
   def viewSeatOrder(id: ShowId, order: OrderId) = AuthDBAction.async { implicit rs =>
-    ensureOrderAccess(id, order) {
+    ensureOrderAccessAsync(order) {
       Future.successful(Ok(views.html.reservationFloorplan(showService.getEventShow(id), order, userContext)))
     }
   }
@@ -268,11 +295,13 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
  def cancelTicketOrder(order: OrderId, event: EventId, ticket: TicketOrderId) = AuthDBAction { implicit rs =>
    import FloorProtocol._
 
-   orderService.destroyTicketOrders(ticket) match {
-     case 0 => BadRequest(s"Bestelling $ticket niet gevonden")
-     case _ => {
-       (orderEngine.floors) ! ReloadState
-       Redirect(routes.Orders.view(order, event))
+   ensureOrderAccess(order) {
+     orderService.destroyTicketOrders(ticket) match {
+       case 0 => BadRequest(s"Bestelling $ticket niet gevonden")
+       case _ => {
+         (orderEngine.floors) ! ReloadState
+         Redirect(routes.Orders.view(order, event))
+       }
      }
    }
   }
@@ -283,7 +312,7 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
   def ajaxFloorplan(id: ShowId, order: OrderId) = AuthDBAction.async { implicit rs =>
     import FloorProtocol._
 
-    ensureOrderAccess(id, order) {
+    ensureOrderAccessAsync(order) {
 
       implicit val timeout = Timeout(30.seconds)
 
@@ -307,7 +336,7 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
   def ajaxMove(id: ShowId, order: OrderId) = AuthDBAction.async(parse.json) { implicit rs =>
     import FloorProtocol._
 
-    ensureOrderAccess(id, order) {
+    ensureOrderAccessAsync(order) {
 
       implicit val timeout = Timeout(5.seconds)
 
@@ -332,7 +361,7 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
   def ajaxMoveBest(id: ShowId, order: OrderId) = AuthDBAction.async { implicit rs =>
     import FloorProtocol._
 
-    ensureOrderAccess(id, order) {
+    ensureOrderAccessAsync(order) {
 
       implicit val timeout = Timeout(30.seconds)
 

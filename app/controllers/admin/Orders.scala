@@ -13,7 +13,6 @@ import controllers.auth.Mailer
 import play.api.libs.json.Json
 import models.entities.SeatType
 import be.studiocredo.reservations.{ReservationEngineMonitorService, FloorProtocol}
-import controllers.routes
 
 case class OrderSearchFormData(search: String)
 
