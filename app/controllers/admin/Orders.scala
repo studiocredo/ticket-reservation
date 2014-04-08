@@ -12,10 +12,12 @@ import scala.Some
 import controllers.auth.Mailer
 import play.api.libs.json.Json
 import models.entities.SeatType
+import be.studiocredo.reservations.{ReservationEngineMonitorService, FloorProtocol}
+import controllers.routes
 
 case class OrderSearchFormData(search: String)
 
-class Orders @Inject()(preReservationService: PreReservationService, showService: ShowService, eventService: EventService, orderService: OrderService, venueService: VenueService, val userService: UserService, val authService: AuthenticatorService, val notificationService: NotificationService) extends AdminController with UserContextSupport {
+class Orders @Inject()(preReservationService: PreReservationService, showService: ShowService, eventService: EventService, orderService: OrderService, venueService: VenueService, orderEngine: ReservationEngineMonitorService, val userService: UserService, val authService: AuthenticatorService, val notificationService: NotificationService) extends AdminController with UserContextSupport {
   val ListPage = Redirect(routes.Orders.list())
 
   val orderSearchForm = Form(
@@ -60,6 +62,18 @@ class Orders @Inject()(preReservationService: PreReservationService, showService
         val currentUser = rs.currentUser.get
         Mailer.sendOrderConfirmationEmail(currentUser.user, order)
         ListPage.flashing("error" -> "Bevestiging email verzonden")
+      }
+    }
+  }
+
+  def cancel(id: OrderId) = AuthDBAction { implicit rs =>
+    import FloorProtocol._
+
+    orderService.destroy(id) match {
+      case 0 => BadRequest(s"Bestelling $id niet gevonden")
+      case _ => {
+        (orderEngine.floors) ! ReloadState
+        ListPage
       }
     }
   }

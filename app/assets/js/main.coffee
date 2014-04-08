@@ -1,5 +1,5 @@
 "use strict"
-App = angular.module("credo", ["floorplan", "counterInput"])
+App = angular.module("credo", ["floorplan", "counterInput", "dismissModal"])
 
 Floorplan = angular.module("floorplan", ["ngDragDrop", "ui.sortable", "ng", "ui.bootstrap"])
 
@@ -381,3 +381,31 @@ UPDATE_DISABLED_SEAT_TYPE = "UPDATE_DISABLED_SEAT_TYPE"
 Floorplan.controller "OrderCtrl", ($scope, $http, $timeout) ->
   $scope.updateDisabledSeatType = () ->
     $scope.$broadcast(UPDATE_DISABLED_SEAT_TYPE, $scope.disabledSeatType)
+
+DismissModal = angular.module("dismissModal", ["ng", "ui.bootstrap"])
+
+DismissModal.controller "DismissModalCtrl", ($scope, $modal, $log) ->
+    $scope.open = (confirmUrl, message) ->
+        modalInstance = $modal.open({
+            templateUrl: 'dismissModalContent.html',
+            controller: "ModalInstanceCtrl",
+            resolve: {
+                message: ->
+                    message
+                confirmUrl: ->
+                    confirmUrl
+            }
+        })
+
+#--- Please note that $modalInstance represents a modal window (instance) dependency.
+#--- It is not the same as the $modal service used above.
+
+DismissModal.controller "ModalInstanceCtrl", ($scope, $modalInstance, message, confirmUrl) ->
+  $scope.message = message
+  $scope.confirmUrl = confirmUrl
+
+  $scope.ok = ->
+    $modalInstance.close()
+
+  $scope.cancel = ->
+    $modalInstance.dismiss('cancel')

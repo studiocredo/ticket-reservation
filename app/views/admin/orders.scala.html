@@ -15,6 +15,25 @@
     }
 
     @if(!currentPage.isEmpty) {
+
+
+    <div data-ng-controller="DismissModalCtrl">
+
+        <script type="text/ng-template" id="dismissModalContent.html">
+            <div class="modal-header">
+                <h4 class="modal-title">Bestelling verwijderen?</h4>
+            </div>
+            <div class="modal-body">
+                <b>{{ message }}</b>
+            </div>
+            <div class="modal-footer">
+                <form action="{{ confirmUrl }}" method="POST" role="form">
+                    <button type="submit" class="btn btn-success" data-ng-click="ok()">Ja</button>
+                    <button type="button" class="btn btn-warning" data-ng-click="cancel()">Nee</button>
+                </form>
+            </div>
+        </script>
+
         <table class="table table-hover table-striped">
             <thead>
                 <tr>
@@ -39,6 +58,8 @@
                         <td>@CurrencyFormat.format(order.price)</td>
                         <td>
                             <a class="btn btn-default btn-xs" href="@{routes.Orders.confirm(order.id)}">Bevestiging zenden</a>
+                            <button class="btn btn-default btn-xs" data-ng-click="open('@{routes.Orders.cancel(order.id)}', 'Order @order.id: @{order.order.billingName} - @{ticketOrder.ticketSeatOrders.length} ticket(s)')">Annuleren</button>
+
                             @if(order.order.comments.isDefined) {
                                 <button type="button" class="btn btn-warning btn-xs" data-popover-placement="left" data-popover="@order.order.comments">
                                     <span class="glyphicon glyphicon-comment"></span>
@@ -52,6 +73,8 @@
         </table>
 
         @helper.paging(currentPage, (page:Int) => routes.Orders.list(page))
+
+     </div>
     } else {
         <div class="well">
             <em>Geen bestellingen gevonden.</em>

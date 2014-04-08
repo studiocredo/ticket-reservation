@@ -51,6 +51,7 @@ GET         /admin/orders                           @controllers.admin.Orders.li
 GET         /admin/orders/show/:show                @controllers.admin.Orders.show(show: ShowId)
 GET         /admin/orders/availability/:id          @controllers.admin.Orders.ajaxFloorplan(id:ShowId)
 GET         /admin/orders/confirm/:id               @controllers.admin.Orders.confirm(id: OrderId)
+POST        /admin/orders/cancel/:id                @controllers.admin.Orders.cancel(id: OrderId)
 
 GET         /admin/prereservations                  @controllers.admin.Prereservations.list(p:Int ?= 0)
 
