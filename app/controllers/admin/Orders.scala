@@ -58,9 +58,13 @@ class Orders @Inject()(preReservationService: PreReservationService, showService
     orderService.get(id) match {
       case None => BadRequest(s"Bestelling $id niet gevonden")
       case Some(order)  => {
-        val currentUser = rs.currentUser.get
-        Mailer.sendOrderConfirmationEmail(currentUser.user, order)
-        ListPage.flashing("error" -> "Bevestiging email verzonden")
+        userService.find(order.order.userId) match {
+          case None => BadRequest(s"Gebruiker ${order.order.userId} niet gevonden")
+          case Some(user) => {
+            Mailer.sendOrderConfirmationEmail(user, order)
+            ListPage.flashing("error" -> "Bevestiging email verzonden")
+          }
+        }
       }
     }
   }
