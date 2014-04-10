@@ -361,7 +361,7 @@ Floorplan.directive 'orderInput', () ->
     $scope.seatTypesArray = eval($scope.seatTypes)
     $scope.quantity = parseInt($scope.quantity)
     $scope.increment = ->
-      if ($scope.quantity < $scope.max)
+      if (parseInt($scope.quantity) < parseInt($scope.max))
         $scope.quantity = parseInt($scope.quantity) + 1
     $scope.decrement = ->
       if ($scope.quantity > 0)
