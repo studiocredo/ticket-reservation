@@ -257,7 +257,7 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
       BadRequest(s"Order $orderId niet gevonden")
     })(
         order => {
-          if (order.userId == rs.user.id)
+          if (rs.user.allUsers.contains(order.userId))
             action
           else {
             logger.warn(s"$order: Order for user ${order.userId} but ${rs.user.id} attempted to use it")
