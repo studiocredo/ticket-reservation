@@ -182,11 +182,11 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
                 case ooc: CapacityExceededException =>
                   logger.debug(s"$id $order: Capacity exceeded")
                   val remaining = ooc.remaining match {
-                    case 0 => "De voorstelling is uitverkocht."
+                    case amount if amount <= 0 => "De voorstelling is uitverkocht."
                     case 1 => "Er is nog 1 plaats."
                     case other => s"Er zijn nog $other plaatsen."
                   }
-                  startSeatOrderFailed(order, event, s"Onvoldoende plaatsen beschikbaar: $remaining")
+                  startSeatOrderFailed(order, event, s"Onvoldoende plaatsen beschikbaar: $remaining. Niet opgenomen pre-reservaties blijven gewaarborgd, gelieve hiervoor later opnieuw te proberen.")
                 case error =>
                   logger.error(s"$id $order: Failed to start seat order", error)
                   startSeatOrderFailed(order, event)
