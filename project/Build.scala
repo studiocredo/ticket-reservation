@@ -28,7 +28,9 @@ object ApplicationBuild extends Build {
     "net.codingwell" % "scala-guice_2.10" % "3.0.2",
 
     play.Project.cache,
-    "com.typesafe.play" % "play-slick_2.10" % "0.5.0.8",
+    "com.typesafe.play" % "play-slick_2.10" % "0.5.0.8" exclude("com.jolbox", "bonecp"),
+    "com.jolbox" % "bonecp" % "0.8.0.RELEASE",
+
     "org.mindrot" % "jbcrypt" % "0.3m",
 
     "org.apache.commons" % "commons-email" % "1.3.1",
