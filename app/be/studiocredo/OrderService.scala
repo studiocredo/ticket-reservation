@@ -154,6 +154,13 @@ class OrderService @Inject()(venueService: VenueService) {
     prereservationSeatsByUsers(List(id))
   }
 
+  def prereservationSeats()(implicit s: Session): List[TicketSeatOrderDetail] = {
+    val query = for {
+      (((ticketSeatOrder, show), event), venue) <- TicketSeatOrders.leftJoin(Shows).on(_.showId === _.id).leftJoin(Events).on(_._2.eventId === _.id).leftJoin(Venues).on(_._1._2.venueId === _.id)
+    } yield (ticketSeatOrder, show, event, venue)
+    query.list.map{ case (tso: TicketSeatOrder, s: Show, e: Event, v: Venue) => TicketSeatOrderDetail(tso, EventShow(s.id, e.id, e.name, s.venueId, v.name, s.date, s.archived)) }
+  }
+
   def prereservationSeatsByUsers(ids: List[UserId])(implicit s: Session): List[TicketSeatOrderDetail] = {
     val query = for {
       (((ticketSeatOrder, show), event), venue) <- TicketSeatOrders.leftJoin(Shows).on(_.showId === _.id).leftJoin(Events).on(_._2.eventId === _.id).leftJoin(Venues).on(_._1._2.venueId === _.id)

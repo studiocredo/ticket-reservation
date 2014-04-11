@@ -32,7 +32,7 @@ import models.entities.ShowAvailability
 import models.entities.Order
 import models.entities.TicketSeatOrderDetail
 
-class PreReservationService @Inject()(orderService: OrderService, venueService: VenueService) {
+class PreReservationService @Inject()(orderService: OrderService, venueService: VenueService, userService: UserService) {
   import models.schema.tables._
 
   val SPRQ = Query(ShowPrereservations)
@@ -268,6 +268,30 @@ class PreReservationService @Inject()(orderService: OrderService, venueService: 
 
   def findForUsers(showId: ShowId, userIds: List[UserId])(implicit s: Session): List[ShowPrereservation] = {
     SPRQ.where(_.showId === showId).where(_.userId inSet userIds).list
+  }
+
+  def detailedAvailability(show: EventShow, excludedUsers: List[UserId] = List())(implicit s: Session): DetailedShowAvailability = {
+    val venue = venueService.get(show.venueId).get
+    val ticketSeatOrders = orderService.byShowId(show.id, excludedUsers)
+    val floorplan = venue.floorplan.get
+
+    val seatTypeMap = mutable.Map[SeatType, Int]()
+    SeatType.values.foreach { st => seatTypeMap(st) = venue.capacityByType(st) }
+
+    val userMap = mutable.Map[UserId, UserPendingPrereservations]()
+
+    ticketSeatOrders.foreach { tso => floorplan.seat(tso.seat) match { case Some(seat) => seatTypeMap(seat.kind) -= 1; case None => }}
+
+    val floorplanWithStatus = venueService.fillFloorplan(floorplan, orderService.detailsByShowId(show.id), Nil, SeatType.values.toList)
+    val freeMap = mutable.Map[SeatType, Int]()
+    SeatType.values.foreach { st => freeMap(st) = floorplanWithStatus.seatsWithStatus.count(seat => seat.kind == st && seat.status == SeatStatus.Free) }
+
+    preReservationsByShow(show.id, excludedUsers).foreach { case (userId, quantity) =>
+      val pending = quantity - ticketSeatOrders.filter(tso => tso.userId == Some(userId)).length
+      seatTypeMap(SeatType.Normal) -= Math.max(0, pending)
+      userMap.put(userId, UserPendingPrereservations(userService.find(userId).get, pending))
+    }
+    DetailedShowAvailability(ShowAvailability(show, seatTypeMap.toMap), userMap.values.filterNot(_.pending <= 0).toList, freeMap.toMap)
   }
 
   def availability(show: EventShow, excludedUsers: List[UserId] = List())(implicit s: Session): ShowAvailability = {

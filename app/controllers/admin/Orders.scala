@@ -47,7 +47,7 @@ class Orders @Inject()(preReservationService: PreReservationService, showService
         val currentUserContext = userContext
         val venueShow = details.shows.flatMap(_.shows).find(_.id == show)
         val showAvailability = venueShow.map {
-          s => preReservationService.availability(showService.getEventShow(s.id))
+          s => preReservationService.detailedAvailability(showService.getEventShow(s.id))
         }
         Ok(views.html.admin.showOrders(details, showAvailability.get, currentUserContext))
       }

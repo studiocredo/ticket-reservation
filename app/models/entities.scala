@@ -106,6 +106,17 @@ object entities {
     }
   }
 
+  case class UserPendingPrereservations(user: RichUser, pending: Int)
+  case class DetailedShowAvailability(availability: ShowAvailability, pending: List[UserPendingPrereservations], freeByType: Map[SeatType, Int]) {
+    def totalPending: Int = {
+      pending.map(_.pending).sum
+    }
+    def totalFree: Int = {
+      freeByType.values.sum
+    }
+  }
+
+
   sealed trait RowContent
   case class SeatId(name: String)
   case class Seat          (id: SeatId, kind: SeatType, preference: Int) extends RowContent
@@ -174,7 +185,7 @@ object entities {
       val userString = s"${userId}".toInt
       val orderString = s"${id}".toInt
       val remainder = (orderString*10000 + userString) % 997
-      s"+++${"%03d".format(remainder)}/${"%04d".format(userString)}/${"%05d".format(orderString)}+++"
+      s"REF ${"%03d".format(remainder)}/${"%04d".format(userString)}/${"%05d".format(orderString)}"
     }
   }
   case class OrderEdit(         userId: UserId, date: DateTime, billingName: String, billingAddress: String, processed: Boolean, comments: Option[String])
