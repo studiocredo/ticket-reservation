@@ -24,6 +24,10 @@ object ApplicationBuild extends Build {
 
     "org.joda" % "joda-money" % "0.9",
 
+    "com.itextpdf" % "itextpdf" % "5.5.0",
+    "org.bouncycastle" % "bcpkix-jdk15on" % "1.50",
+    "org.bouncycastle" % "bcprov-jdk15on" % "1.50",
+
     "com.google.inject" % "guice" % "3.0",
     "net.codingwell" % "scala-guice_2.10" % "3.0.2",
 

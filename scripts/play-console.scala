@@ -18,7 +18,7 @@ import org.joda.time.DateTime
 
 val vs = new VenueService()
 val os = new OrderService(vs)
-val prs = new PreReservationService(os, vs)
+val prs = new PreReservationService(os, vs, us)
 val ss = new ShowService(vs, prs)
 val es = new EventService(ss, prs, us)
 val us = new UserService()
