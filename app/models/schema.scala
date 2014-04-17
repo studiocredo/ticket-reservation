@@ -5,8 +5,8 @@ import play.api.db.slick.Config.driver.simple._
 import com.github.tototoshi.slick.JodaSupport._
 import be.studiocredo.auth.{Roles, EmailToken, AuthToken, Password}
 import play.api.libs.json.Json
-import play.api.Logger
 import be.studiocredo.util.Money
+import models.entities.PaymentType.PaymentType
 
 object schema {
 
@@ -41,6 +41,10 @@ object schema {
   trait Archiveable {
     this:Table[_] =>
     def archived = column[Boolean]("archived", O.Default(false))
+  }
+
+  abstract class PersistableEnumeration extends Enumeration {
+    implicit val enumMapper = MappedTypeMapper.base[Value, Int](_.id, this.apply)
   }
 
   class Users extends Table[User]("user") {
@@ -244,19 +248,23 @@ object schema {
     def uniqueShowUser = index("idx_showuser", showId ~ userId, unique = true)
   }
 
-  class Payments extends Table[Payment]("payment") {
+  class Payments extends Table[Payment]("payment") with Archiveable {
     def id = column[PaymentId]("id", O.PrimaryKey, O.AutoInc)
-    def orderId = column[OrderId]("order_id")
+    def paymentType = column[PaymentType]("payment_type", O.DBType("TEXT"))
+    def importId = column[Option[String]]("import_id", O.DBType("TEXT"))
+    def orderId = column[Option[OrderId]]("order_id")
     def debtor = column[String]("debtor", O.DBType("TEXT"))
     def amount = column[Money]("amount")
+    def message = column[Option[String]]("message", O.DBType("TEXT"))
     def details = column[Option[String]]("details", O.DBType("TEXT"))
     def date = column[DateTime]("date")
 
-    def * = id ~ orderId ~ debtor ~ amount ~ details ~ date <> (Payment.apply _, Payment.unapply _)
+    def * = id ~ paymentType ~ importId ~ orderId ~  debtor ~ amount ~ message ~ details ~ date ~ archived <> (Payment.apply _, Payment.unapply _)
 
-    def autoInc = orderId ~ debtor ~ amount ~ details ~ date <>(PaymentEdit.apply _, PaymentEdit.unapply _) returning id
+    def autoInc = paymentType ~ importId ~ orderId ~ debtor ~ amount ~ message ~ details ~ date ~ archived <>(PaymentEdit.apply _, PaymentEdit.unapply _) returning id
 
     def pk = foreignKey("order_fk", orderId, Orders)(_.id)
+    def uniqueImportId = index("idx_import_id", importId, unique = true)
 
   }
 

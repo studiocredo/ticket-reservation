@@ -46,6 +46,8 @@ GET         /admin/user/:id                         @controllers.admin.UserDetai
 
 GET         /admin/payments                         @controllers.admin.Payments.list(p:Int ?= 0)
 GET         /admin/payments/new                     @controllers.admin.Payments.create
+POST        /admin/payments                         @controllers.admin.Payments.upload
+POST        /admin/payments/archive                 @controllers.admin.Payments.archive(id:PaymentId)
 
 GET         /admin/orders                           @controllers.admin.Orders.list(p:Int ?= 0)
 GET         /admin/orders/show/:show                @controllers.admin.Orders.show(show: ShowId)

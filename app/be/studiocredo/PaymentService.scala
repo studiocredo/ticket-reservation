@@ -1,35 +1,32 @@
 package be.studiocredo
 
 
-import models.ids.{OrderId, PaymentId, UserId}
+import models.ids.{OrderId, PaymentId}
 import play.api.db.slick.Config.driver.simple._
 import models.entities._
 import scala.slick.session.Session
 import models.schema.tables._
 import com.google.inject.Inject
-import be.studiocredo.auth.{Passwords, Password, Roles}
-import models.admin._
-import models.Page
 import be.studiocredo.util.ServiceReturnValues._
-import models.admin.RichUser
-import models.entities.UserDetailEdit
-import models.entities.UserDetail
 import models.Page
 import scala.Some
-import models.entities.User
-import models.entities.UserEdit
-import be.studiocredo.auth.Password
-import models.entities.UserRole
-import models.admin.UserFormData
+import java.io.File
+import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
+import be.studiocredo.util.{AXATransactionImporter, Money}
+import java.text.{DecimalFormatSymbols, DecimalFormat, SimpleDateFormat, DateFormat}
+import org.joda.time.format.DateTimeFormat
 
 class PaymentService @Inject()() {
   val PaymentsQ = Query(Payments)
+  val PaymentsQActive = PaymentsQ.where(_.archived === false)
+
 
   def page(page: Int = 0, pageSize: Int = 10, orderBy: Int = 1, filter: Option[String] = None)(implicit s: Session): Page[Payment] = {
     import models.queries._
 
     val offset = pageSize * page
-    val query = filter.foldLeft(PaymentsQ.sortBy(_.date.desc)){
+    val query = filter.foldLeft(PaymentsQActive.sortBy(_.date.desc)){
       (query, filter) => query.filter(q => iLike(q.debtor, s"%${filter}%")) // should replace with lucene
     }
     val total = query.length.run
@@ -49,8 +46,24 @@ class PaymentService @Inject()() {
     Payments.autoInc.insert(payment)
   }
 
+  def insertTransactions(file: File)(implicit s: Session): List[PaymentId] = {
+    val payments = new AXATransactionImporter().importFile(file)
+    val known = (for {
+      p <- PaymentsQ.filter(_.importId inSet payments.flatMap(_.importId))
+    } yield p.importId).list
+    payments.filterNot(pe => known.contains(pe.importId)).map(addOrderId).map(insert)
+  }
+
+  private def addOrderId(payment: PaymentEdit)(implicit s: Session): PaymentEdit = {
+    payment.message.fold(payment) { message =>
+        OrderReference.parse(message).fold(payment) { orderReference =>
+          payment.copy(orderId = Some(orderReference.order))
+        }
+    }
+  }
+
   def getEdit(id: PaymentId)(implicit s: Session): Option[PaymentEdit] = {
-    find(id) map {pe => PaymentEdit(pe.orderId, pe.debtor, pe.amount, pe.details, pe.date)}
+    find(id) map {pe => PaymentEdit(pe.paymentType, pe.importId, pe.orderId, pe.debtor, pe.amount, pe.message, pe.details, pe.date, pe.archived)}
   }
 
   def update(id: PaymentId, data: PaymentEdit)(implicit s: Session): Either[ServiceFailure, ServiceSuccess] = {
@@ -59,12 +72,16 @@ class PaymentService @Inject()() {
       success => {
         val paymentUpdate = for {
           p <- PaymentsQ.filter(_.id === id)
-        } yield p.orderId ~ p.debtor ~ p.amount ~ p.details ~ p.date
+        } yield p.paymentType ~ p.importId ~ p.orderId ~ p.debtor ~ p.amount ~ p.message ~ p.details ~ p.date ~ p.archived
 
         paymentUpdate.update(PaymentEdit.unapply(data).get)
 
         Right(serviceSuccess("payment.update.success"))
       })
+  }
+
+  def archive(id: PaymentId)(implicit s: Session) = {
+    PaymentsQ.where(_.id === id).map(_.archived).update(true)
   }
 
   private def validatePaymentUpdate(id: PaymentId, data: PaymentEdit)(implicit s: Session): Either[ServiceFailure, ServiceSuccess] = {

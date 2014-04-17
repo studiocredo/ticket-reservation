@@ -10,6 +10,7 @@ import scala.{Int, Option, Some}
 import be.studiocredo.util.Money
 import models.admin.RichUser
 import be.studiocredo.auth.Password
+import models.schema.PersistableEnumeration
 
 object entities {
 
@@ -180,12 +181,39 @@ object entities {
     implicit val floorPlanFmt = Json.format[FloorPlan]
   }
 
+  object OrderReference {
+    val pattern = "\\b(\\d{3})[^\\d]?(\\d{4})[^\\d]?(\\d{5})\\b".r
+    def parse(s: String) = {
+      pattern.findFirstMatchIn(s).flatMap { m =>
+        val remainder = m.group(1).toInt
+        val user = UserId(m.group(2).toInt)
+        val order = OrderId(m.group(3).toInt)
+
+        if (remainder == calcRemainder(order, user)) {
+          Some(OrderReference(order, user))
+        } else {
+          None
+        }
+      }
+    }
+
+    def calcRemainder(order: OrderId, user: UserId): Long = {
+      (order.id * 10000 + user.id) % 997
+    }
+  }
+
+
+
+  case class OrderReference(order: OrderId, user: UserId) {
+    val remainder = OrderReference.calcRemainder(order, user)
+    val reference = s"${"%03d".format(remainder)}/${"%04d".format(user.id)}/${"%05d".format(order.id)}"
+  }
+
   case class Order(id: OrderId, userId: UserId, date: DateTime, billingName: String, billingAddress: String, processed: Boolean, comments: Option[String]) {
+    val orderReference = OrderReference(id, userId)
+
     def reference: String = {
-      val userString = s"${userId}".toInt
-      val orderString = s"${id}".toInt
-      val remainder = (orderString*10000 + userString) % 997
-      s"REF ${"%03d".format(remainder)}/${"%04d".format(userString)}/${"%05d".format(orderString)}"
+      s"REF ${orderReference.reference}"
     }
   }
   case class OrderEdit(         userId: UserId, date: DateTime, billingName: String, billingAddress: String, processed: Boolean, comments: Option[String])
@@ -259,8 +287,16 @@ object entities {
 
   case class UserContext(notifications: List[Notification], otherUsers: List[User])
 
-  case class Payment(id: PaymentId, orderId: OrderId, debtor: String, amount: Money, details: Option[String], date: DateTime) extends HasTime
-  case class PaymentEdit(           orderId: OrderId, debtor: String, amount: Money, details: Option[String], date: DateTime) extends HasTime
+  object PaymentType extends PersistableEnumeration {
+    type PaymentType = Value
+    val Cash = Value("cash")
+    val WireTransfer = Value("wire")
+    val OnlineTransaction = Value("online")
+  }
+  import PaymentType._
+
+  case class Payment(id: PaymentId, paymentType: PaymentType, importId: Option[String], orderId: Option[OrderId], debtor: String, amount: Money, message: Option[String], details: Option[String], date: DateTime, archived: Boolean) extends HasTime with Archiveable
+  case class PaymentEdit(           paymentType: PaymentType, importId: Option[String], orderId: Option[OrderId], debtor: String, amount: Money, message: Option[String], details: Option[String], date: DateTime, archived: Boolean) extends HasTime with Archiveable
 }
 
 object ids {
