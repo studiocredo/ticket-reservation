@@ -39,6 +39,10 @@ class Orders @Inject()(preReservationService: PreReservationService, showService
     )
   }
 
+  def details(order: OrderId) = AuthDBAction { implicit rs =>
+    ???
+  }
+
   def show(show: ShowId) = AuthDBAction { implicit rs =>
     showService.get(show) match {
       case None => BadRequest("Voorstelling $show niet gevonden")

@@ -1,0 +1,18 @@
+@(paymentForm: Form[entities.PaymentEdit], orders: views.helper.Options[entities.Order], paymentTypes: views.helper.Options[entities.PaymentType.PaymentType])(implicit lang: Lang)
+
+@import helper._
+@import views.Bootstrap._
+
+@globalFormErrors(paymentForm)
+
+<fieldset>
+    @inputText(paymentForm("date"), '_label -> "Datum verrichting", 'class -> "form-control")
+    @rselect(paymentForm("paymentType"), paymentTypes, '_label -> "Type",  '_showConstraints -> false, 'class -> "form-control")
+    @hiddenInput(paymentForm("importId"), '_label -> "Transactie ID", 'class -> "form-control")
+    @rselect(paymentForm("orderId"), orders, '_label -> "Bestelling",  '_showConstraints -> false, 'class -> "form-control")
+    @inputText(paymentForm("debtor"), '_label -> "Tegenpartij", 'class -> "form-control")
+    @inputText(paymentForm("amount"), '_label -> "Bedrag", 'class -> "form-control")
+    @textarea(paymentForm("message"), '_label -> "Boodschap", 'class -> "form-control", 'rows -> 2, '_help -> "Korte boodschap (zoals bv. bankreferentie)")
+    @textarea(paymentForm("details"), '_label -> "Details", 'class -> "form-control", 'rows -> 5, '_help -> "Commentaar, opmerkingen")
+    @twCheckbox(paymentForm("archived"), '_label -> "Gearchiveerd")
+</fieldset>

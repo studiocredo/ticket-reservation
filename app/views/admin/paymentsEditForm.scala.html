@@ -1,0 +1,23 @@
+@(id: Long, paymentForm: Form[entities.PaymentEdit], orders: views.helper.Options[entities.Order], paymentTypes: views.helper.Options[entities.PaymentType.PaymentType], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
+@import controllers.admin.routes
+@import helper._
+
+@base("Administratie: Betaling bewerken")(userContext) {
+
+    <h1>Betaling bewerken
+        @form(routes.Payments.delete(id), 'class -> "pull-right") {
+            <input type="submit" value="Verwijderen" class="btn btn-danger">
+        }
+    </h1>
+
+
+    @form(action = routes.Payments.update(id), 'class -> "form form-horizontal") {
+
+        @paymentsForm(paymentForm, orders, paymentTypes)
+
+        @twFormActions {
+            <input type="submit" value="Aanpassen" class="btn btn-primary">
+            <a href="@routes.Payments.list()" class="btn btn-warning">Annuleren</a>
+        }
+    }
+}

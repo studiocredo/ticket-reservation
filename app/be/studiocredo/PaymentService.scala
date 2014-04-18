@@ -26,7 +26,7 @@ class PaymentService @Inject()() {
     import models.queries._
 
     val offset = pageSize * page
-    val query = filter.foldLeft(PaymentsQActive.sortBy(_.date.desc)){
+    val query = filter.foldLeft(PaymentsQActive.sortBy(r => (r.date.desc, r.id.desc))){
       (query, filter) => query.filter(q => iLike(q.debtor, s"%${filter}%")) // should replace with lucene
     }
     val total = query.length.run
@@ -42,8 +42,11 @@ class PaymentService @Inject()() {
     PaymentsQ.filter(q => q.orderId === id).list
   }
 
-  def insert(payment: PaymentEdit)(implicit s: Session): PaymentId = {
-    Payments.autoInc.insert(payment)
+  def insert(payment: PaymentEdit)(implicit s: Session): Either[ServiceFailure, PaymentId] = {
+    validatePayment(payment).fold(
+      error => Left(error),
+      success => Right(Payments.autoInc.insert(payment))
+    )
   }
 
   def insertTransactions(file: File)(implicit s: Session): List[PaymentId] = {
@@ -51,7 +54,7 @@ class PaymentService @Inject()() {
     val known = (for {
       p <- PaymentsQ.filter(_.importId inSet payments.flatMap(_.importId))
     } yield p.importId).list
-    payments.filterNot(pe => known.contains(pe.importId)).map(addOrderId).map(insert)
+    payments.filterNot(pe => known.contains(pe.importId)).map(addOrderId).map(Payments.autoInc.insert)
   }
 
   private def addOrderId(payment: PaymentEdit)(implicit s: Session): PaymentEdit = {
@@ -80,7 +83,7 @@ class PaymentService @Inject()() {
       })
   }
 
-  def archive(id: PaymentId)(implicit s: Session) = {
+  def delete(id: PaymentId)(implicit s: Session) = {
     PaymentsQ.where(_.id === id).map(_.archived).update(true)
   }
 
@@ -91,5 +94,9 @@ class PaymentService @Inject()() {
         Right(serviceSuccess("payment.update.success"))
       }
     }
+  }
+
+  private def validatePayment(payment: PaymentEdit): Either[ServiceFailure, ServiceSuccess] = {
+    Right(serviceSuccess("payment.insert.success"))
   }
 }

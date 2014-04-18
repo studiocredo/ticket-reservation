@@ -44,7 +44,7 @@ object schema {
   }
 
   abstract class PersistableEnumeration extends Enumeration {
-    implicit val enumMapper = MappedTypeMapper.base[Value, Int](_.id, this.apply)
+    implicit val enumMapper = MappedTypeMapper.base[Value, String](_.toString, this.withName(_))
   }
 
   class Users extends Table[User]("user") {

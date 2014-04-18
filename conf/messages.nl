@@ -12,6 +12,8 @@ constraint.email=Email
 format.date=Datum (''{0}'')
 format.numeric=Getal
 format.real=Kommagetal
+format.money=Bedrag in euro
+format.paymentType=Betalingswijze
 
 # --- Errors
 error.invalid=Ongeldige waarde
@@ -28,6 +30,9 @@ error.minLength=Minimale lengte is {0}
 error.maxLength=Maximale lengte is {0}
 error.email=Waarde moet een geldig e-mail adres zijn
 error.pattern=Waarde moet voldoen aan {0}
+error.money.invalid=Ongeldig bedrag
+error.paymentType.invalid=Ongeldige betalingswijze
+error.date=Ongeldige datum
 
 #No need to translate JSON conversion errors
 #error.expected.date=Datum verwacht
@@ -80,3 +85,13 @@ floorplan.invalid.preference.notpositive=Waarde voor voorkeur van opvullen moet 
 
 # --- Pricing
 pricing.standard=Standaard Ticket
+
+# --- Payment
+#payment.insert.success
+#payment.update.success
+#payment.update.notfound
+
+# --- Payment type options
+options.paymenttype.wire=Overschrijving
+options.paymenttype.cash=Cash
+options.paymenttype.online=On-line

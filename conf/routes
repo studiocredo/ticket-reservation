@@ -46,10 +46,15 @@ GET         /admin/user/:id                         @controllers.admin.UserDetai
 
 GET         /admin/payments                         @controllers.admin.Payments.list(p:Int ?= 0)
 GET         /admin/payments/new                     @controllers.admin.Payments.create
-POST        /admin/payments                         @controllers.admin.Payments.upload
-POST        /admin/payments/archive                 @controllers.admin.Payments.archive(id:PaymentId)
+POST        /admin/payments/upload                  @controllers.admin.Payments.upload
+POST        /admin/payments                         @controllers.admin.Payments.save
+GET         /admin/payments/:id                     @controllers.admin.Payments.edit(id:PaymentId)
+POST        /admin/payments/:id                     @controllers.admin.Payments.update(id:PaymentId)
+POST        /admin/payments/:id/delete              @controllers.admin.Payments.delete(id:PaymentId)
+POST        /admin/payments/:id/copy                @controllers.admin.Payments.copy(id:PaymentId)
 
 GET         /admin/orders                           @controllers.admin.Orders.list(p:Int ?= 0)
+GET         /admin/orders/:id                       @controllers.admin.Orders.details(id:OrderId)
 GET         /admin/orders/show/:show                @controllers.admin.Orders.show(show: ShowId)
 GET         /admin/orders/availability/:id          @controllers.admin.Orders.ajaxFloorplan(id:ShowId)
 GET         /admin/orders/confirm/:id               @controllers.admin.Orders.confirm(id: OrderId)

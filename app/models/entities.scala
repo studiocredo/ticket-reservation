@@ -402,6 +402,28 @@ object ids {
     }
   }
 
+  import models.entities.PaymentType
+  import models.entities.PaymentType.PaymentType
+  implicit val paymentTypeFormatter = new Formatter[PaymentType] {
+    override val format = Some(("format.paymentType", Nil))
+
+    override def bind(key: String, data: Map[String, String]): Either[Seq[FormError], PaymentType] = {
+      data.get(key).map { value =>
+        try {
+          Right(PaymentType.withName(value))
+        } catch {
+          case e: NoSuchElementException => error(key, "error.paymentType.invalid")
+        }
+      }.getOrElse(error(key, "error.paymentType.missing"))
+    }
+
+    private def error(key: String, msg: String) = Left(List(new FormError(key, msg)))
+
+    override def unbind(key: String, value: PaymentType): Map[String, String] = {
+      Map(key -> value.toString)
+    }
+  }
+
 
   import play.api.libs.json._
 

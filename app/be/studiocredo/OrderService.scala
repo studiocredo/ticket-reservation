@@ -128,6 +128,13 @@ class OrderService @Inject()(venueService: VenueService) {
     q.firstOption
   }
 
+  def all()(implicit  s: Session): List[Order] = {
+    val q = for {
+      order <- OQ
+    } yield (order)
+    q.list
+  }
+
 
   def get(id: OrderId)(implicit  s: Session): Option[OrderDetail] = {
     val q = for {

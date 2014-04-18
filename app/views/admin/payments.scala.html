@@ -32,32 +32,54 @@
         <table class="table table-hover table-striped">
             <thead>
                 <tr>
+                    <th></th>
                     <th>Datum</th>
                     <th>Naam</th>
                     <th>Bestelling</th>
                     <th>Bedrag</th>
                     <th>Details</th>
                     <th></th>
+                    <th></th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
             @currentPage.items.map { payment =>
                 <tr>
+                    <td>
+                        @form(action = routes.Payments.delete(payment.id), 'class -> "form form-inline form-no-feedback") {
+                        <button type="submit" class="btn btn-danger btn-xs">
+                            <span class="glyphicon glyphicon-remove"></span>
+                        </button>
+                        }
+                    </td>
                     <td>@HumanDateTime.formatDateCompact(payment.date)</td>
                     <td>@payment.debtor</td>
-                    <td>@payment.orderId</td>
+                    <td>@payment.orderId match {
+                        case Some(orderId) => { <a href="@{routes.Orders.details(orderId)}">@orderId</a> }
+                        case None => {}
+                        }
+                    </td>
                     <td>@CurrencyFormat.format(payment.amount)</td>
                     <td>@payment.message</td>
                     <td>
-                        @form(action = routes.Payments.archive(payment.id), 'class -> "form form-inline form-no-feedback") {
-                            @if(payment.details.isDefined) {
+                        @if(payment.details.isDefined) {
                             <button type="button" class="btn btn-warning btn-xs" data-popover-placement="left" data-popover="@payment.details">
                                 <span class="glyphicon glyphicon-comment"></span>
                             </button>
-                            }
-
-                            <button type="submit" class="btn btn-danger btn-xs">
-                                <span class="glyphicon glyphicon-remove"></span>
+                        }
+                    </td>
+                    <td>
+                        @form(action = routes.Payments.edit(payment.id), 'class -> "form form-inline form-no-feedback") {
+                            <button type="submit" class="btn btn-primary btn-xs">
+                                <span class="glyphicon glyphicon-edit"></span>
+                            </button>
+                        }
+                    </td>
+                    <td>
+                        @form(action = routes.Payments.copy(payment.id), 'class -> "form form-inline form-no-feedback") {
+                            <button type="submit" class="btn btn-primary btn-xs">
+                                <span class="glyphicon glyphicon-file"></span>
                             </button>
                         }
                     </td>

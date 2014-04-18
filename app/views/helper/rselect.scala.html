@@ -17,7 +17,7 @@
             @opts.map { v =>
                     <!-- @values -->
 
-                <option value="@opts.id(v)" @if(opts.contains(values, v)){selected}>@opts.display(v)</option>
+                <option value="@opts.id(v)" @if(opts.contains(values, v)){selected}>@Messages(opts.display(v))</option>
             }
         </select>
     }}
