@@ -13,7 +13,7 @@ import models.admin.RichUser
 import com.github.tototoshi.slick.JodaSupport._
 import org.joda.time.DateTime
 
-class OrderService @Inject()(venueService: VenueService) {
+class OrderService @Inject()(venueService: VenueService, paymentService: PaymentService) {
   import models.schema.tables._
 
   val OQ = Query(Orders)
@@ -84,6 +84,12 @@ class OrderService @Inject()(venueService: VenueService) {
     }.toList
   }
 
+  private def orderPaymentsDetail(implicit s: Session): (Order) => OrderPayments = {
+    (order) => {
+      OrderPayments(orderDetail.apply(order), paymentService.find(order.id))
+    }
+  }
+
   private def orderDetail(implicit s: Session): (Order) => OrderDetail = {
     (order) => {
       val ticketOrderDetailsQuery = for {
@@ -142,6 +148,14 @@ class OrderService @Inject()(venueService: VenueService) {
       if (order.id === id)
     } yield (order)
     q.firstOption.map(orderDetail)
+  }
+
+  def getWithPayments(id: OrderId)(implicit  s: Session): Option[OrderPayments] = {
+    val q = for {
+      order <- OQ
+      if (order.id === id)
+    } yield (order)
+    q.firstOption.map(orderPaymentsDetail)
   }
 
   def page(page: Int = 0, pageSize: Int = 10, orderBy: Int = 1, filter: Option[String] = None)(implicit s: Session): Page[OrderDetail] = {

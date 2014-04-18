@@ -37,6 +37,7 @@
         <table class="table table-hover table-striped">
             <thead>
                 <tr>
+                    <th>Id</th>
                     <th>Datum</th>
                     <th>Gebruiker</th>
                     <th>Naam</th>
@@ -50,6 +51,7 @@
             @currentPage.items.map { order =>
                 @order.ticketOrders.map { ticketOrder =>
                     <tr>
+                        <td><a href="@{routes.Orders.details(order.id)}">@order.id</a></td>
                         <td>@HumanDateTime.formatDateTimeCompact(order.order.date)</td>
                         <td><a href="@{routes.UserDetails.view(order.user.id)}">@order.user.username</a></td>
                         <td>@order.order.billingName</td>

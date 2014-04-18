@@ -137,6 +137,4 @@ class Payments @Inject()(paymentService: PaymentService, orderService: OrderServ
         "error" -> "Bestand niet gevonden")
     }
   }
-
-
 }

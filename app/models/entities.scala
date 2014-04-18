@@ -232,6 +232,11 @@ object entities {
     //val numberOfSeatsByShow = ticketOrders.flatMap(_.ticketSeatOrders.map((_.show.id, )))
   }
 
+  case class OrderPayments(order: OrderDetail, payments: List[Payment]) {
+    val balance = payments.map(_.amount).foldLeft(order.price)((total,amount) => total.minus(amount))
+    val isPayed = balance.amount == 0
+  }
+
   case class TicketOrder(id: TicketOrderId, orderId: OrderId, showId: ShowId)
   case class TicketOrderDetail(ticketOrder: TicketOrder, order: Order, show: EventShow, ticketSeatOrders: List[TicketSeatOrderDetail]) {
     def id = ticketOrder.id

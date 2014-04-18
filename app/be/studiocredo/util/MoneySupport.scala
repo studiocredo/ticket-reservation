@@ -10,6 +10,10 @@ class Money(val underlying: JMoney) {
   def plus(other: Money): Money = {
     new Money(underlying.plus(other.underlying))
   }
+
+  def minus(other: Money): Money = {
+    new Money(underlying.minus(other.underlying))
+  }
 }
 
 object Money {

@@ -40,12 +40,17 @@ class Orders @Inject()(preReservationService: PreReservationService, showService
   }
 
   def details(order: OrderId) = AuthDBAction { implicit rs =>
-    ???
+    orderService.getWithPayments(order) match {
+      case None => BadRequest(s"Bestelling $order niet gevonden")
+      case Some(order) => {
+        Ok(views.html.admin.order(order, userContext))
+      }
+    }
   }
 
   def show(show: ShowId) = AuthDBAction { implicit rs =>
     showService.get(show) match {
-      case None => BadRequest("Voorstelling $show niet gevonden")
+      case None => BadRequest(s"Voorstelling $show niet gevonden")
       case Some(showDetail) => {
         val details = eventService.eventDetails(showDetail.eventId).get
         val currentUserContext = userContext
