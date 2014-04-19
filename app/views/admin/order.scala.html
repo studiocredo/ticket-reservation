@@ -1,5 +1,6 @@
 @(order: models.entities.OrderPayments, userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
 @import helper._
+@import controllers.admin.routes
 
 @orderRow(ticketOrder: models.entities.TicketOrderDetail)= {
 <tr>
@@ -21,6 +22,7 @@
 }
 
 @base("Overzicht bestelling")(userContext) {
+
 <div class="page-header">
     <h1>Overzicht bestelling</h1>
 </div>
@@ -75,4 +77,15 @@
 
 <p>@newlines(order.order.commentLines)</p>
 }
+
+@if(order.isPayed) {
+    @form(action = routes.Orders.sendTicket(order.order.id), 'class -> "form form-inline form-no-feedback") {
+        <button type="submit" class="btn btn-large btn-primary">Ticket verzenden</button>
+    }
+} else {
+    @form(action = routes.Orders.confirm(order.order.id), 'class -> "form form-inline form-no-feedback") {
+        <button type="submit" class="btn btn-large btn-primary">Bevestiging verzenden</button>
+    }
+}
+
 }

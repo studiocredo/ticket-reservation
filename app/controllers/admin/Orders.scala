@@ -63,6 +63,14 @@ class Orders @Inject()(preReservationService: PreReservationService, showService
     }
   }
 
+  def sendTicket(id: OrderId) = AuthDBAction { implicit rs =>
+    ???
+  }
+
+  def sendNewTickets() = AuthDBAction { implicit rs =>
+    ???
+  }
+
   def confirm(id: OrderId) = AuthDBAction { implicit rs =>
     orderService.get(id) match {
       case None => BadRequest(s"Bestelling $id niet gevonden")

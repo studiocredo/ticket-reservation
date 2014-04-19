@@ -158,7 +158,7 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
     q.firstOption.map(orderPaymentsDetail)
   }
 
-  def page(page: Int = 0, pageSize: Int = 10, orderBy: Int = 1, filter: Option[String] = None)(implicit s: Session): Page[OrderDetail] = {
+  def page(page: Int = 0, pageSize: Int = 10, orderBy: Int = 1, filter: Option[String] = None)(implicit s: Session): Page[OrderPayments] = {
     import models.queries._
 
     val offset = pageSize * page
@@ -167,7 +167,7 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
       (query, filter) => query.filter(q => iLike(q.billingName, s"%${filter}%")) // should replace with lucene
     }
     val total = query.length.run
-    val values = paginate(query, page, pageSize).run map orderDetail
+    val values = paginate(query, page, pageSize).run map orderPaymentsDetail
     Page(values, page, pageSize, offset, total)
   }
 
