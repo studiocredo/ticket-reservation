@@ -59,8 +59,9 @@ GET         /admin/orders/show/:show                @controllers.admin.Orders.sh
 GET         /admin/orders/availability/:id          @controllers.admin.Orders.ajaxFloorplan(id:ShowId)
 POST        /admin/orders/confirm/:id               @controllers.admin.Orders.confirm(id: OrderId)
 POST        /admin/orders/cancel/:id                @controllers.admin.Orders.cancel(id: OrderId)
-POST        /admin/orders/sendTicket/:id            @controllers.admin.Orders.sendTicket(id: OrderId)
-POST        /admin/orders/sendNewTickets            @controllers.admin.Orders.sendNewTickets()
+POST        /admin/orders/ticket/create/:id         @controllers.admin.Orders.sendAndCreateTicket(id: OrderId)
+POST        /admin/orders/ticket/new                @controllers.admin.Orders.sendAndCreateNewTickets()
+GET         /admin/orders/ticket/:id                @controllers.admin.Orders.showTicket(id:OrderId)
 
 GET         /admin/prereservations                  @controllers.admin.Prereservations.list(p:Int ?= 0)
 
@@ -94,6 +95,7 @@ POST        /order/:order/event/:event              @controllers.Orders.confirm(
 GET         /order/:id/cancel                       @controllers.Orders.cancel(id:OrderId)
 GET         /order/:id/overview                     @controllers.Orders.overview(id:OrderId)
 POST        /order/:order/event/:event/updateBillingData @controllers.Orders.updateBillingData(order:OrderId, event:EventId)
+GET         /order/ticket/:reference                @controllers.Orders.ticketDetails(reference:String)
 
 POST        /order/:order/event/:event/show/:id     @controllers.Orders.startSeatOrder(id:ShowId, order: OrderId, event: EventId)
 GET         /order/:order/show/:id                  @controllers.Orders.viewSeatOrder(id:ShowId, order: OrderId)

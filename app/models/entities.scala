@@ -11,6 +11,8 @@ import be.studiocredo.util.Money
 import models.admin.RichUser
 import be.studiocredo.auth.Password
 import models.schema.PersistableEnumeration
+import java.io.{FileOutputStream, File}
+import org.joda.time.format.DateTimeFormat
 
 object entities {
 
@@ -234,7 +236,7 @@ object entities {
 
   case class OrderPayments(order: OrderDetail, payments: List[Payment]) {
     val balance = payments.map(_.amount).foldLeft(order.price)((total,amount) => total.minus(amount))
-    val isPayed = balance.amount == 0
+    val isPaid = balance.amount == 0
   }
 
   case class TicketOrder(id: TicketOrderId, orderId: OrderId, showId: ShowId)
@@ -302,6 +304,42 @@ object entities {
 
   case class Payment(id: PaymentId, paymentType: PaymentType, importId: Option[String], orderId: Option[OrderId], debtor: String, amount: Money, message: Option[String], details: Option[String], date: DateTime, archived: Boolean) extends HasTime with Archiveable
   case class PaymentEdit(           paymentType: PaymentType, importId: Option[String], orderId: Option[OrderId], debtor: String, amount: Money, message: Option[String], details: Option[String], date: DateTime, archived: Boolean) extends HasTime with Archiveable
+
+  case class TicketDocument(order: OrderDetail, pdf: Array[Byte]) {
+    def saveAs(file: File) {
+      val out = new FileOutputStream(file)
+      try { out.write(pdf) } finally { out.close() }
+    }
+  }
+
+  object TicketDistribution {
+    val pattern = "^(\\d{4})-(\\d{5})-(\\d{17})-(\\d{3})$".r
+    val datetimeformat =  DateTimeFormat.forPattern("yyyyMMddHHmmssSSS")
+
+    def parse(s: String) = {
+      pattern.findFirstMatchIn(s).flatMap { m =>
+        val serial = m.group(1).toInt
+        val order = OrderId(m.group(2).toInt)
+        val timestamp = datetimeformat.parseDateTime(m.group(3))
+        val remainder = m.group(4).toInt
+
+        if (remainder == calcRemainder(order, serial)) {
+          Some(TicketDistribution(order, serial, timestamp))
+        } else {
+          None
+        }
+      }
+    }
+
+    def calcRemainder(order: OrderId, serial: Int): Long = {
+      (order.id * 10000 + serial) % 997
+    }
+  }
+
+  case class TicketDistribution(order: OrderId, serial: Int, date: DateTime) extends HasTime {
+    val remainder = TicketDistribution.calcRemainder(order, serial)
+    val reference = s"${"%04d".format(serial)}-${"%05d".format(order.id)}-${TicketDistribution.datetimeformat.print(date)}-${"%03d".format(remainder)}"
+  }
 }
 
 object ids {

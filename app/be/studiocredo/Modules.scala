@@ -20,6 +20,7 @@ object Modules {
       bind[PreReservationService].in[Singleton]
       bind[NotificationService].in[Singleton]
       bind[PaymentService].in[Singleton]
+      bind[TicketService].in[Singleton]
       bind[ReservationEngineMonitorService].asEagerSingleton()
 
       bind[controllers.Application].in[Singleton]

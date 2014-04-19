@@ -6,17 +6,9 @@ import java.io.{FileOutputStream, File, ByteArrayOutputStream}
 import models.ids._
 import java.net.URL
 import play.api.Logger
-import models.entities.TicketSeatOrderDetail
-import models.entities.OrderDetail
+import models.entities.{TicketDistribution, TicketDocument, TicketSeatOrderDetail, OrderDetail}
 import scala.Some
 import models.{CurrencyFormat, HumanDateTime}
-
-case class TicketDocument(order: OrderDetail, pdf: Array[Byte]) {
-  def saveAs(file: File) {
-    val out = new FileOutputStream(file)
-    try { out.write(pdf) } finally { out.close() }
-  }
-}
 
 class TicketGenerator {
 
@@ -26,7 +18,7 @@ object TicketGenerator {
   val logger = Logger("be.studiocredo.ticketgenerator")
   val templateResource = "templates/slotshow_2014_ticket_template2.pdf"
 
-  def create(order: OrderDetail): Option[TicketDocument] = {
+  def create(order: OrderDetail, ticket: TicketDistribution, url: String): Option[TicketDocument] = {
     val out = new ByteArrayOutputStream
 
     try {
@@ -56,8 +48,8 @@ object TicketGenerator {
         document.newPage()
         canvas.addTemplate(template, 0, 0)
 
-        addText(order, ticketSeatOrder, canvas, font)
-        addBarcode(new URL(s"http://www.tickets.studiocredo.be/${order.id}"), document)
+        addText(order, ticketSeatOrder, ticket, canvas, font)
+        addBarcode(new URL(url), document)
 
       }
 
@@ -85,18 +77,20 @@ object TicketGenerator {
     document.add(img)
   }
 
-  private def addText(order: OrderDetail, ticketSeatOrder: TicketSeatOrderDetail, canvas: PdfContentByte, font: BaseFont) {
+  private def addText(order: OrderDetail, ticketSeatOrder: TicketSeatOrderDetail, ticket: TicketDistribution, canvas: PdfContentByte, font: BaseFont) {
     canvas.beginText()
     canvas.setFontAndSize(font, 12)
     canvas.showTextAligned(Element.ALIGN_LEFT, ticketSeatOrder.show.name, 400, 788, 0)
-    canvas.showTextAligned(Element.ALIGN_RIGHT, HumanDateTime.formatDate(ticketSeatOrder.show.date), 400, 752, 0)
+    canvas.showTextAligned(Element.ALIGN_RIGHT, HumanDateTime.formatDateTime(ticketSeatOrder.show.date), 400, 752, 0)
     canvas.showTextAligned(Element.ALIGN_CENTER, CurrencyFormat.format(ticketSeatOrder.price), 400, 716, 0)
     canvas.showTextAligned(Element.ALIGN_CENTER, order.order.billingName, 400, 650, 0)
     canvas.showTextAligned(Element.ALIGN_CENTER, order.order.billingAddress, 400, 600, 0)
-    canvas.showTextAligned(Element.ALIGN_CENTER, HumanDateTime.formatDateTime(order.order.date), 400, 600, 0)
+    canvas.showTextAligned(Element.ALIGN_CENTER, HumanDateTime.formatDateTimeCompact(order.order.date), 400, 550, 0)
+    canvas.showTextAligned(Element.ALIGN_CENTER, ticket.reference, 400, 500, 0)
+    canvas.showTextAligned(Element.ALIGN_CENTER, ticketSeatOrder.show.venueName, 400, 450, 0)
 
     canvas.setFontAndSize(font, 48)
-    canvas.showTextAlignedKerned(Element.ALIGN_CENTER, ticketSeatOrder.ticketSeatOrder.seat.name, 400, 644, 0)
+    canvas.showTextAlignedKerned(Element.ALIGN_CENTER, ticketSeatOrder.ticketSeatOrder.seat.name, 350, 400, 0)
     canvas.endText()
   }
 }

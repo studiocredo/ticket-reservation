@@ -1,4 +1,4 @@
-@(order: models.entities.OrderDetail)
+@(user: models.admin.RichUser, ticket: models.entities.TicketDocument)
 @import helper._
 @import models.CurrencyFormat
 
@@ -17,19 +17,15 @@
 
 <html>
     <body>
-        <p>Er is een bestelling uitgevoerd met een opmerking.</p>
+        <p>Beste @user.name,</p>
+
+        <p>In bijlage vind je de e-tickets van je bestelling.</p>
 
         <h1>Factuurgegevens</h1>
         <p>
-            <strong>@order.order.billingName</strong><br>
-            @newlines(order.billingAddressLines)
+            <strong>@ticket.order.order.billingName</strong><br>
+            @newlines(ticket.order.billingAddressLines)
         </p>
-
-        @if(order.order.comments.isDefined) {
-        <h1>Opmerkingen</h1>
-
-        <p>@newlines(order.commentLines)</p>
-        }
 
         <h1>Bestelling</h1>
         <table cellpadding="3px">
@@ -44,14 +40,14 @@
             </thead>
             <tbody>
 
-            @defining(order.ticketOrders match { case head :: tail => (Some(head), tail); case _ => (None, Nil) }) { tuple =>
+            @defining(ticket.order.ticketOrders match { case head :: tail => (Some(head), tail); case _ => (None, Nil) }) { tuple =>
             @defining(tuple._1) { first =>
             @defining(tuple._2) { tail =>
             @first match {
             case Some(first) => {
             <tr>
-                <td>@HumanDateTime.formatDateCompact(order.order.date)</td>
-                @orderRow(order.user, first)
+                <td>@HumanDateTime.formatDateCompact(ticket.order.order.date)</td>
+                @orderRow(ticket.order.user, first)
             </tr>
             }
             case None => { }
@@ -59,19 +55,18 @@
             @tail.map { ticketOrder =>
             <tr>
                 <td/>
-                @orderRow(order.user, ticketOrder)
+                @orderRow(ticket.order.user, ticketOrder)
             </tr>
             }
             }
             }
             }
             </tbody>
-            <tfoot>
-            <tr>
-                <td colspan="4"><strong>Totaal</strong></td>
-                <td><strong>@CurrencyFormat.format(order.price)</strong></td>
-            </tr>
-            </tfoot>
         </table>
+
+        <p>Deze tickets gelden als toegangsbewijs en moet je dus afdrukken en meebrengen naar de voorstelling.</p>
+
+        <p>Tot binnenkort,</p>
+        @emailFooter()
     </body>
 </html>

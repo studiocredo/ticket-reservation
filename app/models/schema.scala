@@ -26,6 +26,7 @@ object schema {
     val TicketOrders = new TicketOrders
     val TicketSeatOrders = new TicketSeatOrders
     val Payments = new Payments
+    val TicketDistributionLog = new TicketDistributionLog
 
     val ReservationQuota = new ReservationQuota
     val ShowPrereservations = new ShowPrereservations
@@ -266,6 +267,17 @@ object schema {
     def pk = foreignKey("order_fk", orderId, Orders)(_.id)
     def uniqueImportId = index("idx_import_id", importId, unique = true)
 
+  }
+
+  class TicketDistributionLog extends Table[TicketDistribution]("ticket_distribution_log") {
+    def orderId = column[OrderId]("order_id")
+    def serial = column[Int]("serial")
+    def date = column[DateTime]("date")
+
+    def * = orderId ~ serial ~ date <> (TicketDistribution.apply _, TicketDistribution.unapply _)
+
+    def pk = foreignKey("order_fk", orderId, Orders)(_.id)
+    def uniqueReferenceOrderId = index("idx_order_id_serial", orderId ~ serial, unique = true)
   }
 
   //////////////////////////////////

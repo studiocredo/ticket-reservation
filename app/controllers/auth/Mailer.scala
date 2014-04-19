@@ -8,7 +8,7 @@ import java.nio.charset.StandardCharsets
 import play.api.mvc.RequestHeader
 import be.studiocredo.auth.EmailToken
 import models.admin.{EventPrereservationsDetail, RichUser}
-import models.entities.OrderDetail
+import models.entities.{TicketDocument, OrderDetail}
 
 object Mailer {
   val fromAddress = current.configuration.getString("smtp.from").get
@@ -91,6 +91,16 @@ object Mailer {
     }
   }
 
+  def sendTicketEmail(user: RichUser, ticket: TicketDocument) = {
+    user.email match {
+      case Some(email) => {
+        val txtAndHtml = (None, Some(views.html.mails.ticket(user, ticket)))
+        sendEmail(s"$subjectPrefix Tickets", email, txtAndHtml)
+      }
+      case None => ()
+    }
+  }
+
   private def sendEmail(subject: String, recipient: String, body: (Option[Txt], Option[Html])) {
     import com.typesafe.plugin._
     import scala.concurrent.duration._
@@ -108,6 +118,7 @@ object Mailer {
       mail.setCharset(StandardCharsets.UTF_8.name())
       // the mailer plugin handles null / empty string gracefully
       mail.send(body._1.map(_.body).getOrElse(""), body._2.map(_.body).getOrElse(""))
+
     }
   }
 

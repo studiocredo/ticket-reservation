@@ -23,21 +23,32 @@ import be.studiocredo.reservations.FloorProtocol.StartOrder
 import play.api.Logger
 import play.api.cache.Cache
 import models.entities.SeatType.SeatType
-import models.entities.SeatType
-import models.entities.SeatId
+import models.entities._
 import be.studiocredo.reservations.FloorProtocol.Response
 import play.api.mvc.SimpleResult
+import be.studiocredo.reservations.CapacityExceededException
+import be.studiocredo.auth.SecuredDBRequest
+import models.entities.SeatType.SeatType
+import models.entities.SeatType
+import be.studiocredo.reservations.MissingOrderException
+import scala.Some
+import play.api.mvc.SimpleResult
 import models.entities.Identity
+import be.studiocredo.reservations.FloorProtocol.Response
+import models.entities.SeatId
+import be.studiocredo.reservations.FloorProtocol.StartOrder
 import models.entities.Order
 import be.studiocredo.reservations.CapacityExceededException
 import be.studiocredo.auth.SecuredDBRequest
+import models.HumanDateTime
+import scala.collection.mutable
 
 
 case class StartSeatOrderForm(quantity: Int, priceCategory: String, availableSeatTypes: List[SeatType])
 case class OrderComments(comments: Option[String])
 case class OrderBillingData(billingName: String, billingAddress: String)
 
-class Orders @Inject()(eventService: EventService, orderService: OrderService, showService: ShowService, preReservationService: PreReservationService, venueService: VenueService, val authService: AuthenticatorService, val notificationService: NotificationService, val userService: UserService, orderEngine: ReservationEngineMonitorService) extends Controller with Secure with UserContextSupport {
+class Orders @Inject()(ticketService: TicketService, eventService: EventService, orderService: OrderService, showService: ShowService, preReservationService: PreReservationService, venueService: VenueService, val authService: AuthenticatorService, val notificationService: NotificationService, val userService: UserService, orderEngine: ReservationEngineMonitorService) extends Controller with Secure with UserContextSupport {
   val logger = Logger("be.studiocredo.orders")
 
   val defaultAuthorization = Some(Authorization.ANY)
@@ -84,6 +95,35 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
   def view(order: OrderId, event: EventId) = AuthDBAction { implicit rs =>
     ensureOrderAccess(order) {
       viewPage(order, event)
+    }
+  }
+
+  def ticketDetails(reference: String) = AuthDBAction { implicit rs =>
+    TicketDistribution.parse(reference) match {
+      case None => BadRequest(views.html.ticket(reference, None, Map("error" -> s"Ongeldige referentie $reference"), userContext))
+      case Some(ticket) => {
+        ensureOrderAccess(ticket.order) {
+          orderService.getWithPayments(ticket.order) match {
+            case None => BadRequest(views.html.ticket(reference, None, Map("error" -> s"Bestelling ${ticket.order} niet gevonden"), userContext))
+            case Some(order) => {
+              ticketService.find(ticket.order) match {
+                case Nil => BadRequest(views.html.ticket(reference, None, Map("error" -> s"Referentie ${reference} niet gevonden"), userContext))
+                case last :: _ => {
+                  var messages = mutable.Map[String, String]()
+                  if (last != ticket) {
+                    messages("warning") = s"Dit is niet het meest recente ticket. Er werd een nieuw ticket aangemaakt op ${HumanDateTime.formatDateCompact(last.date)} met referentie ${last.reference}"
+                  }
+                  if (!order.isPaid) {
+                    messages("error") =  "Bestelling is nog niet (volledig) betaald"
+                  }
+                  Ok(views.html.ticket(reference, Some(order), messages.toMap, userContext))
+                }
+              }
+
+            }
+          }
+        }
+      }
     }
   }
 
@@ -257,11 +297,11 @@ class Orders @Inject()(eventService: EventService, orderService: OrderService, s
       BadRequest(s"Order $orderId niet gevonden")
     })(
         order => {
-          if (rs.user.allUsers.contains(order.userId))
+          if (rs.user.allUsers.contains(order.userId) || rs.user.roles.contains(Roles.Admin))
             action
           else {
             logger.warn(s"$order: Order for user ${order.userId} but ${rs.user.id} attempted to use it")
-            BadRequest(s"Geen toegang tot order $order")
+            BadRequest(s"Geen toegang tot order ${orderId}")
           }
         }
       )

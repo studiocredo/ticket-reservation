@@ -6,17 +6,20 @@ import play.api.data.Forms._
 import models.ids._
 import models.entities.FloorPlanJson._
 import com.google.inject.Inject
-import be.studiocredo.auth.AuthenticatorService
+import be.studiocredo.auth.{SecureRequest, AuthenticatorService}
 
 import scala.Some
 import controllers.auth.Mailer
 import play.api.libs.json.Json
-import models.entities.SeatType
-import be.studiocredo.reservations.{ReservationEngineMonitorService, FloorProtocol}
+import models.entities.{TicketDistribution, SeatType}
+import be.studiocredo.reservations.{TicketGenerator, ReservationEngineMonitorService, FloorProtocol}
+import play.api.libs.iteratee.Enumerator
+import play.api.mvc.{SimpleResult, ResponseHeader}
+import controllers.{routes => defaultRoutes}
 
 case class OrderSearchFormData(search: String)
 
-class Orders @Inject()(preReservationService: PreReservationService, showService: ShowService, eventService: EventService, orderService: OrderService, venueService: VenueService, orderEngine: ReservationEngineMonitorService, val userService: UserService, val authService: AuthenticatorService, val notificationService: NotificationService) extends AdminController with UserContextSupport {
+class Orders @Inject()(ticketService: TicketService, preReservationService: PreReservationService, showService: ShowService, eventService: EventService, orderService: OrderService, venueService: VenueService, orderEngine: ReservationEngineMonitorService, val userService: UserService, val authService: AuthenticatorService, val notificationService: NotificationService) extends AdminController with UserContextSupport {
   val ListPage = Redirect(routes.Orders.list())
 
   val orderSearchForm = Form(
@@ -63,12 +66,68 @@ class Orders @Inject()(preReservationService: PreReservationService, showService
     }
   }
 
-  def sendTicket(id: OrderId) = AuthDBAction { implicit rs =>
-    ???
+  private def getTicketUrl(ticket: TicketDistribution)(implicit request: SecureRequest[_]): String = {
+    defaultRoutes.Orders.ticketDetails(ticket.reference).absoluteURL()
   }
 
-  def sendNewTickets() = AuthDBAction { implicit rs =>
-    ???
+  def sendAndCreateTicket(id: OrderId) = AuthDBAction { implicit rs =>
+    ticketService.create(id).fold(
+      error => ListPage.flashing("error" -> "Ticket aanmaken mislukt"),
+      ticket => {
+        ticketService.generate(ticket, getTicketUrl(ticket)).fold(
+          error => ListPage.flashing("error" -> "Ticket aanmaken mislukt"),
+          ticket => {
+            SimpleResult(   //TODO send email instead
+              header = ResponseHeader(200),
+              body = Enumerator(ticket.pdf)
+            )
+          }
+        )
+      }
+    )
+  }
+
+
+  def showTicket(id: OrderId) = AuthDBAction { implicit rs =>
+    ticketService.findOrCreate(id).fold(
+      error => ListPage.flashing("error" -> "Ticket aanmaken mislukt"),
+      ticket => {
+        ticketService.generate(ticket, getTicketUrl(ticket)).fold(
+          error => ListPage.flashing("error" -> "Ticket aanmaken mislukt"),
+          ticket => {
+            SimpleResult(
+              header = ResponseHeader(200),
+              body = Enumerator(ticket.pdf)
+            )
+          }
+        )
+      }
+    )
+  }
+
+  def sendAndCreateNewTickets() = AuthDBAction { implicit rs =>
+    val newTickets = ticketService.createForNew()
+
+    val (success, failure) = newTickets.map { ticket =>
+      ticketService.generate(ticket, getTicketUrl(ticket)).fold(
+        error => None,
+        ticket => Some(ticket)
+      )
+    }.partition(_.isDefined)
+
+    success.flatten.foreach { ticketDocument =>
+      //todo send email
+    }
+
+    if (failure.isEmpty) {
+      if (success.isEmpty) {
+        ListPage.flashing("success" -> "Geen nieuwe tickets te verzenden")
+      } else {
+        ListPage.flashing("success" -> s"${success.length} ticket(s) verzonden")
+      }
+    } else {
+      ListPage.flashing("error" -> s"${success.length} ticket(s) verzonden, ${failure.length} ticket(s) niet verzonden")
+    }
   }
 
   def confirm(id: OrderId) = AuthDBAction { implicit rs =>
@@ -93,7 +152,8 @@ class Orders @Inject()(preReservationService: PreReservationService, showService
       case 0 => BadRequest(s"Bestelling $id niet gevonden")
       case _ => {
         (orderEngine.floors) ! ReloadState
-        ListPage
+        ListPage.flashing(
+          "success" -> s"Bestelling $id geannulleerd")
       }
     }
   }

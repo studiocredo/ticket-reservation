@@ -36,7 +36,7 @@
 <h2>Factuurgegevens</h2>
 <address>
     <strong>@order.order.order.billingName</strong><br>
-    @order.order.order.billingAddress
+    @newlines(order.order.billingAddressLines)
 </address>
 
 <h2>Bestelling</h2>
@@ -65,9 +65,9 @@
 
     </tbody>
     <tfoot>
-        <tr class="@if(order.isPayed){ success } else { danger }">
+        <tr class="@if(order.isPaid){ success } else { danger }">
             <th>Saldo</th>
-            <th class="text-right @if(order.balance.amount < 0){ text-danger }">@if(order.isPayed){ VOLDAAN } else { @CurrencyFormat.format(order.balance) }</th>
+            <th class="text-right @if(order.balance.amount < 0){ text-danger }">@if(order.isPaid){ VOLDAAN } else { @CurrencyFormat.format(order.balance) }</th>
         </tr>
     </tfoot>
 </table>
@@ -78,9 +78,12 @@
 <p>@newlines(order.order.commentLines)</p>
 }
 
-@if(order.isPayed) {
-    @form(action = routes.Orders.sendTicket(order.order.id), 'class -> "form form-inline form-no-feedback") {
-        <button type="submit" class="btn btn-large btn-primary">Ticket verzenden</button>
+@if(order.isPaid) {
+    @form(action = routes.Orders.sendAndCreateTicket(order.order.id), 'class -> "form form-inline form-no-feedback") {
+        <button type="submit" class="btn btn-large btn-primary">Ticket opnieuw verzenden</button>
+    }
+    @form(action = routes.Orders.showTicket(order.order.id), 'class -> "form form-inline form-no-feedback") {
+        <button type="submit" class="btn btn-large btn-primary">Ticket downloaden</button>
     }
 } else {
     @form(action = routes.Orders.confirm(order.order.id), 'class -> "form form-inline form-no-feedback") {

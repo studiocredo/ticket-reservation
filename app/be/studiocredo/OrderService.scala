@@ -171,6 +171,19 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
     Page(values, page, pageSize, offset, total)
   }
 
+  def findPaidForUpcomingShows()(implicit  s: Session): List[OrderId] = {
+    val query = for {
+      order <- OQ
+      ticketOrder <- TOQ
+      if ticketOrder.orderId === order.id
+      show <- Query(Shows)
+      if ticketOrder.showId === show.id
+      if show.date > DateTime.now()
+      if show.archived === false
+    } yield (order)
+    query.list.map(orderPaymentsDetail).filter(_.isPaid).map(_.order.id)
+  }
+
   def prereservationSeatsByUser(id: UserId)(implicit s: Session): List[TicketSeatOrderDetail] = {
     prereservationSeatsByUsers(List(id))
   }

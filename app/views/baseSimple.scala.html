@@ -1,0 +1,52 @@
+@(title: String, bgClass: List[String] = Nil)(userContext: Option[models.entities.UserContext])(content: Html)(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
+@import controllers.admin
+@import controllers.auth
+@import views.helper.Auth
+@import be.studiocredo.auth.Roles._
+
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#">
+<head>
+    <title>@title</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta property="og:title" content="@title" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="http://@request.host@request.uri" />
+    <meta property="og:image" content="@routes.Assets.at("images/logo.png").absoluteURL()" />
+    <meta property="og:description" content="Studio Credo Ticket Reservatie"/>
+    <meta prorerty="og:language" content="nl"/>
+    <link rel='shortcut icon' type='image/x-icon' href='@routes.Assets.at("images/favicon.ico")'>
+    <link rel='shortcut icon' type='image/png' href='@routes.Assets.at("images/favicon.png")'>
+    <link rel='stylesheet' href='@routes.WebJarAssets.at(WebJarAssets.locate("ui-lightness/jquery-ui.min.css"))'>
+    <link rel='stylesheet' href='@routes.WebJarAssets.at(WebJarAssets.locate("css/bootstrap.min.css"))'>
+    <link rel='stylesheet' href='@routes.WebJarAssets.at(WebJarAssets.locate("css/bootstrap-theme.min.css"))'>
+    <link rel='stylesheet' href='@routes.WebJarAssets.at(WebJarAssets.locate("select2.css"))'>
+    <link rel='stylesheet' href='@routes.WebJarAssets.at(WebJarAssets.locate("select2-bootstrap.css"))'>
+    <link rel='stylesheet' href='@routes.Assets.at("css/main.css")'>
+    <link rel='stylesheet' href='@routes.Assets.at("css/admin/main.css")'>
+
+    <!--[if lt IE 9]>
+    <script type='text/javascript' src='@routes.WebJarAssets.at(WebJarAssets.locate("html5shiv.min.js"))'> </script>
+    <script type='text/javascript' src='@routes.Assets.at("js/respond.min.js")'></script>
+    <![endif]-->
+    <script type='text/javascript' src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery.min.js"))'></script>
+    <script type='text/javascript' src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery-ui.min.js"))'></script>
+    <script type='text/javascript' src='@routes.WebJarAssets.at(WebJarAssets.locate("js/bootstrap.min.js"))'></script>
+    <script type='text/javascript' src='@routes.WebJarAssets.at(WebJarAssets.locate("angular.js"))'></script>
+    <script type='text/javascript' src='@routes.WebJarAssets.at(WebJarAssets.locate("ui-bootstrap-tpls.min.js"))'></script>
+    <script type='text/javascript' src='@routes.WebJarAssets.at(WebJarAssets.locate("select2.js"))'></script>
+    <script type="text/javascript" src="@routes.Application.javascriptRoutes"></script>
+    <script type='text/javascript' src='@routes.Assets.at("js/jquery.bootstrap-growl.js")'></script>
+    <script type='text/javascript' src='@routes.Assets.at("js/angular-dragdrop.js")'></script>
+    <script type='text/javascript' src='@routes.Assets.at("js/angular-sortable.js")'></script>
+
+    <script type='text/javascript' src='@routes.Assets.at("js/utils.js")'></script>
+    <script type='text/javascript' src='@routes.Assets.at("js/main.js")'></script>
+</head>
+<body class='status-simple @bgClass.mkString(" ")'>
+<div id="content" class="container">
+    @content
+</div>
+</body>
+</html>

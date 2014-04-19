@@ -7,8 +7,8 @@
 
 @base("Administratie: Bestellingen")(userContext) {
 
-    @form(action = routes.Orders.sendNewTickets(), 'class -> "form form-inline form-no-feedback") {
-        <button type="submit" class="btn btn-primary">Tickets verzenden</button>
+    @form(action = routes.Orders.sendAndCreateNewTickets(), 'class -> "form form-inline form-no-feedback") {
+        <button type="submit" class="btn btn-primary" data-loading-text="Bezig..." onclick="$(this).button('loading');">Nieuwe tickets verzenden</button>
     }
 
     @form(action = routes.Orders.list(), 'class -> "form form-inline form-no-feedback") {
@@ -67,7 +67,7 @@
                         <td>@helper.showName(ticketOrder.show)&nbsp;<a href="@{routes.Orders.show(ticketOrder.show.id)}"><span class="glyphicon glyphicon-share-alt"></span></a></td>
                         <td><a href="#" class="seat-popovers" data-tooltip-placement="left" data-tooltip="@{ticketOrder.ticketSeatOrders.map(_.ticketSeatOrder.seat.name).sorted.mkString(", ")}"><span class="badge badge-primary">@ticketOrder.ticketSeatOrders.length</span></a></td>
                         <td>@if(first) { @CurrencyFormat.format(order.order.price) }</td>
-                        <td>@if(first && order.isPayed) { <span class="badge badge-success">OK</td> }</td>
+                        <td>@if(first && order.isPaid) { <span class="badge badge-success">OK</td> }</td>
                         <td>
                             @if(first) {
                                 @if(order.order.order.comments.isDefined) {
@@ -79,9 +79,9 @@
                         </td>
                         <td>
                             @if(first) {
-                                @if(order.isPayed) {
-                                    @form(action = routes.Orders.sendTicket(order.order.id), 'class -> "form form-inline form-no-feedback") {
-                                        <button type="submit" class="btn btn-default btn-xs">Tickets zenden</button>
+                                @if(order.isPaid) {
+                                    @form(action = routes.Orders.showTicket(order.order.id), 'class -> "form form-inline form-no-feedback") {
+                                        <button type="submit" class="btn btn-default btn-xs">Ticket downloaden</button>
                                     }
                                 } else {
                                     @form(action = routes.Orders.confirm(order.order.id), 'class -> "form form-inline form-no-feedback") {
