@@ -105,22 +105,24 @@ object Mailer {
   }
 
   private def sendEmail(subject: String, recipient: String, body: (Option[Txt], Option[Html])) {
-    import com.typesafe.plugin._
+    import mail._
+    import Mail._
     import scala.concurrent.duration._
     import play.api.libs.concurrent.Execution.Implicits._
+    import scala.language.reflectiveCalls
 
     if (Logger.isDebugEnabled) {
       Logger.debug(s"sending email to '$recipient' = [[[$body]]]")
     }
 
     Akka.system.scheduler.scheduleOnce(1.seconds) {
-      val mail = use[MailerPlugin].email
-      mail.setFrom(s"$fromName <$fromAddress>")
-      mail.setRecipient(recipient)
-      mail.setSubject(subject)
-      mail.setCharset(StandardCharsets.UTF_8.name())
-      // the mailer plugin handles null / empty string gracefully
-      mail.send(body._1.map(_.body).getOrElse(""), body._2.map(_.body).getOrElse(""))
+      Mail()
+        .from(fromName, fromAddress)
+        .to(recipient, recipient)
+        .withSubject(subject)
+        .withText(body._1.map(_.body).getOrElse(""))
+        .withHtml(body._2.getOrElse(Html("")))
+        .send()
 
     }
   }

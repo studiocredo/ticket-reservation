@@ -37,10 +37,6 @@ object ApplicationBuild extends Build {
 
     "org.mindrot" % "jbcrypt" % "0.3m",
 
-    "org.apache.commons" % "commons-email" % "1.3.1",
-    "com.typesafe" % "play-plugins-util_2.10" % "2.2.0" notTransitive(),
-    "com.typesafe" % "play-plugins-mailer_2.10" % "2.2.0" notTransitive(),
-
     "org.codemonkey.simplejavamail" % "simple-java-mail" % "2.0",
     "play.modules.mail" %% "play2-mail-plugin" % "0.3" notTransitive()
   )
