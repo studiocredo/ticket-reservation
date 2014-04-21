@@ -41,6 +41,7 @@
         <table class="table table-hover">
             <thead>
                 <tr>
+                    <th></th>
                     <th>Id</th>
                     <th>Datum</th>
                     <th>Gebruiker</th>
@@ -60,6 +61,7 @@
                 @order.order.ticketOrders.zipWithIndex.map { case (ticketOrder, index) =>
                 @defining(index ==0) { first =>
                     <tr>
+                        <td>@if(first) { <button class="btn btn-danger btn-xs" data-ng-click="open('@{routes.Orders.cancel(order.order.id)}', 'Bestelling @order.order.id: @{order.order.order.billingName} - @{ticketOrder.ticketSeatOrders.length} ticket(s)')"><span class="glyphicon glyphicon-remove"></span></button> }</td>
                         <td>@if(first) { <a href="@{routes.Orders.details(order.order.id)}">@order.order.id</a> }</td>
                         <td>@if(first) { @HumanDateTime.formatDateTimeCompact(order.order.order.date) }</td>
                         <td>@if(first) { <a href="@{routes.UserDetails.view(order.order.user.id)}">@order.order.user.username</a> }</td>
@@ -79,6 +81,15 @@
                         </td>
                         <td>
                             @if(first) {
+                                @form(action = routes.Orders.edit(order.order.id), 'class -> "form form-inline form-no-feedback") {
+                                    <button type="submit" class="btn btn-primary btn-xs">
+                                        <span class="glyphicon glyphicon-edit"></span>
+                                    </button>
+                                }
+                            }
+                        </td>
+                        <td>
+                            @if(first) {
                                 @if(order.isPaid) {
                                     @form(action = routes.Orders.showTicket(order.order.id), 'class -> "form form-inline form-no-feedback") {
                                         <button type="submit" class="btn btn-default btn-xs">Ticket downloaden</button>
@@ -90,7 +101,6 @@
                                 }
                             }
                         </td>
-                        <td>@if(first) { <button class="btn btn-default btn-xs" data-ng-click="open('@{routes.Orders.cancel(order.order.id)}', 'Order @order.order.id: @{order.order.order.billingName} - @{ticketOrder.ticketSeatOrders.length} ticket(s)')">Annuleren</button> }</td>
                     </tr>
                 }
                 }

@@ -276,12 +276,22 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
   def createDetailed(user: RichUser)(implicit s:Session): OrderDetail = get(create(user)).get
   def create(user: RichUser)(implicit s:Session): OrderId = insert(OrderEdit(user.id, org.joda.time.DateTime.now, user.name, user.address.getOrElse("n/a"), false, None))
   def insert(order: OrderEdit)(implicit s: Session): OrderId = Orders.autoInc.insert(order)
+
   def update(id: OrderId, billingName: String, billingAddress: String)(implicit s: Session) = byId(id).map(_.billingEdit).update((billingName, billingAddress))
+  def update(id: OrderId, orderEdit: OrderDetailEdit)(implicit s: Session): Either[ServiceFailure, ServiceSuccess] = {
+    import schema.seatIdType
+    s.withTransaction {
+      byId(id).map(_.billingCommentsEdit).update((orderEdit.billingName, orderEdit.billingAddress, orderEdit.comments))
+      orderEdit.seats.foreach{ tsoEdit =>
+        TSOQ.where(_.ticketOrderId === tsoEdit.ticketOrderId).where(_.seat === tsoEdit.seat).map(_.price).update(tsoEdit.price)
+      }
+    }
+    Right(serviceSuccess("order.update.success"))
+  }
 
   def insert(orderId: OrderId, showId: ShowId)(implicit s: Session): TicketOrderId = TicketOrders.autoInc.insert((orderId, showId))
 
   def insert(seatOrders: List[TicketSeatOrder])(implicit s: Session): Either[ServiceFailure, ServiceSuccess] = {
-    seatOrders.map{_.seat}
     val vQuery = for {
       (show, venue) <- Shows.leftJoin(Venues).on(_.venueId === _.id)
       if show.id inSet seatOrders.map{_.showId}
@@ -314,6 +324,19 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
       (for {
         o <- OQ if o.id === id
       } yield o.processed ~ o.comments).update((true, comments)) == 1
+    }
+  }
+
+  def getEdit(id: OrderId)(implicit s: Session): Option[OrderDetailEdit] = {
+    find(id) map { pe =>
+      val query = for {
+        tso <- TSOQ
+        to <- TOQ
+        if tso.ticketOrderId === to.id
+        if to.orderId === id
+      } yield ((tso.ticketOrderId, tso.seat, tso.price))
+      val tso = query.list.map(TicketSeatOrderEdit.tupled(_))
+      OrderDetailEdit(pe.billingName, pe.billingAddress, pe.comments, tso)
     }
   }
 

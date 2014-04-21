@@ -1,0 +1,23 @@
+@(id: Long, orderFormData: Form[entities.OrderDetailEdit], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
+@import controllers.admin.routes
+@import helper._
+
+@base("Administratie: Bestelling bewerken")(userContext) {
+
+<h1>Bestelling bewerken
+    @form(routes.Orders.cancel(id), 'class -> "pull-right") {
+    <input type="submit" value="Verwijderen" class="btn btn-danger">
+    }
+</h1>
+
+
+@form(action = routes.Orders.update(id), 'class -> "form form-horizontal") {
+
+@orderForm(orderFormData)
+
+@twFormActions {
+<input type="submit" value="Aanpassen" class="btn btn-primary">
+<a href="@routes.Orders.list()" class="btn btn-warning">Annuleren</a>
+}
+}
+}

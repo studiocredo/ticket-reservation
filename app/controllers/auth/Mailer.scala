@@ -130,6 +130,7 @@ object Mailer {
     import Mail._
     import scala.concurrent.duration._
     import play.api.libs.concurrent.Execution.Implicits._
+    import scala.language.reflectiveCalls
 
     if (Logger.isDebugEnabled) {
       Logger.debug(s"sending email with attachments to '$recipient' = [[[$body]]]")

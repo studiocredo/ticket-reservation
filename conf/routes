@@ -57,6 +57,8 @@ GET         /admin/orders                           @controllers.admin.Orders.li
 GET         /admin/orders/:id                       @controllers.admin.Orders.details(id:OrderId)
 GET         /admin/orders/show/:show                @controllers.admin.Orders.show(show: ShowId)
 GET         /admin/orders/availability/:id          @controllers.admin.Orders.ajaxFloorplan(id:ShowId)
+GET         /admin/orders/edit/:id                  @controllers.admin.Orders.edit(id:OrderId)
+POST        /admin/orders/edit/:id                  @controllers.admin.Orders.update(id:OrderId)
 POST        /admin/orders/confirm/:id               @controllers.admin.Orders.confirm(id: OrderId)
 POST        /admin/orders/cancel/:id                @controllers.admin.Orders.cancel(id: OrderId)
 POST        /admin/orders/ticket/create/:id         @controllers.admin.Orders.sendAndCreateTicket(id: OrderId)

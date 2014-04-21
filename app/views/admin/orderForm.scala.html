@@ -1,0 +1,26 @@
+@(orderForm: Form[entities.OrderDetailEdit])(implicit lang: Lang)
+
+@import helper._
+@import views.Bootstrap._
+
+@globalFormErrors(orderForm)
+
+<fieldset>
+    @inputText(orderForm("billingName"), '_label -> "Naam", 'class -> "form-control")
+    @textarea(orderForm("billingAddress"), '_label -> "Adres", '_help -> "Gebruik twee regels, één voor straat en huisnummer en één voor postcode en gemeente", 'class -> "form-control")
+    @textarea(orderForm("comments"), '_label -> "Details", 'class -> "form-control", 'rows -> 5, '_help -> "Commentaar, opmerkingen")
+    @repeat(orderForm("seats")) { seatForm =>
+        <fieldset class="form-inline">
+            <div class="row">
+                <div class="col-md-offset-2 col-md-4">
+                    @hiddenInput(seatForm("ticketOrderId"), '_label -> "Ticket Order ID", 'class -> "form-control")
+                    @hiddenInput(seatForm("seat"), '_label -> "Plaats", 'class -> "form-control")
+                    Stoel @seatForm("seat").value
+                </div>
+                <div class="col-md-6">
+                    @inputText(seatForm("price"), '_label -> "Prijs", 'class -> "form-control")
+                </div>
+            </div>
+        </fieldset>
+    }
+</fieldset>

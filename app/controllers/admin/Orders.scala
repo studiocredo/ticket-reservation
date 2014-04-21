@@ -1,7 +1,7 @@
 package controllers.admin
 
 import be.studiocredo._
-import play.api.data.Form
+import play.api.data.{Forms, Form}
 import play.api.data.Forms._
 import models.ids._
 import models.entities.FloorPlanJson._
@@ -11,11 +11,16 @@ import be.studiocredo.auth.{SecureRequest, AuthenticatorService}
 import scala.Some
 import controllers.auth.Mailer
 import play.api.libs.json.Json
-import models.entities.{TicketDistribution, SeatType}
+import models.entities._
 import be.studiocredo.reservations.{TicketGenerator, ReservationEngineMonitorService, FloorProtocol}
 import play.api.libs.iteratee.Enumerator
 import play.api.mvc.{SimpleResult, ResponseHeader}
 import controllers.{routes => defaultRoutes}
+import be.studiocredo.util.ServiceReturnValues._
+import be.studiocredo.util.Money
+import models.entities.OrderDetailEdit
+import play.api.mvc.SimpleResult
+import play.api.mvc.ResponseHeader
 
 case class OrderSearchFormData(search: String)
 
@@ -26,6 +31,21 @@ class Orders @Inject()(ticketService: TicketService, preReservationService: PreR
     mapping(
       "search" -> nonEmptyText(3)
     )(OrderSearchFormData.apply)(OrderSearchFormData.unapply)
+  )
+
+  val orderForm = Form(
+    mapping(
+      "billingName" -> nonEmptyText,
+      "billingAddress" -> text,
+      "comments" -> optional(text),
+      "seats" -> Forms.list[TicketSeatOrderEdit] (
+        mapping(
+          "ticketOrderId" -> of[TicketOrderId],
+          "seat" -> of[SeatId],
+          "price" -> of[Money]
+        )(TicketSeatOrderEdit.apply)(TicketSeatOrderEdit.unapply)
+      )
+    )(OrderDetailEdit.apply)(OrderDetailEdit.unapply)
   )
 
   def list(page: Int) = AuthDBAction { implicit rs =>
@@ -64,6 +84,26 @@ class Orders @Inject()(ticketService: TicketService, preReservationService: PreR
         Ok(views.html.admin.showOrders(details, showAvailability.get, currentUserContext))
       }
     }
+  }
+
+  def edit(id: OrderId) = AuthDBAction { implicit rs =>
+    orderService.getEdit(id) match {
+      case None => ListPage
+      case Some(order) => Ok(views.html.admin.orderEditForm(id, orderForm.fillAndValidate(order), userContext))
+    }
+  }
+
+  def update(id: OrderId) = AuthDBAction { implicit rs =>
+    val bindedForm = orderForm.bindFromRequest
+    bindedForm.bindFromRequest.fold(
+      formWithErrors => BadRequest(views.html.admin.orderEditForm(id, formWithErrors, userContext)),
+      order => {
+        orderService.update(id, order).fold(
+          error => BadRequest(views.html.admin.orderEditForm(id, bindedForm.withGlobalError(serviceMessage(error)), userContext)),
+          success => Redirect(routes.Orders.details(id)).flashing("success" -> "Bestelling aangepast")
+        )
+      }
+    )
   }
 
   private def getTicketUrl(ticket: TicketDistribution)(implicit request: SecureRequest[_]): String = {

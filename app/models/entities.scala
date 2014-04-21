@@ -234,6 +234,8 @@ object entities {
     val numberOfSeats = ticketOrders.map(_.ticketSeatOrders.length).sum
     //val numberOfSeatsByShow = ticketOrders.flatMap(_.ticketSeatOrders.map((_.show.id, )))
   }
+  case class OrderDetailEdit(billingName: String, billingAddress: String, comments: Option[String], seats: List[TicketSeatOrderEdit])
+  case class TicketSeatOrderEdit(ticketOrderId: TicketOrderId, seat: SeatId, price: Money)
 
   case class OrderPayments(order: OrderDetail, payments: List[Payment]) {
     val balance = payments.map(_.amount).foldLeft(order.price)((total,amount) => total.minus(amount))
@@ -468,6 +470,18 @@ object ids {
     }
   }
 
+  import models.entities.SeatId
+  implicit val seatFormatter = new Formatter[SeatId] {
+    override val format = Some(("format.seat", Nil))
+
+    override def bind(key: String, data: Map[String, String]): Either[Seq[FormError], SeatId] = {
+      data.get(key).map(value => Right(SeatId(value))).getOrElse(error(key, "error.seat.missing"))
+    }
+
+    private def error(key: String, msg: String) = Left(List(new FormError(key, msg)))
+
+    override def unbind(key: String, seat: SeatId) = Map(key -> seat.name)
+  }
 
   import play.api.libs.json._
 
