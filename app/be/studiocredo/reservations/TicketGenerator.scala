@@ -17,7 +17,7 @@ class TicketGenerator {
 
 object TicketGenerator {
   val logger = Logger("be.studiocredo.ticketgenerator")
-  val templateResource = "templates/slotshow_2014_ticket_template2.pdf"
+  val templateResource = "templates/slotshow_2014_ticket_template.pdf"
 
   def create(order: OrderDetail, ticket: TicketDistribution, url: String): Option[TicketDocument] = {
     val out = new ByteArrayOutputStream
@@ -74,24 +74,31 @@ object TicketGenerator {
     val qrcode = new BarcodeQRCode(url.toExternalForm, 1, 1, null)
     val img = qrcode.getImage
     img.scalePercent(250.0f)
-    img.setAbsolutePosition(280f, 120f)
+    img.setAbsolutePosition(250f, 200f)
     document.add(img)
   }
 
   private def addText(order: OrderDetail, ticketSeatOrder: TicketSeatOrderDetail, ticket: TicketDistribution, canvas: PdfContentByte, font: BaseFont) {
     canvas.beginText()
+
+    canvas.setFontAndSize(font, 14)
+    canvas.showTextAlignedKerned(Element.ALIGN_LEFT, ticketSeatOrder.show.name, 50, 560, 0)
+    canvas.showTextAlignedKerned(Element.ALIGN_LEFT, HumanDateTime.formatDateTime(ticketSeatOrder.show.date), 50, 530, 0)
+
     canvas.setFontAndSize(font, 12)
-    canvas.showTextAligned(Element.ALIGN_LEFT, ticketSeatOrder.show.name, 400, 788, 0)
-    canvas.showTextAligned(Element.ALIGN_RIGHT, HumanDateTime.formatDateTime(ticketSeatOrder.show.date), 400, 752, 0)
-    canvas.showTextAligned(Element.ALIGN_CENTER, CurrencyFormat.format(ticketSeatOrder.price), 400, 716, 0)
-    canvas.showTextAligned(Element.ALIGN_CENTER, order.order.billingName, 400, 650, 0)
-    canvas.showTextAligned(Element.ALIGN_CENTER, order.order.billingAddress, 400, 600, 0)
-    canvas.showTextAligned(Element.ALIGN_CENTER, HumanDateTime.formatDateTimeCompact(order.order.date), 400, 550, 0)
-    canvas.showTextAligned(Element.ALIGN_CENTER, ticket.reference, 400, 500, 0)
-    canvas.showTextAligned(Element.ALIGN_CENTER, ticketSeatOrder.show.venueName, 400, 450, 0)
+    canvas.showTextAlignedKerned(Element.ALIGN_LEFT, ticketSeatOrder.show.venueName, 50, 500, 0)
 
     canvas.setFontAndSize(font, 48)
-    canvas.showTextAlignedKerned(Element.ALIGN_CENTER, ticketSeatOrder.ticketSeatOrder.seat.name, 350, 400, 0)
+    canvas.showTextAligned(Element.ALIGN_RIGHT, ticketSeatOrder.ticketSeatOrder.seat.name, 410, 515, 0)
+
+    canvas.setFontAndSize(font, 12)
+    canvas.showTextAlignedKerned(Element.ALIGN_LEFT, order.order.billingName, 50, 405, 0)
+    canvas.showTextAlignedKerned(Element.ALIGN_LEFT, order.billingAddressLines.mkString(", "), 50, 370, 0)
+    canvas.showTextAlignedKerned(Element.ALIGN_RIGHT, CurrencyFormat.format(ticketSeatOrder.price), 405, 405, 0)
+    canvas.showTextAlignedKerned(Element.ALIGN_RIGHT, HumanDateTime.formatDateTimeCompact(order.order.date), 405, 360, 0)
+
+    canvas.showTextAligned(Element.ALIGN_CENTER, ticket.reference, 250, 35, 0)
+
     canvas.endText()
   }
 }
