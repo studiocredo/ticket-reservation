@@ -108,10 +108,14 @@ class Orders @Inject()(ticketService: TicketService, eventService: EventService,
             case Some(order) => {
               ticketService.find(ticket.order) match {
                 case Nil => BadRequest(views.html.ticket(reference, None, Map("error" -> s"Referentie ${reference} niet gevonden"), userContext))
-                case last :: _ => {
+                case last :: other => {
                   var messages = mutable.Map[String, String]()
                   if (last != ticket) {
-                    messages("warning") = s"Dit is niet het meest recente ticket. Er werd een nieuw ticket aangemaakt op ${HumanDateTime.formatDateCompact(last.date)} met referentie ${last.reference}"
+                    if (!other.contains(ticket)) {
+                      messages("warning") = s"Dit is niet het meest recente ticket. Er werd een nieuw ticket aangemaakt op ${HumanDateTime.formatDateCompact(last.date)} met referentie ${last.reference}"
+                    } else {
+                      messages("error") = s"Ongeldige referentie $reference"
+                    }
                   }
                   if (!order.isPaid) {
                     messages("error") =  "Bestelling is nog niet (volledig) betaald"

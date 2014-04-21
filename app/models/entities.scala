@@ -13,6 +13,7 @@ import be.studiocredo.auth.Password
 import models.schema.PersistableEnumeration
 import java.io.{FileOutputStream, File}
 import org.joda.time.format.DateTimeFormat
+import play.api.http.MimeTypes
 
 object entities {
 
@@ -305,7 +306,7 @@ object entities {
   case class Payment(id: PaymentId, paymentType: PaymentType, importId: Option[String], orderId: Option[OrderId], debtor: String, amount: Money, message: Option[String], details: Option[String], date: DateTime, archived: Boolean) extends HasTime with Archiveable
   case class PaymentEdit(           paymentType: PaymentType, importId: Option[String], orderId: Option[OrderId], debtor: String, amount: Money, message: Option[String], details: Option[String], date: DateTime, archived: Boolean) extends HasTime with Archiveable
 
-  case class TicketDocument(order: OrderDetail, pdf: Array[Byte]) {
+  case class TicketDocument(order: OrderDetail, filename: String, pdf: Array[Byte], mimetype: String) {
     def saveAs(file: File) {
       val out = new FileOutputStream(file)
       try { out.write(pdf) } finally { out.close() }

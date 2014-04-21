@@ -1,1 +1,2 @@
+400:mail.MailPlugin
 1500:com.typesafe.plugin.CommonsMailerPlugin

@@ -15,6 +15,7 @@ import scala.collection.mutable.ListBuffer
 import be.studiocredo.util.AXATransactionImporter
 import java.text.DateFormat
 import be.studiocredo.reservations.TicketGenerator
+import com.github.tototoshi.slick.JodaSupport._
 import org.joda.time.DateTime
 
 class TicketService @Inject()(orderService: OrderService) {
@@ -26,6 +27,10 @@ class TicketService @Inject()(orderService: OrderService) {
 
   def find(id: OrderId, serial: Int)(implicit s: Session): Option[TicketDistribution] = {
     TicketQ.filter(q => q.orderId === id && q.serial === serial).firstOption
+  }
+
+  def find(ticket: TicketDistribution)(implicit s: Session): Option[TicketDistribution] = {
+    TicketQ.filter(q => q.orderId === ticket.order && q.serial === ticket.serial && q.date === ticket.date).firstOption
   }
 
   def findOrCreate(order: OrderId)(implicit s: Session): Either[ServiceFailure, TicketDistribution] = {

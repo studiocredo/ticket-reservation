@@ -77,10 +77,13 @@ class Orders @Inject()(ticketService: TicketService, preReservationService: PreR
         ticketService.generate(ticket, getTicketUrl(ticket)).fold(
           error => ListPage.flashing("error" -> "Ticket aanmaken mislukt"),
           ticket => {
-            SimpleResult(   //TODO send email instead
-              header = ResponseHeader(200),
-              body = Enumerator(ticket.pdf)
-            )
+            userService.find(ticket.order.user.id) match {
+              case None => BadRequest(s"Gebruiker ${ticket.order.user.id} niet gevonden")
+              case Some(user) => {
+                Mailer.sendTicketEmail(user, ticket)
+                ListPage.flashing("error" -> "Ticket email verzonden")
+              }
+            }
           }
         )
       }
@@ -115,8 +118,11 @@ class Orders @Inject()(ticketService: TicketService, preReservationService: PreR
       )
     }.partition(_.isDefined)
 
-    success.flatten.foreach { ticketDocument =>
-      //todo send email
+    success.flatten.foreach { ticket =>
+      userService.find(ticket.order.user.id) match {
+        case None => ()
+        case Some(user) => Mailer.sendTicketEmail(user, ticket)
+      }
     }
 
     if (failure.isEmpty) {

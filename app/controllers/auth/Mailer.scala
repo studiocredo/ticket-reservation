@@ -9,9 +9,12 @@ import play.api.mvc.RequestHeader
 import be.studiocredo.auth.EmailToken
 import models.admin.{EventPrereservationsDetail, RichUser}
 import models.entities.{TicketDocument, OrderDetail}
+import mail.Mail.Attachment
+import scala.io.Source
 
 object Mailer {
-  val fromAddress = current.configuration.getString("smtp.from").get
+  val fromAddress = current.configuration.getString("smtp.from.address").get
+  val fromName = current.configuration.getString("smtp.from.name").get
   val subjectPrefix = "[Studio Credo Ticket Reservatie]"
   val adminAddress = current.configuration.getString("mail.admin")
 
@@ -95,7 +98,7 @@ object Mailer {
     user.email match {
       case Some(email) => {
         val txtAndHtml = (None, Some(views.html.mails.ticket(user, ticket)))
-        sendEmail(s"$subjectPrefix Tickets", email, txtAndHtml)
+        sendEmailWithAttachments(s"$subjectPrefix Tickets", email, txtAndHtml, List(Attachment(ticket.filename, Source.fromRawBytes(ticket.pdf), ticket.mimetype)))
       }
       case None => ()
     }
@@ -112,13 +115,35 @@ object Mailer {
 
     Akka.system.scheduler.scheduleOnce(1.seconds) {
       val mail = use[MailerPlugin].email
-      mail.setFrom(fromAddress)
+      mail.setFrom(s"$fromName <$fromAddress>")
       mail.setRecipient(recipient)
       mail.setSubject(subject)
       mail.setCharset(StandardCharsets.UTF_8.name())
       // the mailer plugin handles null / empty string gracefully
       mail.send(body._1.map(_.body).getOrElse(""), body._2.map(_.body).getOrElse(""))
 
+    }
+  }
+
+  private def sendEmailWithAttachments(subject: String, recipient: String, body: (Option[Txt], Option[Html]), attachments: List[Attachment]) {
+    import mail._
+    import Mail._
+    import scala.concurrent.duration._
+    import play.api.libs.concurrent.Execution.Implicits._
+
+    if (Logger.isDebugEnabled) {
+      Logger.debug(s"sending email with attachments to '$recipient' = [[[$body]]]")
+    }
+
+    Akka.system.scheduler.scheduleOnce(1.seconds) {
+      Mail()
+      .from(fromName, fromAddress)
+      .to(recipient, recipient)
+      .withSubject(subject)
+      .withText(body._1.map(_.body).getOrElse(""))
+      .withHtml(body._2.getOrElse(Html("")))
+      .withAttachments(attachments)
+      .send()
     }
   }
 

@@ -9,6 +9,7 @@ import play.api.Logger
 import models.entities.{TicketDistribution, TicketDocument, TicketSeatOrderDetail, OrderDetail}
 import scala.Some
 import models.{CurrencyFormat, HumanDateTime}
+import play.api.http.MimeTypes
 
 class TicketGenerator {
 
@@ -56,7 +57,7 @@ object TicketGenerator {
       templateStream.close()
       document.close()
 
-      Some(TicketDocument(order, out.toByteArray))
+      Some(TicketDocument(order, s"ticket_${ticket.reference}.pdf", out.toByteArray, "application/pdf"))
 
     } catch {
       case e: Exception =>

@@ -39,7 +39,10 @@ object ApplicationBuild extends Build {
 
     "org.apache.commons" % "commons-email" % "1.3.1",
     "com.typesafe" % "play-plugins-util_2.10" % "2.2.0" notTransitive(),
-    "com.typesafe" % "play-plugins-mailer_2.10" % "2.2.0" notTransitive()
+    "com.typesafe" % "play-plugins-mailer_2.10" % "2.2.0" notTransitive(),
+
+    "org.codemonkey.simplejavamail" % "simple-java-mail" % "2.0",
+    "play.modules.mail" %% "play2-mail-plugin" % "0.3" notTransitive()
   )
 
   val main = Project(appName, appVersion, appDependencies).settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*).settings(
@@ -49,6 +52,7 @@ object ApplicationBuild extends Build {
     , routesImport += "models.ids._"
     , routesImport += "models.ids.TypedId._"
     , resolvers += Resolver.url("sbt-plugin-releases", new URL("http://repo.scala-sbt.org/scalasbt/sbt-plugin-releases/"))(Resolver.ivyStylePatterns)
+    , resolvers += Resolver.url("mcveat.github.com", url("http://mcveat.github.com/releases"))(Resolver.ivyStylePatterns)
     , initialCommands in console := scala.io.Source.fromFile("./scripts/play-console.scala").mkString
   )
 }
