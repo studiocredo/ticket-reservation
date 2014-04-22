@@ -71,10 +71,9 @@ object TicketGenerator {
   }
 
   private def addBarcode(url: URL, document: Document) {
-    val qrcode = new BarcodeQRCode(url.toExternalForm, 1, 1, null)
+    val qrcode = new BarcodeQRCode(url.toExternalForm, 110, 110, null)
     val img = qrcode.getImage
-    img.scalePercent(250.0f)
-    img.setAbsolutePosition(250f, 200f)
+    img.setAbsolutePosition(20f, 15f)
     document.add(img)
   }
 
