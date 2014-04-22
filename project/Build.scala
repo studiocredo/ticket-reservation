@@ -37,8 +37,7 @@ object ApplicationBuild extends Build {
 
     "org.mindrot" % "jbcrypt" % "0.3m",
 
-    "org.codemonkey.simplejavamail" % "simple-java-mail" % "2.0",
-    "play.modules.mail" %% "play2-mail-plugin" % "0.3" notTransitive()
+    "org.codemonkey.simplejavamail" % "simple-java-mail" % "2.1"
   )
 
   val main = Project(appName, appVersion, appDependencies).settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*).settings(

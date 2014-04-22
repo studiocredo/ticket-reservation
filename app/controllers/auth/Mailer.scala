@@ -4,19 +4,32 @@ import play.api.Play._
 import play.api.templates.{Html, Txt}
 import play.api.Logger
 import play.api.libs.concurrent.Akka
-import java.nio.charset.StandardCharsets
 import play.api.mvc.RequestHeader
 import be.studiocredo.auth.EmailToken
 import models.admin.{EventPrereservationsDetail, RichUser}
 import models.entities.{TicketDocument, OrderDetail}
-import mail.Mail.Attachment
 import scala.io.Source
+import org.codemonkey.simplejavamail.Email
+import javax.mail.internet.MimeUtility
+import javax.mail.Message.RecipientType
+
+case class Attachment(name: String, data: Source, mimeType: String)
 
 object Mailer {
+  val logger = Logger("mailer")
+
   val fromAddress = current.configuration.getString("smtp.from.address").get
   val fromName = current.configuration.getString("smtp.from.name").get
   val subjectPrefix = "[Studio Credo Ticket Reservatie]"
   val adminAddress = current.configuration.getString("mail.admin")
+
+  val host = current.configuration.getString("smtp.host").getOrElse("localhost")
+  val port = current.configuration.getInt("smtp.port").getOrElse(25)
+  val user = current.configuration.getString("smtp.user").getOrElse("")
+  val password = current.configuration.getString("smtp.password").getOrElse("")
+
+  import org.codemonkey.simplejavamail.Mailer
+  def mailer = new Mailer(host, port, user, password)
 
   def sendSignUpEmail(to: String, token: EmailToken)(implicit request: RequestHeader)  {
     val txtAndHtml  = (None, Some(views.html.mails.signUpEmail(token.id)))
@@ -98,56 +111,33 @@ object Mailer {
     user.email match {
       case Some(email) => {
         val txtAndHtml = (None, Some(views.html.mails.ticket(user, ticket)))
-        sendEmailWithAttachments(s"$subjectPrefix Tickets", email, txtAndHtml, List(Attachment(ticket.filename, Source.fromRawBytes(ticket.pdf), ticket.mimetype)))
+        sendEmail(s"$subjectPrefix Tickets", email, txtAndHtml, List(Attachment(ticket.filename, Source.fromRawBytes(ticket.pdf), ticket.mimetype)))
       }
       case None => ()
     }
   }
 
-  private def sendEmail(subject: String, recipient: String, body: (Option[Txt], Option[Html])) {
-    import mail._
-    import Mail._
+  private def sendEmail(subject: String, recipient: String, body: (Option[Txt], Option[Html]), attachments: List[Attachment] = Nil) {
     import scala.concurrent.duration._
     import play.api.libs.concurrent.Execution.Implicits._
-    import scala.language.reflectiveCalls
 
     if (Logger.isDebugEnabled) {
-      Logger.debug(s"sending email to '$recipient' = [[[$body]]]")
+      logger.debug(s"sending email to '$recipient' = [[[$body]]]")
     }
 
     Akka.system.scheduler.scheduleOnce(1.seconds) {
-      Mail()
-        .from(fromName, fromAddress)
-        .to(recipient, recipient)
-        .withSubject(subject)
-        .withText(body._1.map(_.body).getOrElse(""))
-        .withHtml(body._2.getOrElse(Html("")))
-        .send()
-
+      val e = new Email()
+      e.setFromAddress(fromName, fromAddress)
+      e.setSubject(subject)
+      e.addRecipient(recipient, recipient, RecipientType.TO)
+      e.setText(body._1.map(_.body).getOrElse(""))
+      e.setTextHTML(body._2.getOrElse(Html("")).toString)
+      attachments.foreach {
+        a =>
+          e.addAttachment(MimeUtility.encodeText(a.name), a.data.map(_.toByte).toArray, a.mimeType)
+      }
+      mailer.sendMail(e)
+      logger.debug(s"Mail with subject $subject sent to $recipient")
     }
   }
-
-  private def sendEmailWithAttachments(subject: String, recipient: String, body: (Option[Txt], Option[Html]), attachments: List[Attachment]) {
-    import mail._
-    import Mail._
-    import scala.concurrent.duration._
-    import play.api.libs.concurrent.Execution.Implicits._
-    import scala.language.reflectiveCalls
-
-    if (Logger.isDebugEnabled) {
-      Logger.debug(s"sending email with attachments to '$recipient' = [[[$body]]]")
-    }
-
-    Akka.system.scheduler.scheduleOnce(1.seconds) {
-      Mail()
-      .from(fromName, fromAddress)
-      .to(recipient, recipient)
-      .withSubject(subject)
-      .withText(body._1.map(_.body).getOrElse(""))
-      .withHtml(body._2.getOrElse(Html("")))
-      .withAttachments(attachments)
-      .send()
-    }
-  }
-
 }

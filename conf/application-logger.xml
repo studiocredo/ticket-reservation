@@ -12,6 +12,7 @@
     <logger name="scala.slick.session" level="info"/>
 
     <logger name="com.jolbox.bonecp" level="OFF"/>
+    <logger name="org.codemonkey.simplejavamail.Mailer" level="OFF"/>
 
     <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
