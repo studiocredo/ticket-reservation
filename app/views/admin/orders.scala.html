@@ -49,7 +49,7 @@
                     <th>Show</th>
                     <th># Tickets</th>
                     <th>Prijs</th>
-                    <th/>
+                    <th>Saldo</th>
                     <th/>
                     <th/>
                     <th/>
@@ -69,7 +69,12 @@
                         <td>@helper.showName(ticketOrder.show)&nbsp;<a href="@{routes.Orders.show(ticketOrder.show.id)}"><span class="glyphicon glyphicon-share-alt"></span></a></td>
                         <td><a href="#" class="seat-popovers" data-tooltip-placement="left" data-tooltip="@{ticketOrder.ticketSeatOrders.map(_.ticketSeatOrder.seat.name).sorted.mkString(", ")}"><span class="badge badge-primary">@ticketOrder.ticketSeatOrders.length</span></a></td>
                         <td>@if(first) { @CurrencyFormat.format(order.order.price) }</td>
-                        <td>@if(first && order.isPaid) { <span class="badge badge-success">OK</td> }</td>
+                        <td>
+                            @if(first) {
+                                @if(order.isPaid) { <span class="badge badge-success">OK</span> }
+                                @if(!order.isPaid && !order.payments.isEmpty) { <span class="@if(order.balance.amount < 0){ text-danger } else { text-warning }">@CurrencyFormat.format(order.balance)</span> }
+                            }
+                        </td>
                         <td>
                             @if(first) {
                                 @if(order.order.order.comments.isDefined) {
