@@ -72,9 +72,9 @@ class Payments @Inject()(paymentService: PaymentService, orderService: OrderServ
     Ok(views.html.admin.paymentsCreateForm(paymentForm, getOrderOptions(orderService.all), paymentTypeOptions, userContext))
   }
 
-  private def getOrderOptions(orders: Seq[Order]): Options[Order] = {
+  private def getOrderOptions(orders: Seq[Order]): Options[Option[Order]] = {
     import Options._
-    Options.apply(orders, OrderRenderer)
+    Options.apply(None +: orders.map(Some(_)), OrderRenderer)
   }
 
   def save() = AuthDBAction { implicit rs =>

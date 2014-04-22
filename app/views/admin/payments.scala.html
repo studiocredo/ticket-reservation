@@ -57,7 +57,7 @@
                     <td>@payment.debtor</td>
                     <td>@payment.orderId match {
                         case Some(orderId) => { <a href="@{routes.Orders.details(orderId)}">@orderId</a> }
-                        case None => {}
+                        case None => { <p class="text-warning">(geen)</p> }
                         }
                     </td>
                     <td>@CurrencyFormat.format(payment.amount)</td>

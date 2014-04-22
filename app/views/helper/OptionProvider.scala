@@ -6,7 +6,7 @@ import models.entities.PaymentType.PaymentType
 object Options {
   val VenueRenderer = Renderer[Venue](_.id.toString, _.name)
   val PaymentTypeRenderer = Renderer[PaymentType](value => value.toString, value => s"options.paymenttype.${value.toString}")
-  val OrderRenderer = Renderer[Order](_.id.toString, value => s"${value.id} - ${value.billingName}")
+  val OrderRenderer = Renderer[Option[Order]](_.fold("")(_.id.toString), value => value.fold("(geen)")(value => s"${value.id} - ${value.billingName}"))
 
   def apply[T](options: Seq[T], renderer: Renderer[T]) = new Options[T](options, renderer)
 }

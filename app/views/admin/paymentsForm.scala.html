@@ -1,4 +1,4 @@
-@(paymentForm: Form[entities.PaymentEdit], orders: views.helper.Options[entities.Order], paymentTypes: views.helper.Options[entities.PaymentType.PaymentType])(implicit lang: Lang)
+@(paymentForm: Form[entities.PaymentEdit], orders: views.helper.Options[Option[entities.Order]], paymentTypes: views.helper.Options[entities.PaymentType.PaymentType])(implicit lang: Lang)
 
 @import helper._
 @import views.Bootstrap._
