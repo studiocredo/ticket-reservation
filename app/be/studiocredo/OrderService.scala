@@ -163,7 +163,7 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
 
     val offset = pageSize * page
 
-    val query = filter.foldLeft(OQ.sortBy(_.date.desc)){
+    val query = filter.foldLeft(OQ.where(_.processed === true).sortBy(_.date.desc)){
       (query, filter) => query.filter(q => iLike(q.billingName, s"%${filter}%")) // should replace with lucene
     }
     val total = query.length.run
