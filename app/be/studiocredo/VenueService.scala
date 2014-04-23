@@ -102,7 +102,13 @@ class VenueService @Inject()() {
   private def getComment(seat: Seat, order: Option[OrderDetail]): Option[String] = {
     order match {
       case None => None
-      case Some(order) => Some(s"${order.user.name}")
+      case Some(order) => {
+        if (order.order.billingName == order.user.name) {
+          Some(s"${order.user.name}")
+        } else {
+          Some(s"${order.order.billingName} (${order.user.name})")
+        }
+      }
     }
   }
 
