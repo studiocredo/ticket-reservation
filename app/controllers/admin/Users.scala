@@ -35,7 +35,7 @@ class Users @Inject()(val userService: UserService, val authService: Authenticat
     )(UserSearchFormData.apply)(UserSearchFormData.unapply)
   )
 
-  def list(page: Int) = AuthDBAction { implicit rs =>
+  def list(search: Option[String], active: String, page: Int) = AuthDBAction { implicit rs =>
     val bindedForm = userSearchForm.bindFromRequest
     bindedForm.fold(
       formWithErrors => {

@@ -48,7 +48,7 @@
             </tbody>
         </table>
 
-        @helper.paging(currentPage, (page:Int) => routes.Users.list(page))
+        @helper.paging(currentPage, (page:Int) => routes.Users.list(userSearchForm("search").value, userSearchForm("active").value.getOrElse(views.helper.UserActiveOption.default.id), page))
     } else {
         <div class="well">
             <em>Geen gebruikers gevonden.</em>
