@@ -16,17 +16,27 @@ import scala.collection.mutable.ListBuffer
 import be.studiocredo.util.{AXATransactionImporter, Money}
 import java.text.{DecimalFormatSymbols, DecimalFormat, SimpleDateFormat, DateFormat}
 import org.joda.time.format.DateTimeFormat
+import views.helper.PaymentRegisteredOption
 
 class PaymentService @Inject()() {
   val PaymentsQ = Query(Payments)
   val PaymentsQActive = PaymentsQ.where(_.archived === false)
 
 
-  def page(page: Int = 0, pageSize: Int = 10, orderBy: Int = 1, filter: Option[String] = None)(implicit s: Session): Page[Payment] = {
+  def page(page: Int = 0, pageSize: Int = 10, orderBy: Int = 1, nameFilter: Option[String] = None, registeredFilter: PaymentRegisteredOption.Option = PaymentRegisteredOption.default)(implicit s: Session): Page[Payment] = {
     import models.queries._
 
     val offset = pageSize * page
-    val query = filter.foldLeft(PaymentsQActive.sortBy(r => (r.date.desc, r.id.desc))){
+
+    val baseQuery = PaymentsQActive.sortBy(r => (r.date.desc, r.id.desc))
+    val registeredFilterQuery = registeredFilter match {
+      case PaymentRegisteredOption.Registered => baseQuery.where(_.orderId.isNotNull)
+      case PaymentRegisteredOption.Unregistered => baseQuery.where(_.orderId.isNull)
+      case PaymentRegisteredOption.Both => baseQuery
+      case _ => baseQuery
+    }
+
+    val query = nameFilter.foldLeft(registeredFilterQuery){
       (query, filter) => query.filter(q => iLike(q.debtor, s"%${filter}%")) // should replace with lucene
     }
     val total = query.length.run

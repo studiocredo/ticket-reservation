@@ -15,6 +15,7 @@
         <div class="col-md-9">
             @form(action = routes.Payments.list(), 'class -> "form form-inline form-no-feedback") {
                 @inputText(paymentSearchForm("search"), '_label -> "Zoekopdracht",  '_labelclass -> "sr-only", '_inputclass -> "", 'class -> "form-control", 'placeholder -> "Zoekopdracht", '_showConstraints -> false, '_showErrors -> false)
+                @inputRadioGroup(paymentSearchForm("registered").copy(value=paymentSearchForm("registered").value.map{Some(_)}.getOrElse(Some(views.helper.PaymentRegisteredOption.default.id))), views.helper.PaymentRegisteredOption.mapper, '_label -> "Status",  '_labelclass -> "sr-only", '_inputclass -> "", 'class -> "checkbox-inline", '_showConstraints -> false, '_showErrors -> false)
                 <button type="submit" class="btn btn-default"><span class="glyphicon glyphicon-search"></span></button>
             }
         </div>
@@ -97,7 +98,7 @@
             </tbody>
         </table>
 
-        @helper.paging(currentPage, (page:Int) => routes.Payments.list(page))
+        @helper.paging(currentPage, (page:Int) => routes.Payments.list(paymentSearchForm("search").value, paymentSearchForm("registered").value.getOrElse(views.helper.PaymentRegisteredOption.default.id), page))
     } else {
         <div class="well">
             <em>Geen betalingen gevonden.</em>

@@ -12,10 +12,10 @@ import be.studiocredo.util.Money
 import be.studiocredo.util.ServiceReturnValues._
 import models.entities.PaymentEdit
 import scala.Some
-import views.helper.Options
+import views.helper.{PaymentRegisteredOption, Options}
 
 
-case class PaymentSearchForm(search: String)
+case class PaymentSearchForm(search: Option[String], registered: PaymentRegisteredOption.Option)
 
 class Payments @Inject()(paymentService: PaymentService, orderService: OrderService, val authService: AuthenticatorService, val notificationService: NotificationService, val userService: UserService) extends AdminController with UserContextSupport {
 
@@ -26,7 +26,8 @@ class Payments @Inject()(paymentService: PaymentService, orderService: OrderServ
 
   val paymentSearchForm = Form(
     mapping(
-      "search" -> nonEmptyText(3)
+      "search" -> optional(nonEmptyText(3)),
+      "registered" -> of[PaymentRegisteredOption.Option]
     )(PaymentSearchForm.apply)(PaymentSearchForm.unapply)
   )
 
@@ -44,7 +45,7 @@ class Payments @Inject()(paymentService: PaymentService, orderService: OrderServ
     )(PaymentEdit.apply)(PaymentEdit.unapply)
   )
   
-  def list(page: Int) = AuthDBAction { implicit rs =>
+  def list(search: Option[String], registered: String, page: Int) = AuthDBAction { implicit rs =>
     val bindedForm = paymentSearchForm.bindFromRequest
     bindedForm.fold(
       formWithErrors => {
@@ -52,7 +53,7 @@ class Payments @Inject()(paymentService: PaymentService, orderService: OrderServ
         Ok(views.html.admin.payments(list, formWithErrors, userContext))
       },
       paymentFormData => {
-        val list = paymentService.page(page, 10, 1, Some(paymentFormData.search))
+        val list = paymentService.page(page, 10, 1, paymentFormData.search, paymentFormData.registered)
         Ok(views.html.admin.payments(list, bindedForm, userContext))
       }
     )

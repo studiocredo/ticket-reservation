@@ -21,15 +21,17 @@ import be.studiocredo.util.Money
 import models.entities.OrderDetailEdit
 import play.api.mvc.SimpleResult
 import play.api.mvc.ResponseHeader
+import views.helper.OrderPaidOption
 
-case class OrderSearchFormData(search: String)
+case class OrderSearchFormData(search: Option[String], paid: OrderPaidOption.Option)
 
 class Orders @Inject()(ticketService: TicketService, preReservationService: PreReservationService, showService: ShowService, eventService: EventService, orderService: OrderService, venueService: VenueService, orderEngine: ReservationEngineMonitorService, val userService: UserService, val authService: AuthenticatorService, val notificationService: NotificationService) extends AdminController with UserContextSupport {
   val ListPage = Redirect(routes.Orders.list())
 
   val orderSearchForm = Form(
     mapping(
-      "search" -> nonEmptyText(3)
+      "search" -> optional(nonEmptyText(3)),
+      "paid" -> of[OrderPaidOption.Option]
     )(OrderSearchFormData.apply)(OrderSearchFormData.unapply)
   )
 
@@ -48,7 +50,7 @@ class Orders @Inject()(ticketService: TicketService, preReservationService: PreR
     )(OrderDetailEdit.apply)(OrderDetailEdit.unapply)
   )
 
-  def list(page: Int) = AuthDBAction { implicit rs =>
+  def list(search: Option[String], paid: String, page: Int) = AuthDBAction { implicit rs =>
     val bindedForm = orderSearchForm.bindFromRequest
     bindedForm.fold(
       formWithErrors => {
@@ -56,7 +58,7 @@ class Orders @Inject()(ticketService: TicketService, preReservationService: PreR
         Ok(views.html.admin.orders(list, formWithErrors, userContext))
       },
       orderFormData => {
-        val list = orderService.page(page, 10, 1, Some(orderFormData.search))
+        val list = orderService.page(page, 10, 1, orderFormData.search, orderFormData.paid)
         Ok(views.html.admin.orders(list, bindedForm, userContext))
       }
     )

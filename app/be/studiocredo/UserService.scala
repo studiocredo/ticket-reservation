@@ -41,14 +41,14 @@ class UserService @Inject()() {
     import models.queries._
 
     val offset = pageSize * page
-    val q = UDQ.sortBy(_._1.id)
-    val baseQuery = activeFilter match {
-          case UserActiveOption.Active => q.where(_._1.active === true)
-          case UserActiveOption.Inactive => q.where(_._1.active === false)
-          case UserActiveOption.Both => q
-          case _ => q
+    val baseQuery = UDQ.sortBy(_._1.id)
+    val activeFilterQuery = activeFilter match {
+          case UserActiveOption.Active => baseQuery.where(_._1.active === true)
+          case UserActiveOption.Inactive => baseQuery.where(_._1.active === false)
+          case UserActiveOption.Both => baseQuery
+          case _ => baseQuery
     }
-    val query = nameFilter.foldLeft(baseQuery){
+    val query = nameFilter.foldLeft(activeFilterQuery){
       (query, filter) => query.filter(q => iLike(q._1.name, s"%${filter}%")) // should replace with lucene
     }
     val total = query.length.run

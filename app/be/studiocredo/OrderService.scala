@@ -12,6 +12,7 @@ import be.studiocredo.util.ServiceReturnValues._
 import models.admin.RichUser
 import com.github.tototoshi.slick.JodaSupport._
 import org.joda.time.DateTime
+import views.helper.OrderPaidOption
 
 class OrderService @Inject()(venueService: VenueService, paymentService: PaymentService) {
   import models.schema.tables._
@@ -158,12 +159,26 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
     q.firstOption.map(orderPaymentsDetail)
   }
 
-  def page(page: Int = 0, pageSize: Int = 10, orderBy: Int = 1, filter: Option[String] = None)(implicit s: Session): Page[OrderPayments] = {
+  def page(page: Int = 0, pageSize: Int = 10, orderBy: Int = 1, nameFilter: Option[String] = None, paidFilter: OrderPaidOption.Option = OrderPaidOption.default)(implicit s: Session): Page[OrderPayments] = {
     import models.queries._
 
     val offset = pageSize * page
 
-    val query = filter.foldLeft(OQ.where(_.processed === true).sortBy(_.date.desc)){
+    val baseQuery = OQ.where(_.processed === true).sortBy(_.date.desc)
+    val paidFilterQuery = paidFilter match {
+      case OrderPaidOption.WithPayments => for {
+        order <- baseQuery
+        payment <- Payments
+        if order.id === payment.orderId
+      } yield order
+      case OrderPaidOption.NoPayments => for {
+        (order, payment) <- baseQuery.leftJoin(Payments).on(_.id === _.orderId).where(_._2.id.isNull)
+      } yield order
+      case OrderPaidOption.Both => baseQuery
+      case _ => baseQuery
+    }
+
+    val query = nameFilter.foldLeft(paidFilterQuery){
       (query, filter) => query.filter(q => iLike(q.billingName, s"%${filter}%")) // should replace with lucene
     }
     val total = query.length.run
