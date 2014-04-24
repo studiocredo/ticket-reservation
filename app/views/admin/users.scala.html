@@ -13,7 +13,7 @@
     @form(action = routes.Users.list(), 'class -> "form form-inline form-no-feedback") {
 
         @inputText(userSearchForm("search"), '_label -> "Zoekopdracht",  '_labelclass -> "sr-only", '_inputclass -> "", 'class -> "form-control", 'placeholder -> "Zoekopdracht", '_showConstraints -> false, '_showErrors -> false)
-        @inputRadioGroup(userSearchForm("active"), Seq("A" -> "Actief", "I" -> "Niet actief", "B" -> "Beide"), '_label -> "Status",  '_labelclass -> "sr-only", '_inputclass -> "", 'class -> "checkbox-inline", '_showConstraints -> false, '_showErrors -> false)
+        @inputRadioGroup(userSearchForm("active").copy(value=userSearchForm("active").value.map{Some(_)}.getOrElse(Some(views.helper.UserActiveOption.default.id))), views.helper.UserActiveOption.mapper, '_label -> "Status",  '_labelclass -> "sr-only", '_inputclass -> "", 'class -> "checkbox-inline", '_showConstraints -> false, '_showErrors -> false)
 
         <button type="submit" class="btn btn-default"><span class="glyphicon glyphicon-search"></span></button>
     }

@@ -21,6 +21,7 @@ import models.entities.UserEdit
 import be.studiocredo.auth.Password
 import models.entities.UserRole
 import models.admin.UserFormData
+import views.helper.UserActiveOption
 
 class UserService @Inject()() {
   val UsersQ = Query(Users)
@@ -36,11 +37,18 @@ class UserService @Inject()() {
     (ud) => RichUser(ud._1, ud._2)
   }
 
-  def page(page: Int = 0, pageSize: Int = 10, orderBy: Int = 1, filter: Option[String] = None)(implicit s: Session): Page[RichUser] = {
+  def page(page: Int = 0, pageSize: Int = 10, orderBy: Int = 1, nameFilter: Option[String] = None, activeFilter: UserActiveOption.Option = UserActiveOption.default)(implicit s: Session): Page[RichUser] = {
     import models.queries._
 
     val offset = pageSize * page
-    val query = filter.foldLeft(UDQ.sortBy(_._1.id)){
+    val q = UDQ.sortBy(_._1.id)
+    val baseQuery = activeFilter match {
+          case UserActiveOption.Active => q.where(_._1.active === true)
+          case UserActiveOption.Inactive => q.where(_._1.active === false)
+          case UserActiveOption.Both => q
+          case _ => q
+    }
+    val query = nameFilter.foldLeft(baseQuery){
       (query, filter) => query.filter(q => iLike(q._1.name, s"%${filter}%")) // should replace with lucene
     }
     val total = query.length.run
