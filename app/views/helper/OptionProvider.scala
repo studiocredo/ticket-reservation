@@ -38,7 +38,7 @@ object UserActiveOption {
 
   case object Active   extends Option { val id = "A"; val value = "actief"      }
   case object Inactive extends Option { val id = "I"; val value = "niet actief" }
-  case object Both     extends Option { val id = "B"; val value = "both"        }
+  case object Both     extends Option { val id = "B"; val value = "beide"        }
 
   val options = Seq(Active, Inactive, Both)
   val mapper = options.map( key => (key.id, key.value)).toSeq

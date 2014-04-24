@@ -8,25 +8,34 @@
 
 @base("Administratie: Betalingen")(userContext) {
 
-    <div>
-        <a class="btn btn-primary" id="add" href="@routes.Payments.create()">Betaling toevoegen</a>
+    <div class="row actions-bar">
+        <div class="col-md-3">
+            <a class="btn btn-primary" id="add" href="@routes.Payments.create()">Betaling toevoegen</a>
+        </div>
+        <div class="col-md-9">
+            @form(action = routes.Payments.list(), 'class -> "form form-inline form-no-feedback") {
+                @inputText(paymentSearchForm("search"), '_label -> "Zoekopdracht",  '_labelclass -> "sr-only", '_inputclass -> "", 'class -> "form-control", 'placeholder -> "Zoekopdracht", '_showConstraints -> false, '_showErrors -> false)
+                <button type="submit" class="btn btn-default"><span class="glyphicon glyphicon-search"></span></button>
+            }
+        </div>
     </div>
-
-    @form(action = routes.Payments.upload(), 'enctype -> "multipart/form-data", 'class -> "form form-inline form-no-feedback") {
-        <input type="file" name="transactions" title="Bestand selecteren...">
-
-        <button type="submit" class="btn btn-default"><span class="glyphicon glyphicon-upload"></span></button>
-    }
-
-
-
-
-    @form(action = routes.Payments.list(), 'class -> "form form-inline form-no-feedback") {
-
-        @inputText(paymentSearchForm("search"), '_label -> "Zoekopdracht",  '_labelclass -> "sr-only", '_inputclass -> "", 'class -> "form-control", 'placeholder -> "Zoekopdracht", '_showConstraints -> false, '_showErrors -> false)
-
-        <button type="submit" class="btn btn-default"><span class="glyphicon glyphicon-search"></span></button>
-    }
+    <div class="row actions-bar">
+        <div class="col-md-6">
+            @form(action = routes.Payments.upload(), 'enctype -> "multipart/form-data", 'class -> "form form-inline form-no-feedback") {
+                <div class="input-group">
+                        <span class="input-group-btn">
+                            <span class="btn btn-primary btn-file">
+                                Bestand selecteren... <input type="file" name="transactions" title="Bestand kiezen">
+                            </span>
+                        </span>
+                        <input type="text" class="form-control for-btn-file" readonly="">
+                        <span class="input-group-btn">
+                            <button type="submit" class="btn btn-default"><span class="glyphicon glyphicon-upload"></span></button>
+                        </span>
+                </div>
+            }
+        </div>
+    </div>
 
     @if(!currentPage.isEmpty) {
         <table class="table table-hover table-striped">

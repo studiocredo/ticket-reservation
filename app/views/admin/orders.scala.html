@@ -7,16 +7,21 @@
 
 @base("Administratie: Bestellingen")(userContext) {
 
-    @form(action = routes.Orders.sendAndCreateNewTickets(), 'class -> "form form-inline form-no-feedback") {
-        <button type="submit" class="btn btn-primary" data-loading-text="Bezig..." onclick="$(this).button('loading');">Nieuwe tickets verzenden</button>
-    }
+    <div class="row actions-bar">
+        <div class="col-md-3">
+            @form(action = routes.Orders.sendAndCreateNewTickets(), 'class -> "form form-inline form-no-feedback") {
+                <button type="submit" class="btn btn-primary" data-loading-text="Bezig..." onclick="$(this).button('loading');">Nieuwe tickets verzenden</button>
+            }
+        </div>
+        <div class="col-md-9">
+            @form(action = routes.Orders.list(), 'class -> "form form-inline form-no-feedback") {
 
-    @form(action = routes.Orders.list(), 'class -> "form form-inline form-no-feedback") {
+                @inputText(orderSearchForm("search"), '_label -> "Zoekopdracht",  '_labelclass -> "sr-only", '_inputclass -> "", 'class -> "form-control", 'placeholder -> "Zoekopdracht", '_showConstraints -> false, '_showErrors -> false)
 
-        @inputText(orderSearchForm("search"), '_label -> "Zoekopdracht",  '_labelclass -> "sr-only", '_inputclass -> "", 'class -> "form-control", 'placeholder -> "Zoekopdracht", '_showConstraints -> false, '_showErrors -> false)
-
-        <button type="submit" class="btn btn-default"><span class="glyphicon glyphicon-search"></span></button>
-    }
+                <button type="submit" class="btn btn-default"><span class="glyphicon glyphicon-search"></span></button>
+            }
+        </div>
+     </div>
 
     @if(!currentPage.isEmpty) {
 

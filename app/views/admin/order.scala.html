@@ -24,7 +24,7 @@
 @base("Overzicht bestelling")(userContext) {
 
 <div class="page-header">
-    <h1>Overzicht bestelling</h1>
+    <h1>Overzicht bestelling<button class="btn btn-danger btn-large pull-right" data-toggle="modal" data-target="#cancelModal">Bestelling annuleren</button></h1>
 </div>
 
 @request.flash.get("error").map { msg =>
@@ -78,25 +78,26 @@
 <p>@newlines(order.order.commentLines)</p>
 }
 
-<div>
-    @if(order.isPaid) {
-        @form(action = routes.Orders.sendAndCreateTicket(order.order.id), 'class -> "form form-inline form-no-feedback") {
-            <button type="submit" class="btn btn-large btn-primary">Ticket opnieuw verzenden</button>
+<div class="row actions-bar">
+    <div class="col-md-2">
+        @if(order.isPaid) {
+            @form(action = routes.Orders.sendAndCreateTicket(order.order.id), 'class -> "form form-inline form-no-feedback") {
+                <button type="submit" class="btn btn-large btn-primary">Ticket opnieuw verzenden</button>
+            }
+            @form(action = routes.Orders.showTicket(order.order.id), 'class -> "form form-inline form-no-feedback") {
+                <button type="submit" class="btn btn-large btn-primary">Ticket downloaden</button>
+            }
+        } else {
+            @form(action = routes.Orders.confirm(order.order.id), 'class -> "form form-inline form-no-feedback") {
+                <button type="submit" class="btn btn-large btn-primary">Bevestiging verzenden</button>
+            }
         }
-        @form(action = routes.Orders.showTicket(order.order.id), 'class -> "form form-inline form-no-feedback") {
-            <button type="submit" class="btn btn-large btn-primary">Ticket downloaden</button>
+    </div>
+    <div class="col-md-10">
+        @form(action = routes.Orders.edit(order.order.id), 'class -> "form form-inline form-no-feedback") {
+            <button type="submit" class="btn btn-warning btn-large">Bewerken</button>
         }
-    } else {
-        @form(action = routes.Orders.confirm(order.order.id), 'class -> "form form-inline form-no-feedback") {
-            <button type="submit" class="btn btn-large btn-primary">Bevestiging verzenden</button>
-        }
-    }
-
-    @form(action = routes.Orders.edit(order.order.id), 'class -> "form form-inline form-no-feedback") {
-        <button type="submit" class="btn btn-warning btn-large">Bewerken</button>
-    }
-
-    <button class="btn btn-danger btn-large" data-toggle="modal" data-target="#cancelModal">Annuleren</button>
+    </div>
 </div>
 
 <!-- Modal -->

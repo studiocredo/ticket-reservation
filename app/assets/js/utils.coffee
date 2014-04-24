@@ -47,3 +47,16 @@ $(document).ready ->
  	$('.pull-middle').each ->
      	$(this).css('margin-top', ($(this).parent().height()-$(this).height()) /2 )
 
+
+$(document).on('change', '.btn-file :file', ->
+	input = $(this)
+	numFiles = if input.get(0).files then input.get(0).files.length else 1
+	label = input.val().replace(/\\/g, '/').replace(/.*\//, '')
+	input.trigger('fileselect', [numFiles, label])
+)
+
+$(document).ready ->
+  $('.btn-file :file').on('fileselect', (event, numFiles, label) ->
+    input = $(this).parents('.input-group').find(':text')
+    input.val(label) if input.length
+  )
