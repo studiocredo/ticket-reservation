@@ -47,10 +47,10 @@ object TicketGenerator {
       order.ticketSeatOrders.foreach { ticketSeatOrder =>
 
         document.newPage()
-        canvas.addTemplate(template, 0, 0)
+        writer.getDirectContentUnder.addTemplate(template, 0, 0)
 
         addText(order, ticketSeatOrder, ticket, canvas, font)
-        addBarcode(new URL(url), document)
+        addBarcode(new URL(url), document, canvas)
 
       }
 
@@ -70,7 +70,7 @@ object TicketGenerator {
     }
   }
 
-  private def addBarcode(url: URL, document: Document) {
+  private def addBarcode(url: URL, document: Document, canvas: PdfContentByte) {
     val qrcode = new BarcodeQRCode(url.toExternalForm, 110, 110, null)
     val img = qrcode.getImage
     img.setAbsolutePosition(20f, 15f)
