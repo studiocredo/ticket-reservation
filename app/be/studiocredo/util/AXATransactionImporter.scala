@@ -52,6 +52,9 @@ class AXATransactionImporter extends TransactionImporter {
         lastProcessedLine = Some(values)
       }
     }
+    if (lastProcessedLine.isDefined) {
+      rawPaymentValues += lastProcessedLine.get.map(stripQuotes)
+    }
 
     val rawPaymentValueMap = rawPaymentValues.toList.map { value =>
       value.zipWithIndex.collect{
