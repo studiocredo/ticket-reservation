@@ -175,6 +175,10 @@ class UserService @Inject()() {
     }
   }
 
+  def clearLoginGroups()(implicit s: Session) = {
+    UsersQ.map(_.loginGroupId).update(None)
+  }
+
   def update(id: UserId, data: UserFormData)(implicit s: Session): Either[ServiceFailure, ServiceSuccess] = {
     validateUserUpdate(id, data.username).fold(
       failure => Left(failure),
