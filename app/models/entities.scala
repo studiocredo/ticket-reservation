@@ -185,12 +185,12 @@ object entities {
   }
 
   object OrderReference {
-    val pattern = "\\b(\\d{3})[^\\d]?(\\d{4})[^\\d]?(\\d{5})\\b".r
+    val pattern = "\\b(\\d{3})[^\\d]?(\\d{3})(\\d{1})[^\\d]?(\\d{3})(\\d{2})\\b".r
     def parse(s: String) = {
       pattern.findFirstMatchIn(s).flatMap { m =>
-        val remainder = m.group(1).toInt
-        val user = UserId(m.group(2).toInt)
-        val order = OrderId(m.group(3).toInt)
+        val order = OrderId(m.group(1).toInt*1000 + m.group(2).toInt)
+        val user = UserId(m.group(3).toInt*1000 + m.group(4).toInt)
+        val remainder = m.group(5).toInt
 
         if (remainder == calcRemainder(order, user)) {
           Some(OrderReference(order, user))
@@ -201,7 +201,10 @@ object entities {
     }
 
     def calcRemainder(order: OrderId, user: UserId): Long = {
-      (order.id * 10000 + user.id) % 997
+      ((order.id * 10000 + user.id) % 97) match {  //9999 users and 999999 orders
+        case 0 => 97
+        case n => n
+      }
     }
   }
 
@@ -209,7 +212,7 @@ object entities {
 
   case class OrderReference(order: OrderId, user: UserId) {
     val remainder = OrderReference.calcRemainder(order, user)
-    val reference = s"${"%03d".format(remainder)}/${"%04d".format(user.id)}/${"%05d".format(order.id)}"
+    val reference = s"${"%03d".format(order.id/1000)}/${"%03d".format(order.id%1000)}${"%01d".format(user.id/1000)}/${"%03d".format(user.id%1000)}${"%02d".format(remainder)}"
   }
 
   case class Order(id: OrderId, userId: UserId, date: DateTime, billingName: String, billingAddress: String, processed: Boolean, comments: Option[String]) {
