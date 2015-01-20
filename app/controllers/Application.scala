@@ -14,7 +14,8 @@ class Application @Inject()(showService: ShowService, eventService: EventService
     if (isOldExplorer) {
       Ok(views.html.reject())
     } else {
-      Ok(views.html.index(showService.nextShows(4), eventService.listUpcoming, userContext))
+      val nextShows = Play.current.configuration.getInt("application.next-shows").getOrElse(4)
+      Ok(views.html.index(showService.nextShows(nextShows), eventService.listUpcoming, userContext))
     }
   }
 

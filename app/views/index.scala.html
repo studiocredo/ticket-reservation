@@ -1,8 +1,10 @@
 @(nextShows: List[entities.ShowAvailability], events: List[models.admin.EventDetail], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
 @import controllers.auth
 @import helper._
+@import play.api.Play.current
 
 @base("Studio Credo Ticket Reservatie")(userContext) {
+@defining(current.configuration.getBoolean("application.disable-registration").getOrElse(false)) { disableRegistration =>
 
 <div class="jumbotron front-page-banner hidden-xs">
     <div class="inner-1">
@@ -24,7 +26,9 @@
                 } else {
                     <p>
                         <a class="btn btn-primary btn-lg" href="@auth.routes.LoginPage.login()">Aanmelden &raquo;</a>
+                        @if(!disableRegistration) {
                         <a class="btn btn-primary btn-lg" href="@auth.routes.SignUp.startSignUp()">Registreren  &raquo;</a>
+                        }
                     </p>
                 }
             </div>
@@ -149,5 +153,6 @@
     </div>
     }
 </div>
+}
 }
 }

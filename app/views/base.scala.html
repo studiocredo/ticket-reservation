@@ -3,6 +3,9 @@
 @import controllers.auth
 @import views.helper.Auth
 @import be.studiocredo.auth.Roles._
+@import play.api.Play.current
+
+@defining(current.configuration.getBoolean("application.disable-registration").getOrElse(false)) { disableRegistration =>
 
 <!DOCTYPE html>
 <html prefix="og: http://ogp.me/ns#">
@@ -97,7 +100,9 @@
                         @notifications(userContext)
                     } else {
                         <ul class="nav navbar-nav navbar-right">
+                            @if(!disableRegistration) {
                             <li><a href="@auth.routes.SignUp.startSignUp()">Registreren</a></li>
+                            }
                             <li><a href="@auth.routes.LoginPage.login()">Aanmelden</a></li>
                         </ul>
                     }
@@ -121,3 +126,5 @@
         </script>
     </body>
 </html>
+
+}
