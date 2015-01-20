@@ -17,7 +17,7 @@ class TicketGenerator {
 
 object TicketGenerator {
   val logger = Logger("be.studiocredo.ticketgenerator")
-  val templateResource = "templates/slotshow_2014_ticket_template.pdf"
+  val templateResource = "templates/slotshow_2015_ticket_template.pdf"
 
   def create(order: OrderDetail, ticket: TicketDistribution, url: String): Option[TicketDocument] = {
     val out = new ByteArrayOutputStream
