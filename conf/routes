@@ -42,7 +42,7 @@ GET         /admin/users/sudo/:id                   @controllers.admin.Users.sud
 GET         /admin/users/:id                        @controllers.admin.Users.edit(id:UserId)
 POST        /admin/users/:id                        @controllers.admin.Users.update(id:UserId)
 GET         /admin/users/activate/:name             @controllers.admin.Users.activate(name:String)
-GET         /admin/user/:id                         @controllers.admin.UserDetails.view(id:UserId)
+GET         /admin/user/:id                         @controllers.admin.UserDetails.view(id:UserId, showAll:Boolean ?= false)
 
 GET         /admin/payments                         @controllers.admin.Payments.list(search:Option[String] ?= None, registered:String ?= views.helper.PaymentRegisteredOption.default.id, p:Int ?= 0)
 GET         /admin/payments/new                     @controllers.admin.Payments.create
