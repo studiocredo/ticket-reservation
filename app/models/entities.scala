@@ -219,7 +219,7 @@ object entities {
     val orderReference = OrderReference(id, userId)
 
     def reference: String = {
-      s"REF ${orderReference.reference}"
+      s"+++${orderReference.reference}+++"
     }
   }
   case class OrderEdit(         userId: UserId, date: DateTime, billingName: String, billingAddress: String, processed: Boolean, comments: Option[String])
