@@ -9,7 +9,7 @@ import be.studiocredo.util.DBSupport._
 import models.admin.RichUser
 import scala.Some
 import models.admin.RichUserWithReservationHistory
-import models.entities.User
+import models.entities._
 
 
 class UserDetails @Inject()(val userService: UserService, val authService: AuthenticatorService, val notificationService: NotificationService, orderService: OrderService, prereservationService: PreReservationService) extends AdminController with UserContextSupport {
@@ -25,6 +25,18 @@ class UserDetails @Inject()(val userService: UserService, val authService: Authe
   def getReservationHistory(user: RichUser)(implicit s: DBSession): RichUserWithReservationHistory = {
     val otherUsers = userService.findOtherUsers(user.user)
     val allUserIds = user.id :: otherUsers.map{_.id}
-    RichUserWithReservationHistory(user, otherUsers, orderService.detailedOrdersByUsers(allUserIds), prereservationService.preReservationsByUsers(allUserIds), prereservationService.pendingPrereservationsByUsers(allUserIds), prereservationService.quotaByUsers(allUserIds), prereservationService.unusedQuotaByUsers(allUserIds))
+    RichUserWithReservationHistory(user, otherUsers, orderService.detailedOrdersByUsers(allUserIds, Some(activeOrderFilter)), prereservationService.preReservationsByUsers(allUserIds, Some(activePreReservationFilter)), prereservationService.pendingPrereservationsByUsers(allUserIds, Some(activePreReservationFilter)), prereservationService.quotaByUsers(allUserIds, Some(activeQuotaFilter)), prereservationService.unusedQuotaByUsers(allUserIds, Some(activeQuotaFilter)))
+  }
+
+  private def activeOrderFilter(t: (TicketOrder, TicketSeatOrder, Show, Event, Venue)): Boolean = {
+    !t._3.archived && !t._4.archived
+  }
+
+  private def activePreReservationFilter(t: (ShowPrereservation, Show, Event, User, Venue)): Boolean = {
+    !t._2.archived && !t._3.archived
+  }
+
+  private def activeQuotaFilter(t: (ReservationQuotum, Event, User)): Boolean = {
+    !t._2.archived
   }
 }

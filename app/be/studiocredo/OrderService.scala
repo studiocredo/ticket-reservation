@@ -218,8 +218,8 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
     query.list.map{ case (tso: TicketSeatOrder, s: Show, e: Event, v: Venue) => TicketSeatOrderDetail(tso, EventShow(s.id, e.id, e.name, s.venueId, v.name, s.date, s.archived)) }
   }
   
-  def detailedOrdersByUser(id: UserId)(implicit s: Session): List[OrderDetail] = {
-    detailedOrdersByUsers(List(id))
+  def detailedOrdersByUser(id: UserId, f: Option[((TicketOrder, TicketSeatOrder, Show, Event, Venue)) => Boolean] = None)(implicit s: Session): List[OrderDetail] = {
+    detailedOrdersByUsers(List(id), f)
   }
 
   //http://stackoverflow.com/questions/18147396/comparing-type-mapped-values-in-slick-queries
@@ -242,11 +242,11 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
     q.list
   }
 
-  def detailedOrdersByUsers(ids: List[UserId])(implicit s: Session): List[OrderDetail] = {
-    detailedOrdersByUsersInternal(OQ, ids)
+  def detailedOrdersByUsers(ids: List[UserId], f: Option[((TicketOrder, TicketSeatOrder, Show, Event, Venue)) => Boolean] = None)(implicit s: Session): List[OrderDetail] = {
+    detailedOrdersByUsersInternal(OQ, ids, f)
   }
 
-  private def detailedOrdersByUsersInternal(startQuery: Query[schema.Orders, Order], ids: List[UserId])(implicit s: Session): List[OrderDetail] = {
+  private def detailedOrdersByUsersInternal(startQuery: Query[schema.Orders, Order], ids: List[UserId], f: Option[((TicketOrder, TicketSeatOrder, Show, Event, Venue)) => Boolean] = None)(implicit s: Session): List[OrderDetail] = {
     val ordersQuery = for {
       order <- startQuery
       if order.userId inSet ids
@@ -272,7 +272,10 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
 
     ordersUsers.map(_._2).foreach( u => userMap.put(u.id, u))
 
-    val x = ticketOrderQuery.list
+    val x = f match {
+      case Some(f) => ticketOrderQuery.list.withFilter(f)
+      case None => ticketOrderQuery.list
+    }
     x.foreach { case (ticketOrder, ticketSeatOrder, show, event, venue) =>
       orderMap.addBinding(ticketOrder.orderId, ticketOrder)
       ticketOrderMap.addBinding(ticketOrder, ticketSeatOrder)
@@ -285,7 +288,7 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
         TicketOrderDetail(ticketOrder, order, showMap(ticketOrder.showId), ticketSeatOrders)
       }
       OrderDetail(order, userMap(order.userId), ticketOrders)
-    }.toList
+    }.filter(!_.ticketOrders.isEmpty).toList
   }
 
   def createDetailed(user: RichUser)(implicit s:Session): OrderDetail = get(create(user)).get

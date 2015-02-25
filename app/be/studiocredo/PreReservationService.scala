@@ -119,8 +119,8 @@ class PreReservationService @Inject()(orderService: OrderService, venueService: 
     unusedQuotaByUsers(ids, activeQuotaByUsers(ids))
   }
 
-  def unusedQuotaByUsers(ids: List[UserId])(implicit s: Session): UnusedQuotaDisplay = {
-    unusedQuotaByUsers(ids, quotaByUsers(ids))
+  def unusedQuotaByUsers(ids: List[UserId], f: Option[((ReservationQuotum, Event, User)) => Boolean] = None)(implicit s: Session): UnusedQuotaDisplay = {
+    unusedQuotaByUsers(ids, quotaByUsers(ids, f))
   }
 
   private def unusedQuotaByUsers(ids: List[UserId], rqd: List[ReservationQuotumDetail])(implicit s: Session): UnusedQuotaDisplay = {
@@ -162,8 +162,8 @@ class PreReservationService @Inject()(orderService: OrderService, venueService: 
     pendingPrereservationsByUsers(ids, activePreReservationsByUsers(ids))
   }
 
-  def pendingPrereservationsByUsers(ids: List[UserId])(implicit s: Session): PendingPrereservationDisplay = {
-    pendingPrereservationsByUsers(ids, preReservationsByUsers(ids))
+  def pendingPrereservationsByUsers(ids: List[UserId], f: Option[((ShowPrereservation, Show, Event, User, Venue)) => Boolean] = None)(implicit s: Session): PendingPrereservationDisplay = {
+    pendingPrereservationsByUsers(ids, preReservationsByUsers(ids, f))
   }
 
   def pendingPrereservationsByUsersAndEvent(ids: List[UserId], event: EventId)(implicit s: Session): Map[ShowId, Int] = {
