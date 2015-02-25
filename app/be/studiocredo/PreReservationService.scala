@@ -145,7 +145,7 @@ class PreReservationService @Inject()(orderService: OrderService, venueService: 
     val offset = pageSize * page
 
     val baseQuery = for {
-      ((((showPreres, show), event), user), venue) <- ShowPrereservations.leftJoin(Shows).on(_.showId === _.id).leftJoin(Events).on(_._2.eventId === _.id).leftJoin(Users).on(_._1._1.userId === _.id).leftJoin(Venues).on(_._1._1._2.venueId === _.id)
+      ((((showPreres, show), event), user), venue) <- ShowPrereservations.sortBy(r => (r.showId.desc, r.userId.asc)).leftJoin(Shows).on(_.showId === _.id).leftJoin(Events).on(_._2.eventId === _.id).leftJoin(Users).on(_._1._1.userId === _.id).leftJoin(Venues).on(_._1._1._2.venueId === _.id)
     } yield (showPreres, show, event, user, venue)
 
     val query = nameFilter.foldLeft(baseQuery){
