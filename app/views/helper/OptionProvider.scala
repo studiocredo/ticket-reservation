@@ -42,7 +42,7 @@ object UserActiveOption {
 
   val options = Seq(Active, Inactive, Both)
   val mapper = options.map( key => (key.id, key.value)).toSeq
-  val default = Active
+  val default = Both
 
   implicit val UserActiveFormatter = new Formatter[Option] {
     val typeName = "user_active_option"
