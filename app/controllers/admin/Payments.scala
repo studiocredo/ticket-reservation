@@ -45,16 +45,16 @@ class Payments @Inject()(paymentService: PaymentService, orderService: OrderServ
     )(PaymentEdit.apply)(PaymentEdit.unapply)
   )
   
-  def list(search: Option[String], registered: String, page: Int) = AuthDBAction { implicit rs =>
+  def list(search: Option[String], registered: String, showAll: Boolean, page: Int) = AuthDBAction { implicit rs =>
     val bindedForm = paymentSearchForm.bindFromRequest
     bindedForm.fold(
       formWithErrors => {
-        val list = paymentService.page(page)
-        Ok(views.html.admin.payments(list, formWithErrors, userContext))
+        val list = paymentService.page(page, showAll)
+        Ok(views.html.admin.payments(list, formWithErrors, showAll, userContext))
       },
       paymentFormData => {
-        val list = paymentService.page(page, 10, 1, paymentFormData.search, paymentFormData.registered)
-        Ok(views.html.admin.payments(list, bindedForm, userContext))
+        val list = paymentService.page(page, showAll, 10, 1, paymentFormData.search, paymentFormData.registered)
+        Ok(views.html.admin.payments(list, bindedForm, showAll, userContext))
       }
     )
   }

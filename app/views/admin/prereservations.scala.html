@@ -1,4 +1,4 @@
-@(currentPage: Page[models.entities.ShowPrereservationDetail], prereservationsSearchForm: Form[controllers.admin.PrereservationsSearchFormData], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
+@(currentPage: Page[models.entities.ShowPrereservationDetail], prereservationsSearchForm: Form[controllers.admin.PrereservationsSearchFormData], showAll: Boolean, userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
 
 @import controllers.admin.routes
 @import helper._
@@ -34,7 +34,7 @@
             </tbody>
         </table>
 
-        @helper.paging(currentPage, (page:Int) => routes.Prereservations.list(prereservationsSearchForm("search").value, page))
+        @helper.paging(currentPage, (page:Int) => routes.Prereservations.list(prereservationsSearchForm("search").value, showAll, page))
     } else {
         <div class="well">
             <em>Geen pre-reservaties gevonden.</em>

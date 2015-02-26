@@ -165,7 +165,7 @@ object schema {
 
   //////////////////////////////////
 
-  class Orders extends Table[Order]("order") {
+  class Orders extends Table[Order]("order") with Archiveable {
     def id = column[OrderId]("id", O.PrimaryKey, O.AutoInc)
     def userId = column[UserId]("user_id")
     def date = column[DateTime]("date")
@@ -174,9 +174,9 @@ object schema {
     def processed = column[Boolean]("processed")
     def comments = column[Option[String]]("comments", O.DBType("TEXT"))
 
-    def * = id ~ userId ~ date ~ billingName ~ billingAddress ~ processed ~ comments <>(Order.apply _, Order.unapply _)
+    def * = id ~ userId ~ date ~ billingName ~ billingAddress ~ processed ~ archived ~ comments <>(Order.apply _, Order.unapply _)
 
-    def edit = userId ~ date ~ billingName ~ billingAddress ~ processed ~ comments <>(OrderEdit.apply _, OrderEdit.unapply _)
+    def edit = userId ~ date ~ billingName ~ billingAddress ~ processed ~ archived ~ comments <>(OrderEdit.apply _, OrderEdit.unapply _)
     def autoInc = edit returning id
 
     def billingEdit = billingName ~ billingAddress

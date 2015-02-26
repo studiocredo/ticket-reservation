@@ -44,7 +44,7 @@ POST        /admin/users/:id                        @controllers.admin.Users.upd
 GET         /admin/users/activate/:name             @controllers.admin.Users.activate(name:String)
 GET         /admin/user/:id                         @controllers.admin.UserDetails.view(id:UserId, showAll:Boolean ?= false)
 
-GET         /admin/payments                         @controllers.admin.Payments.list(search:Option[String] ?= None, registered:String ?= views.helper.PaymentRegisteredOption.default.id, p:Int ?= 0)
+GET         /admin/payments                         @controllers.admin.Payments.list(search:Option[String] ?= None, registered:String ?= views.helper.PaymentRegisteredOption.default.id, showAll:Boolean ?= false, p:Int ?= 0)
 GET         /admin/payments/new                     @controllers.admin.Payments.create
 POST        /admin/payments/upload                  @controllers.admin.Payments.upload
 POST        /admin/payments                         @controllers.admin.Payments.save
@@ -53,7 +53,7 @@ POST        /admin/payments/:id                     @controllers.admin.Payments.
 POST        /admin/payments/:id/delete              @controllers.admin.Payments.delete(id:PaymentId)
 POST        /admin/payments/:id/copy                @controllers.admin.Payments.copy(id:PaymentId)
 
-GET         /admin/orders                           @controllers.admin.Orders.list(search:Option[String] ?= None, paid:String ?= views.helper.OrderPaidOption.default.id, p:Int ?= 0)
+GET         /admin/orders                           @controllers.admin.Orders.list(search:Option[String] ?= None, paid:String ?= views.helper.OrderPaidOption.default.id, showAll:Boolean ?= false, p:Int ?= 0)
 GET         /admin/orders/:id                       @controllers.admin.Orders.details(id:OrderId)
 GET         /admin/orders/show/:show                @controllers.admin.Orders.show(show: ShowId)
 GET         /admin/orders/availability/:id          @controllers.admin.Orders.ajaxFloorplan(id:ShowId)
@@ -65,7 +65,7 @@ POST        /admin/orders/ticket/create/:id         @controllers.admin.Orders.se
 POST        /admin/orders/ticket/new                @controllers.admin.Orders.sendAndCreateNewTickets()
 GET         /admin/orders/ticket/:id                @controllers.admin.Orders.showTicket(id:OrderId)
 
-GET         /admin/prereservations                  @controllers.admin.Prereservations.list(search:Option[String] ?= None, p:Int ?= 0)
+GET         /admin/prereservations                  @controllers.admin.Prereservations.list(search:Option[String] ?= None, showAll:Boolean ?= false, p:Int ?= 0)
 
 GET         /admin/venues                           @controllers.admin.Venues.list(p:Int ?= 0)
 GET         /admin/venues/new                       @controllers.admin.Venues.create

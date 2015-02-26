@@ -1,4 +1,4 @@
-@(currentPage: Page[models.entities.OrderPayments], orderSearchForm: Form[controllers.admin.OrderSearchFormData], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
+@(currentPage: Page[models.entities.OrderPayments], orderSearchForm: Form[controllers.admin.OrderSearchFormData], showAll: Boolean, userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
 
 @import controllers.admin.routes
 @import helper._
@@ -152,7 +152,7 @@
             }
         </table>
 
-        @helper.paging(currentPage, (page:Int) => routes.Orders.list(orderSearchForm("search").value, orderSearchForm("paid").value.getOrElse(views.helper.OrderPaidOption.default.id), page))
+        @helper.paging(currentPage, (page:Int) => routes.Orders.list(orderSearchForm("search").value, orderSearchForm("paid").value.getOrElse(views.helper.OrderPaidOption.default.id), showAll, page))
 
      </div>
     } else {

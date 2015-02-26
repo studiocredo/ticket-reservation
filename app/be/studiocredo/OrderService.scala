@@ -159,7 +159,7 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
     q.firstOption.map(orderPaymentsDetail)
   }
 
-  def page(page: Int = 0, pageSize: Int = 10, orderBy: Int = 1, nameFilter: Option[String] = None, paidFilter: OrderPaidOption.Option = OrderPaidOption.default)(implicit s: Session): Page[OrderPayments] = {
+  def page(page: Int = 0, showAll: Boolean, pageSize: Int = 10, orderBy: Int = 1, nameFilter: Option[String] = None, paidFilter: OrderPaidOption.Option = OrderPaidOption.default)(implicit s: Session): Page[OrderPayments] = {
     import models.queries._
 
     val offset = pageSize * page
@@ -178,9 +178,15 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
       case _ => baseQuery
     }
 
-    val query = nameFilter.foldLeft(paidFilterQuery){
+    val queryF = nameFilter.foldLeft(paidFilterQuery){
       (query, filter) => query.filter(q => iLike(q.billingName, s"%${filter}%")) // should replace with lucene
     }
+
+    val query = showAll match {
+      case true => queryF
+      case false => queryF.filter(q => q.archived === false)
+    }
+
     val total = query.length.run
     val values = paginate(query, page, pageSize).run map orderPaymentsDetail
     Page(values, page, pageSize, offset, total)
@@ -292,7 +298,7 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
   }
 
   def createDetailed(user: RichUser)(implicit s:Session): OrderDetail = get(create(user)).get
-  def create(user: RichUser)(implicit s:Session): OrderId = insert(OrderEdit(user.id, org.joda.time.DateTime.now, user.name, user.address.getOrElse("n/a"), false, None))
+  def create(user: RichUser)(implicit s:Session): OrderId = insert(OrderEdit(user.id, org.joda.time.DateTime.now, user.name, user.address.getOrElse("n/a"), false, false, None))
   def insert(order: OrderEdit)(implicit s: Session): OrderId = Orders.autoInc.insert(order)
 
   def update(id: OrderId, billingName: String, billingAddress: String)(implicit s: Session) = byId(id).map(_.billingEdit).update((billingName, billingAddress))

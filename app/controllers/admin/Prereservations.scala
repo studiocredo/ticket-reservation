@@ -20,16 +20,16 @@ class Prereservations @Inject()(preReservationService: PreReservationService, sh
     )(PrereservationsSearchFormData.apply)(PrereservationsSearchFormData.unapply)
   )
   
-  def list(search: Option[String], page: Int) = AuthDBAction { implicit rs =>
+  def list(search: Option[String], showAll: Boolean, page: Int) = AuthDBAction { implicit rs =>
     val bindedForm = prereservationsSearchForm.bindFromRequest
     bindedForm.fold(
       formWithErrors => {
-        val list = preReservationService.page(page)
-        Ok(views.html.admin.prereservations(list, formWithErrors, userContext))
+        val list = preReservationService.page(page, showAll)
+        Ok(views.html.admin.prereservations(list, formWithErrors, showAll, userContext))
       },
       orderFormData => {
-        val list = preReservationService.page(page, 10, 1, orderFormData.search)
-        Ok(views.html.admin.prereservations(list, bindedForm, userContext))
+        val list = preReservationService.page(page, showAll, 10, 1, orderFormData.search)
+        Ok(views.html.admin.prereservations(list, bindedForm, showAll, userContext))
       }
     )
   }

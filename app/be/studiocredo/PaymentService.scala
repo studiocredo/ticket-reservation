@@ -23,12 +23,12 @@ class PaymentService @Inject()() {
   val PaymentsQActive = PaymentsQ.where(_.archived === false)
 
 
-  def page(page: Int = 0, pageSize: Int = 10, orderBy: Int = 1, nameFilter: Option[String] = None, registeredFilter: PaymentRegisteredOption.Option = PaymentRegisteredOption.default)(implicit s: Session): Page[Payment] = {
+  def page(page: Int = 0, showAll: Boolean, pageSize: Int = 10, orderBy: Int = 1, nameFilter: Option[String] = None, registeredFilter: PaymentRegisteredOption.Option = PaymentRegisteredOption.default)(implicit s: Session): Page[Payment] = {
     import models.queries._
 
     val offset = pageSize * page
 
-    val baseQuery = PaymentsQActive.sortBy(r => (r.date.desc, r.id.desc))
+    val baseQuery = PaymentsQ.sortBy(r => (r.date.desc, r.id.desc))
     val registeredFilterQuery = registeredFilter match {
       case PaymentRegisteredOption.Registered => baseQuery.where(_.orderId.isNotNull)
       case PaymentRegisteredOption.Unregistered => baseQuery.where(_.orderId.isNull)
@@ -36,9 +36,15 @@ class PaymentService @Inject()() {
       case _ => baseQuery
     }
 
-    val query = nameFilter.foldLeft(registeredFilterQuery){
+    val queryF = nameFilter.foldLeft(registeredFilterQuery){
       (query, filter) => query.filter(q => iLike(q.debtor, s"%${filter}%")) // should replace with lucene
     }
+
+    val query = showAll match {
+      case true => queryF
+      case false => queryF.filter(q => q.archived === false)
+    }
+
     val total = query.length.run
     val values = paginate(query, page, pageSize).run
     Page(values, page, pageSize, offset, total)

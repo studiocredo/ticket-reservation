@@ -50,16 +50,16 @@ class Orders @Inject()(ticketService: TicketService, preReservationService: PreR
     )(OrderDetailEdit.apply)(OrderDetailEdit.unapply)
   )
 
-  def list(search: Option[String], paid: String, page: Int) = AuthDBAction { implicit rs =>
+  def list(search: Option[String], paid: String, showAll: Boolean, page: Int) = AuthDBAction { implicit rs =>
     val bindedForm = orderSearchForm.bindFromRequest
     bindedForm.fold(
       formWithErrors => {
-        val list = orderService.page(page)
-        Ok(views.html.admin.orders(list, formWithErrors, userContext))
+        val list = orderService.page(page, showAll)
+        Ok(views.html.admin.orders(list, formWithErrors, showAll, userContext))
       },
       orderFormData => {
-        val list = orderService.page(page, 10, 1, orderFormData.search, orderFormData.paid)
-        Ok(views.html.admin.orders(list, bindedForm, userContext))
+        val list = orderService.page(page, showAll, 10, 1, orderFormData.search, orderFormData.paid)
+        Ok(views.html.admin.orders(list, bindedForm, showAll, userContext))
       }
     )
   }

@@ -215,14 +215,14 @@ object entities {
     val reference = s"${"%03d".format(order.id/1000)}/${"%03d".format(order.id%1000)}${"%01d".format(user.id/1000)}/${"%03d".format(user.id%1000)}${"%02d".format(remainder)}"
   }
 
-  case class Order(id: OrderId, userId: UserId, date: DateTime, billingName: String, billingAddress: String, processed: Boolean, comments: Option[String]) {
+  case class Order(id: OrderId, userId: UserId, date: DateTime, billingName: String, billingAddress: String, processed: Boolean, archived: Boolean, comments: Option[String]) {
     val orderReference = OrderReference(id, userId)
 
     def reference: String = {
       s"+++${orderReference.reference}+++"
     }
   }
-  case class OrderEdit(         userId: UserId, date: DateTime, billingName: String, billingAddress: String, processed: Boolean, comments: Option[String])
+  case class OrderEdit(         userId: UserId, date: DateTime, billingName: String, billingAddress: String, processed: Boolean, archived: Boolean, comments: Option[String])
   case class OrderDetail(order: Order, user: User, ticketOrders: List[TicketOrderDetail]) {
     def id = order.id
     def price = ticketOrders.map(_.price).foldLeft(Money(0))((total, amount) => total.plus(amount))

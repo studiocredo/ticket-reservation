@@ -139,7 +139,7 @@ class PreReservationService @Inject()(orderService: OrderService, venueService: 
     UnusedQuotaDisplay(eventMap.filter(_._2 > 0).toMap)
   }
 
-  def page(page: Int = 0, pageSize: Int = 10, orderBy: Int = 1, nameFilter: Option[String] = None)(implicit s: Session): Page[ShowPrereservationDetail] = {
+  def page(page: Int = 0, showAll: Boolean, pageSize: Int = 10, orderBy: Int = 1, nameFilter: Option[String] = None)(implicit s: Session): Page[ShowPrereservationDetail] = {
     import models.queries._
 
     val offset = pageSize * page
@@ -148,8 +148,13 @@ class PreReservationService @Inject()(orderService: OrderService, venueService: 
       ((((showPreres, show), event), user), venue) <- ShowPrereservations.sortBy(r => (r.showId.desc, r.userId.asc)).leftJoin(Shows).on(_.showId === _.id).leftJoin(Events).on(_._2.eventId === _.id).leftJoin(Users).on(_._1._1.userId === _.id).leftJoin(Venues).on(_._1._1._2.venueId === _.id)
     } yield (showPreres, show, event, user, venue)
 
-    val query = nameFilter.foldLeft(baseQuery){
+    val queryF = nameFilter.foldLeft(baseQuery){
       (query, filter) => query.filter(q => iLike(q._4.name, s"%${filter}%")) // should replace with lucene
+    }
+
+    val query = showAll match {
+      case true => queryF
+      case false => queryF.filter(q => q._2.archived === false && q._3.archived === false)
     }
 
     val total = query.length.run
