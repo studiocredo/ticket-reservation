@@ -444,7 +444,10 @@ class Orders @Inject()(ticketService: TicketService, eventService: EventService,
     if (Authorization.ADMIN.isAuthorized(user)) {
       SeatType.values
     } else {
-      Set(SeatType.Normal)
+      current.configuration.getBoolean("application.disable-accessible-seats").getOrElse(false) match {
+        case true => Set(SeatType.Normal, SeatType.Disabled)
+        case false => Set(SeatType.Normal)
+      }
     }
   }
 }

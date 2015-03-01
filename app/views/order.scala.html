@@ -2,6 +2,7 @@
 @import helper._
 @import be.studiocredo.util.Joda._
 @import play.api.libs.json._
+@import play.api.Play.current
 
 @orderRowInactive(ticketOrder: models.entities.TicketOrderDetail)= {
     <tr class="active">
@@ -171,15 +172,18 @@
                 }
             </div>
 
-            <div class="alert alert-success">
-                <div class="checkbox">
-                    <label>
-                        <input id="seattype-disabled" type="checkbox" data-ng-change="updateDisabledSeatType()" data-ng-model="disabledSeatType" data-ng-init="disabledSeatType = @seatTypes.contains(models.entities.SeatType.Disabled)">
-                        Ik wens plaatsen voor rolstoelgebruikers indien beschikbaar.
-                    </label>
+            @defining(current.configuration.getBoolean("application.disable-accessible-seats").getOrElse(false)) { disableAccessibleSeats =>
+                @if(!disableAccessibleSeats) {
+                <div class="alert alert-success">
+                    <div class="checkbox">
+                        <label>
+                            <input id="seattype-disabled" type="checkbox" data-ng-change="updateDisabledSeatType()" data-ng-model="disabledSeatType" data-ng-init="disabledSeatType = @seatTypes.contains(models.entities.SeatType.Disabled)">
+                            Ik wens plaatsen voor rolstoelgebruikers indien beschikbaar.
+                        </label>
+                    </div>
                 </div>
-            </div>
-
+                }
+            }
 
             @request.flash.get("start-order").map { message =>
                 <div class="alert alert-danger">
