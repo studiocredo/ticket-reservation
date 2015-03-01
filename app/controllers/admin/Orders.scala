@@ -201,7 +201,7 @@ class Orders @Inject()(ticketService: TicketService, preReservationService: PreR
       case _ => {
         (orderEngine.floors) ! ReloadState
         ListPage.flashing(
-          "success" -> s"Bestelling $id geannulleerd")
+          "success" -> s"Bestelling $id geannuleerd")
       }
     }
   }
