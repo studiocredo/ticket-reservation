@@ -311,6 +311,7 @@ object FloorProtocol {
 
   case class Commit(show: ShowId, order: OrderId) extends FloorAction
   case class ReloadState(show: ShowId) extends FloorAction
+  case class ReloadFullState()
 
 
   case object TimeOut
@@ -370,6 +371,14 @@ class SeatOrderActor(showService: ShowService, venueService: VenueService, order
       activeShows = showIds
       activeShows foreach getShowRef
     }
+
+    case reload: ReloadFullState => {
+      logger.info("Reloading state of all active shows")
+      for (show <- activeShows) {
+        getShowRef(show).tell(ReloadState(show), sender)
+      }
+    }
+
 
     case action: FloorAction => {
       if (!activeShows.contains(action.show))

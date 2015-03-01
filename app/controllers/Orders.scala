@@ -185,7 +185,7 @@ class Orders @Inject()(ticketService: TicketService, eventService: EventService,
       orderService.destroy(id) match {
         case 0 => BadRequest(s"Bestelling $id niet gevonden")
         case _ => {
-          (orderEngine.floors) ! ReloadState
+          (orderEngine.floors) ! ReloadFullState()
           Redirect(routes.Application.index())
         }
       }
@@ -343,7 +343,7 @@ class Orders @Inject()(ticketService: TicketService, eventService: EventService,
      orderService.destroyTicketOrders(ticket) match {
        case 0 => BadRequest(s"Bestelling $ticket niet gevonden")
        case _ => {
-         (orderEngine.floors) ! ReloadState
+         (orderEngine.floors) ! ReloadFullState()
          Redirect(routes.Orders.view(order, event))
        }
      }

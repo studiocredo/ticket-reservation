@@ -186,7 +186,7 @@ class Orders @Inject()(ticketService: TicketService, preReservationService: PreR
           case None => BadRequest(s"Gebruiker ${order.order.userId} niet gevonden")
           case Some(user) => {
             Mailer.sendOrderConfirmationEmail(user, order)
-            ListPage.flashing("error" -> "Bevestiging email verzonden")
+            ListPage.flashing("success" -> "Bevestiging email verzonden")
           }
         }
       }
@@ -196,13 +196,17 @@ class Orders @Inject()(ticketService: TicketService, preReservationService: PreR
   def cancel(id: OrderId) = AuthDBAction { implicit rs =>
     import FloorProtocol._
 
-    orderService.destroy(id) match {
-      case 0 => BadRequest(s"Bestelling $id niet gevonden")
-      case _ => {
-        (orderEngine.floors) ! ReloadState
-        ListPage.flashing(
-          "success" -> s"Bestelling $id geannuleerd")
-      }
+    ticketService.find(id) match {
+      case Nil =>
+        orderService.destroy(id) match {
+          case 0 => BadRequest(s"Bestelling $id niet gevonden")
+          case _ => {
+            (orderEngine.floors) ! ReloadFullState()
+            ListPage.flashing(
+              "success" -> s"Bestelling $id geannuleerd")
+          }
+        }
+      case _ => ListPage.flashing("error" -> "Ticket(s) reeds gedistribueerd. Deze bestelling kan niet geannuleerd worden")
     }
   }
 
