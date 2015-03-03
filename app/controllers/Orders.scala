@@ -453,8 +453,14 @@ class Orders @Inject()(ticketService: TicketService, eventService: EventService,
       SeatType.values
     } else {
       current.configuration.getBoolean("application.disable-accessible-seats").getOrElse(false) match {
-        case true => Set(SeatType.Normal, SeatType.Disabled)
-        case false => Set(SeatType.Normal)
+        case true => current.configuration.getBoolean("application.disable-vip-seats").getOrElse(false) match {
+          case true => SeatType.values
+          case false => Set(SeatType.Normal, SeatType.Disabled)
+        }
+        case false => current.configuration.getBoolean("application.disable-vip-seats").getOrElse(false) match {
+          case true => Set(SeatType.Normal, SeatType.Vip)
+          case false => Set(SeatType.Normal)
+        }
       }
     }
   }
