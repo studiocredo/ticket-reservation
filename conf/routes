@@ -54,6 +54,7 @@ POST        /admin/payments/:id/delete              @controllers.admin.Payments.
 POST        /admin/payments/:id/copy                @controllers.admin.Payments.copy(id:PaymentId)
 
 GET         /admin/orders                           @controllers.admin.Orders.list(search:Option[String] ?= None, paid:String ?= views.helper.OrderPaidOption.default.id, showAll:Boolean ?= false, p:Int ?= 0)
+GET         /admin/orders/reloadStatus              @controllers.Orders.reloadStatus()
 GET         /admin/orders/:id                       @controllers.admin.Orders.details(id:OrderId)
 GET         /admin/orders/show/:show                @controllers.admin.Orders.show(show: ShowId)
 GET         /admin/orders/availability/:id          @controllers.admin.Orders.ajaxFloorplan(id:ShowId)

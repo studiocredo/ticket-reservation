@@ -420,6 +420,14 @@ class Orders @Inject()(ticketService: TicketService, eventService: EventService,
     }
   }
 
+  def reloadStatus() = AuthDBAction(Authorization.ADMIN) { implicit rs =>
+    import FloorProtocol._
+
+    (orderEngine.floors) ! ReloadFullState()
+    Redirect(routes.Application.index()).flashing("success" -> "Status herladen")
+
+  }
+
 
   private def viewPage(id: OrderId, event: EventId, status: Status = Ok)(implicit rs: SecuredDBRequest[_]) = {
     val users = rs.currentUser match {
