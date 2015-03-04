@@ -235,6 +235,16 @@
                                     @if(unused > 0) {
                                         <div class="alert alert-danger">
                                             <p>Opgelet, je hebt @{unused match { case 1 => "1 pre-reservatie"; case _ => s"${unused} pre-reservaties"}} niet opgebruikt. Indien je je bestelling nu afrondt, vervallen alle niet gebruikte pre-reservaties.</p>
+                                            @defining(current.configuration.getBoolean("application.allow-keep-unused-prereservations").getOrElse(false)) { allowKeepUnusedPrereservations =>
+                                                @if(allowKeepUnusedPrereservations) {
+                                                <div class="checkbox">
+                                                    <label>
+                                                        <input type="checkbox" id="keepUnusedPrereservations" name="keepUnusedPrereservations" value="true">
+                                                        <strong>Ik wil mijn ongebruikte pre-reservaties toch behouden om later op te nemen.</strong>
+                                                    </label>
+                                                </div>
+                                                }
+                                            }
                                         </div>
                                     }
                                 }

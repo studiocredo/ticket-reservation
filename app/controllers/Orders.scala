@@ -45,7 +45,7 @@ import scala.collection.mutable
 
 
 case class StartSeatOrderForm(quantity: Int, priceCategory: String, availableSeatTypes: List[SeatType])
-case class OrderComments(comments: Option[String])
+case class OrderComments(comments: Option[String], keepUnusedPrereservations: Option[Boolean])
 case class OrderBillingData(billingName: String, billingAddress: String)
 
 class Orders @Inject()(ticketService: TicketService, eventService: EventService, orderService: OrderService, showService: ShowService, preReservationService: PreReservationService, venueService: VenueService, val authService: AuthenticatorService, val notificationService: NotificationService, val userService: UserService, orderEngine: ReservationEngineMonitorService) extends Controller with Secure with UserContextSupport {
@@ -63,7 +63,8 @@ class Orders @Inject()(ticketService: TicketService, eventService: EventService,
 
   val orderCommentsForm: Form[OrderComments] = Form(
     mapping(
-      "orderComments" -> optional(text)
+      "orderComments" -> optional(text),
+      "keepUnusedPrereservations" -> optional(boolean)
     )(OrderComments.apply)(OrderComments.unapply)
   )
 
@@ -135,10 +136,10 @@ class Orders @Inject()(ticketService: TicketService, eventService: EventService,
     ensureOrderAccess(order) {
       val bindedForm = orderCommentsForm.bindFromRequest
       bindedForm.fold(
-        formWithErrors => BadRequest(s"Bestelling $order niet afgesloten"),
+        formWithErrors => BadRequest(s"Bestelling $order niet afgesloten ${formWithErrors.errorsAsJson}"),
         comments => {
           val currentUser = rs.currentUser.get
-          preReservationService.cleanupPrereservationsAndCloseOrder(order, comments.comments, event, currentUser.allUsers) match {
+          preReservationService.cleanupPrereservationsAndCloseOrder(order, comments.comments, event, currentUser.allUsers, comments.keepUnusedPrereservations.getOrElse(false)) match {
             case false => BadRequest(s"Bestelling $order niet afgesloten")
             case true => {
               val orderDetail = orderService.get(order).get

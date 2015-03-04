@@ -190,7 +190,7 @@ class PreReservationService @Inject()(orderService: OrderService, venueService: 
     PendingPrereservationDisplay(showMap.filter(_._2 > 0).toMap)
   }
 
-  def cleanupPrereservationsAndCloseOrder(order: OrderId, comments: Option[String], event: EventId, users: List[UserId])(implicit  s: Session): Boolean = {
+  def cleanupPrereservationsAndCloseOrder(order: OrderId, comments: Option[String], event: EventId, users: List[UserId], keepUnusedPrereservations: Boolean)(implicit  s: Session): Boolean = {
     val preres = mutable.Map[(ShowId, UserId), Int]()
     preReservationsByUsersAndEvent(users, event).foreach(prd => preres.put((prd.show.id, prd.user.id), 0))
     orderService.prereservationSeatsByUsers(users).foreach { tsod =>
@@ -202,8 +202,11 @@ class PreReservationService @Inject()(orderService: OrderService, venueService: 
       }
     }
     s.withTransaction {
-      preres.toMap.foreach { case ((showId: ShowId, userId: UserId), quantity: Int) =>
-        updateQuantity(ShowPrereservation(showId, userId, quantity))
+      if (!keepUnusedPrereservations) {
+        //if unused prereservations should not be kept, update the pre-reservation amount to the amount ordered
+        preres.toMap.foreach { case ((showId: ShowId, userId: UserId), quantity: Int) =>
+          updateQuantity(ShowPrereservation(showId, userId, quantity))
+        }
       }
       orderService.close(order, comments)
     }
