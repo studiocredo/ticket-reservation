@@ -6,6 +6,7 @@
 @globalFormErrors(orderForm)
 
 <fieldset>
+    @inputText(orderForm("userId"), '_label -> "Gebruiker", 'class -> "form-control")
     @inputText(orderForm("billingName"), '_label -> "Naam", 'class -> "form-control")
     @textarea(orderForm("billingAddress"), '_label -> "Adres", '_help -> "Gebruik twee regels, één voor straat en huisnummer en één voor postcode en gemeente", 'class -> "form-control")
     @textarea(orderForm("comments"), '_label -> "Details", 'class -> "form-control", 'rows -> 5, '_help -> "Commentaar, opmerkingen")

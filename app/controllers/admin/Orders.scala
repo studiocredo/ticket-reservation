@@ -1,6 +1,8 @@
 package controllers.admin
 
 import be.studiocredo._
+import be.studiocredo.util.DBSupport._
+import play.api.data.validation.{ValidationResult, Invalid, Valid, Constraint}
 import play.api.data.{Forms, Form}
 import play.api.data.Forms._
 import models.ids._
@@ -35,8 +37,15 @@ class Orders @Inject()(ticketService: TicketService, preReservationService: PreR
     )(OrderSearchFormData.apply)(OrderSearchFormData.unapply)
   )
 
+  val validUserId: Constraint[UserId] = Constraint({
+    userId => DB.withSession {
+      implicit session => userService.find(userId).fold(Invalid("Ongeldige gebruiker id"): ValidationResult)(ru => Valid)
+    }
+  })
+
   val orderForm = Form(
     mapping(
+      "userId" -> of[UserId].verifying(validUserId),
       "billingName" -> nonEmptyText,
       "billingAddress" -> text,
       "comments" -> optional(text),

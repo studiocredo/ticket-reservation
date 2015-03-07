@@ -305,7 +305,7 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
   def update(id: OrderId, orderEdit: OrderDetailEdit)(implicit s: Session): Either[ServiceFailure, ServiceSuccess] = {
     import schema.seatIdType
     s.withTransaction {
-      byId(id).map(_.billingCommentsEdit).update((orderEdit.billingName, orderEdit.billingAddress, orderEdit.comments))
+      byId(id).map(_.billingCommentsEdit).update((orderEdit.userId, orderEdit.billingName, orderEdit.billingAddress, orderEdit.comments))
       orderEdit.seats.foreach{ tsoEdit =>
         TSOQ.where(_.ticketOrderId === tsoEdit.ticketOrderId).where(_.seat === tsoEdit.seat).map(_.price).update(tsoEdit.price)
       }
@@ -360,7 +360,7 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
         if to.orderId === id
       } yield ((tso.ticketOrderId, tso.seat, tso.price))
       val tso = query.list.map(TicketSeatOrderEdit.tupled(_))
-      OrderDetailEdit(pe.billingName, pe.billingAddress, pe.comments, tso)
+      OrderDetailEdit(pe.userId, pe.billingName, pe.billingAddress, pe.comments, tso)
     }
   }
 

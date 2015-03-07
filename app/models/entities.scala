@@ -237,7 +237,7 @@ object entities {
     val numberOfSeats = ticketOrders.map(_.ticketSeatOrders.length).sum
     //val numberOfSeatsByShow = ticketOrders.flatMap(_.ticketSeatOrders.map((_.show.id, )))
   }
-  case class OrderDetailEdit(billingName: String, billingAddress: String, comments: Option[String], seats: List[TicketSeatOrderEdit])
+  case class OrderDetailEdit(userId: UserId, billingName: String, billingAddress: String, comments: Option[String], seats: List[TicketSeatOrderEdit])
   case class TicketSeatOrderEdit(ticketOrderId: TicketOrderId, seat: SeatId, price: Money)
 
   case class OrderPayments(order: OrderDetail, payments: List[Payment]) {

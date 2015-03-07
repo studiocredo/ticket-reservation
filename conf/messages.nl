@@ -14,6 +14,7 @@ format.numeric=Getal
 format.real=Kommagetal
 format.money=Bedrag in euro
 format.paymentType=Betalingswijze
+format.id=ID
 
 # --- Errors
 error.invalid=Ongeldige waarde
@@ -33,6 +34,7 @@ error.pattern=Waarde moet voldoen aan {0}
 error.money.invalid=Ongeldig bedrag
 error.paymentType.invalid=Ongeldige betalingswijze
 error.date=Ongeldige datum
+error.id=Ongeldige ID waarde
 
 #No need to translate JSON conversion errors
 #error.expected.date=Datum verwacht

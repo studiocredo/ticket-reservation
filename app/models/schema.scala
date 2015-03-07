@@ -180,7 +180,7 @@ object schema {
     def autoInc = edit returning id
 
     def billingEdit = billingName ~ billingAddress
-    def billingCommentsEdit = billingName ~ billingAddress ~ comments
+    def billingCommentsEdit = userId ~ billingName ~ billingAddress ~ comments
     
     def user = foreignKey("user_fk", userId, Users)(_.id)
   }

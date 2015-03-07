@@ -5,9 +5,9 @@
     <div class="@elements.args.get('_inputclass).getOrElse("col-lg-10")">
         @elements.input
         @if(!elements.errors.isEmpty) {
-            <span class="help-inline">@elements.errors(elements.lang).mkString(", ")</span>
+            <span class="help-inline">@elements.errors(elements.lang).distinct.mkString(", ")</span>
         } else {
-            <span class="help-block">@elements.infos(elements.lang).mkString(", ")</span>
+            <span class="help-block">@elements.infos(elements.lang).distinct.mkString(", ")</span>
         }
     </div>
 </div>
