@@ -2,14 +2,16 @@ package be.studiocredo.reservations
 
 import com.itextpdf.text._
 import com.itextpdf.text.pdf._
-import java.io.{FileOutputStream, File, ByteArrayOutputStream}
+import java.io.{InputStream, FileOutputStream, File, ByteArrayOutputStream}
 import models.ids._
 import java.net.URL
 import play.api.Logger
-import models.entities.{TicketDistribution, TicketDocument, TicketSeatOrderDetail, OrderDetail}
+import models.entities._
 import scala.Some
 import models.{CurrencyFormat, HumanDateTime}
 import play.api.http.MimeTypes
+
+import scala.collection.mutable
 
 class TicketGenerator {
 
@@ -17,15 +19,16 @@ class TicketGenerator {
 
 object TicketGenerator {
   val logger = Logger("be.studiocredo.ticketgenerator")
-  val templateResource = "templates/slotshow_2015_ticket_template.pdf"
+  val templateResourceFolder = "templates"
 
   def create(order: OrderDetail, ticket: TicketDistribution, url: String): Option[TicketDocument] = {
     val out = new ByteArrayOutputStream
+    // Create output PDF
+    val document = new Document(PageSize.A4)
+   // Get template info
+    val ticketInputStreamMap = getTicketInputStreams(order.ticketOrders.map(_.show))
 
     try {
-      // Create output PDF
-      val document = new Document(PageSize.A4)
-
       val writer = PdfWriter.getInstance(document, out)
       document.open()
 
@@ -35,18 +38,18 @@ object TicketGenerator {
       document.addAuthor("Studio Credo vzw")
       document.addCreationDate()
 
-      // Get template info
-      val templateStream = this.getClass.getClassLoader.getResourceAsStream(templateResource)
-      val templateReader = new PdfReader(templateStream)
-      val template = writer.getImportedPage(templateReader, 1)
-
       val canvas = writer.getDirectContent
       val helvetica = new Font(Font.FontFamily.HELVETICA, 12)
       val font = helvetica.getCalculatedBaseFont(false)
 
+      val templateMap = ticketInputStreamMap.filter(_._2.isDefined).map { case (e, is) =>
+        e -> writer.getImportedPage(new PdfReader(is.get), 1)
+      }
+
       order.ticketSeatOrders.foreach { ticketSeatOrder =>
 
         document.newPage()
+        val template = templateMap(ticketSeatOrder.show.eventId)
         writer.getDirectContentUnder.addTemplate(template, 0, 0)
 
         addText(order, ticketSeatOrder, ticket, canvas, font)
@@ -54,7 +57,7 @@ object TicketGenerator {
 
       }
 
-      templateStream.close()
+      ticketInputStreamMap.values.filter(_.isDefined).map(_.get).foreach( try { _.close })
       document.close()
 
       Some(TicketDocument(order, s"ticket_${ticket.reference}.pdf", out.toByteArray, "application/pdf"))
@@ -68,6 +71,14 @@ object TicketGenerator {
         out.close()
       }
     }
+  }
+
+  private def getTicketInputStreams(eventShows: scala.List[EventShow]): Map[EventId, Option[InputStream]] = {
+    val templateMap = mutable.Map[EventId, Option[InputStream]]()
+    eventShows.foreach { eventShow =>
+      templateMap.getOrElseUpdate(eventShow.eventId, Option(this.getClass.getClassLoader.getResourceAsStream(scala.List(templateResourceFolder, eventShow.template.get).mkString("/"))))
+    }
+    templateMap.toMap
   }
 
   private def addBarcode(url: URL, document: Document, canvas: PdfContentByte) {

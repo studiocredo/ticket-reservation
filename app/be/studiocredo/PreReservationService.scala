@@ -69,7 +69,7 @@ class PreReservationService @Inject()(orderService: OrderService, venueService: 
       case Some(f) => query.list.withFilter(f)
       case None => query.list
     }
-    list.map{ case (spr: ShowPrereservation, s: Show, e: Event, u: User, v: Venue) => ShowPrereservationDetail(EventShow(s.id, e.id, e.name, s.venueId, v.name, s.date, s.archived), u, spr.quantity)}
+    list.map{ case (spr: ShowPrereservation, s: Show, e: Event, u: User, v: Venue) => ShowPrereservationDetail(EventShow(s.id, e.id, e.name, s.venueId, v.name, s.date, e.template, s.archived), u, spr.quantity)}
   }
 
   def preReservationsByShow(show: ShowId, excludedUsers: List[UserId] = List())(implicit s: Session): Map[UserId, Int] = {
@@ -158,7 +158,7 @@ class PreReservationService @Inject()(orderService: OrderService, venueService: 
     }
 
     val total = query.length.run
-    val values = paginate(query, page, pageSize).run map { case (spr: ShowPrereservation, s: Show, e: Event, u: User, v: Venue) => ShowPrereservationDetail(EventShow(s.id, e.id, e.name, s.venueId, v.name, s.date, s.archived), u, spr.quantity)}
+    val values = paginate(query, page, pageSize).run map { case (spr: ShowPrereservation, s: Show, e: Event, u: User, v: Venue) => ShowPrereservationDetail(EventShow(s.id, e.id, e.name, s.venueId, v.name, s.date, e.template, s.archived), u, spr.quantity)}
     Page(values, page, pageSize, offset, total)
   }
 
@@ -265,7 +265,7 @@ class PreReservationService @Inject()(orderService: OrderService, venueService: 
     //validate venue capacity
     val showMap = mutable.Map[ShowId, Int]().withDefaultValue(0)
     showPrereservations.foreach { pr: ShowPrereservationUpdate => showMap(pr.showId) += pr.quantity }
-    val eventShowMap = Shows.leftJoin(Events).on(_.eventId === _.id).where(_._1.id inSet showMap.keys).list.map{ case (s: Show, e: Event) => (s.id, EventShow(s.id, s.eventId, e.name, s.venueId, "dummy", s.date, s.archived))}.toMap
+    val eventShowMap = Shows.leftJoin(Events).on(_.eventId === _.id).where(_._1.id inSet showMap.keys).list.map{ case (s: Show, e: Event) => (s.id, EventShow(s.id, s.eventId, e.name, s.venueId, "dummy", s.date, e.template, s.archived))}.toMap
     showMap.keys.foreach { showId: ShowId => showMap(showId) -= availability(eventShowMap(showId), users).byType(SeatType.Normal) }
 
     showMap.view.filter{ case (showId: ShowId, overCapacity: Int) => overCapacity > 0 }.map{case (showId: ShowId, overCapacity: Int) => (eventShowMap(showId), overCapacity)}.headOption match {

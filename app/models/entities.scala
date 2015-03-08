@@ -52,7 +52,7 @@ object entities {
 
   case class UserRole(id: UserId, role: Roles.Role)
 
-  case class Event(id: EventId, name: String, description: String, preReservationStart: Option[DateTime], preReservationEnd: Option[DateTime], reservationStart: Option[DateTime], reservationEnd: Option[DateTime], archived: Boolean) extends Archiveable {
+  case class Event(id: EventId, name: String, description: String, preReservationStart: Option[DateTime], preReservationEnd: Option[DateTime], reservationStart: Option[DateTime], reservationEnd: Option[DateTime], template: Option[String] ,archived: Boolean) extends Archiveable {
     def preReservationAllowed = preReservationStart match {
       case Some(preReservationStart) => !archived && preReservationStart.isBeforeNow && preReservationEnd.get.isAfterNow
       case None => true
@@ -62,7 +62,7 @@ object entities {
       case None => true
     }
   }
-  case class EventEdit(         name: String, description: String, preReservationStart: Option[DateTime], preReservationEnd: Option[DateTime], reservationStart: Option[DateTime], reservationEnd: Option[DateTime], archived: Boolean)
+  case class EventEdit(         name: String, description: String, preReservationStart: Option[DateTime], preReservationEnd: Option[DateTime], reservationStart: Option[DateTime], reservationEnd: Option[DateTime], template: Option[String], archived: Boolean)
 
   case class EventPrice(id: EventId, category: String, price: Money)
   case class EventPricing(id: EventId, prices: List[EventPrice])
@@ -102,7 +102,7 @@ object entities {
   case class VenueEdit(         name: String, description: String, archived: Boolean)
 
   case class Show(id: ShowId, eventId: EventId, venueId: VenueId, date: DateTime, archived: Boolean) extends Archiveable with HasTime
-  case class EventShow(id: ShowId, eventId: EventId, name: String, venueId: VenueId, venueName: String, date: DateTime, archived: Boolean) extends Archiveable with HasTime
+  case class EventShow(id: ShowId, eventId: EventId, name: String, venueId: VenueId, venueName: String, date: DateTime, template: Option[String], archived: Boolean) extends Archiveable with HasTime
 
   case class ShowAvailability(show: EventShow, byType: Map[SeatType, Int] ) {
     def total: Int = {

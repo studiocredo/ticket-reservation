@@ -51,7 +51,7 @@ class ShowService @Inject()(venueService: VenueService, preReservationService: P
     val list = (for (s <- next; e <- s.event; v <- s.venue) yield (s, e, v)).sortBy(_._1.date).take(limit).list
 
     list map {
-      case (show, event, venue) => preReservationService.availability(EventShow(show.id, event.id, event.name, show.venueId, venue.name, show.date, show.archived))
+      case (show, event, venue) => preReservationService.availability(EventShow(show.id, event.id, event.name, show.venueId, venue.name, show.date, event.template, show.archived))
     }
   }
 
@@ -77,7 +77,7 @@ class ShowService @Inject()(venueService: VenueService, preReservationService: P
   }
 
   def getEventShow(id: ShowId)(implicit s: Session): EventShow = {
-    val q = for (s <- byId(id); e <- s.event; v <- s.venue) yield (s.id, e.id, e.name, s.venueId, v.name, s.date, s.archived)
+    val q = for (s <- byId(id); e <- s.event; v <- s.venue) yield (s.id, e.id, e.name, s.venueId, v.name, s.date, e.template, s.archived)
     (EventShow.apply _) tupled q.first
   }
 

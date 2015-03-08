@@ -73,7 +73,7 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
     x.foreach { case (ticketOrder, ticketSeatOrder, show, event, venue) =>
       orderMap.addBinding(ticketOrder.orderId, ticketOrder)
       ticketOrderMap.addBinding(ticketOrder, ticketSeatOrder)
-      showMap.put(show.id, EventShow(show.id, event.id, event.name, show.venueId, venue.name, show.date, show.archived))
+      showMap.put(show.id, EventShow(show.id, event.id, event.name, show.venueId, venue.name, show.date, event.template, show.archived))
     }
 
     orders.map { order =>
@@ -113,7 +113,7 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
       ticketOrderDetailsQuery.list.foreach {
         case (ticketOrder, ticketSeatOrder, show, event, venue) =>
           ticketOrderMap.addBinding(ticketOrder, ticketSeatOrder)
-          showMap.put(show.id, EventShow(show.id, event.id, event.name, show.venueId, venue.name, show.date, show.archived))
+          showMap.put(show.id, EventShow(show.id, event.id, event.name, show.venueId, venue.name, show.date, event.template, show.archived))
       }
 
 
@@ -213,7 +213,7 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
     val query = for {
       (((ticketSeatOrder, show), event), venue) <- TicketSeatOrders.leftJoin(Shows).on(_.showId === _.id).leftJoin(Events).on(_._2.eventId === _.id).leftJoin(Venues).on(_._1._2.venueId === _.id)
     } yield (ticketSeatOrder, show, event, venue)
-    query.list.map{ case (tso: TicketSeatOrder, s: Show, e: Event, v: Venue) => TicketSeatOrderDetail(tso, EventShow(s.id, e.id, e.name, s.venueId, v.name, s.date, s.archived)) }
+    query.list.map{ case (tso: TicketSeatOrder, s: Show, e: Event, v: Venue) => TicketSeatOrderDetail(tso, EventShow(s.id, e.id, e.name, s.venueId, v.name, s.date, e.template, s.archived)) }
   }
 
   def prereservationSeatsByUsers(ids: List[UserId])(implicit s: Session): List[TicketSeatOrderDetail] = {
@@ -221,7 +221,7 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
       (((ticketSeatOrder, show), event), venue) <- TicketSeatOrders.leftJoin(Shows).on(_.showId === _.id).leftJoin(Events).on(_._2.eventId === _.id).leftJoin(Venues).on(_._1._2.venueId === _.id)
       if ticketSeatOrder.userId inSet ids
     } yield (ticketSeatOrder, show, event, venue)
-    query.list.map{ case (tso: TicketSeatOrder, s: Show, e: Event, v: Venue) => TicketSeatOrderDetail(tso, EventShow(s.id, e.id, e.name, s.venueId, v.name, s.date, s.archived)) }
+    query.list.map{ case (tso: TicketSeatOrder, s: Show, e: Event, v: Venue) => TicketSeatOrderDetail(tso, EventShow(s.id, e.id, e.name, s.venueId, v.name, s.date, e.template, s.archived)) }
   }
   
   def detailedOrdersByUser(id: UserId, f: Option[((TicketOrder, TicketSeatOrder, Show, Event, Venue)) => Boolean] = None)(implicit s: Session): List[OrderDetail] = {
@@ -285,7 +285,7 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
     x.foreach { case (ticketOrder, ticketSeatOrder, show, event, venue) =>
       orderMap.addBinding(ticketOrder.orderId, ticketOrder)
       ticketOrderMap.addBinding(ticketOrder, ticketSeatOrder)
-      showMap.put(show.id, EventShow(show.id, event.id, event.name, show.venueId, venue.name, show.date, show.archived))
+      showMap.put(show.id, EventShow(show.id, event.id, event.name, show.venueId, venue.name, show.date, event.template, show.archived))
     }
 
     orders.map { order =>
