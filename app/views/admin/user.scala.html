@@ -4,7 +4,7 @@
 @import be.studiocredo.util.Money
 
 @orderRow(user: models.entities.User, ticketOrder: models.entities.TicketOrderDetail)= {
-    <td>@user.name</td>
+    <td>@ticketOrder.order.billingName @if(user.name != ticketOrder.order.billingName){<small>(via @user.name)</small>}</td>
     <td>@showName(ticketOrder.show)</td>
     <td>@ticketOrder.ticketSeatOrders.map(_.ticketSeatOrder.seat.name).sorted.mkString(", ") (@ticketOrder.ticketSeatOrders.length)</td>
     <td>@CurrencyFormat.format(ticketOrder.price)</td>
