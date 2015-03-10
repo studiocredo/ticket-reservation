@@ -167,9 +167,7 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
     val baseQuery = OQ.where(_.processed === true).sortBy(_.date.desc)
     val paidFilterQuery = paidFilter match {
       case OrderPaidOption.WithPayments => for {
-        order <- baseQuery
-        payment <- Payments
-        if order.id === payment.orderId
+        (order, payment) <- baseQuery.join(Payments).on(_.id === _.orderId).groupBy(_._1)
       } yield order
       case OrderPaidOption.NoPayments => for {
         (order, payment) <- baseQuery.leftJoin(Payments).on(_.id === _.orderId).where(_._2.id.isNull)
