@@ -474,12 +474,23 @@ class MaitreDActor(showId: ShowId, showService: ShowService, venueService: Venue
         val usedPreReservations = state.reservedSeatsByUser()
         preReservationService.preReservationsByShow(showId, order.users).foreach {
           case (userId, quantity) =>
-            avail(SeatType.Normal) -= Math.max(0, quantity - usedPreReservations(userId))
+            val unusedPreReservations = quantity - usedPreReservations(userId)
+            //require (unusedPreReservations >= 0, {logger.error(s"Invalid unused $unusedPreReservations for user $userId")})
+            deductUnusedPreReservations(List(SeatType.Normal, SeatType.Disabled), avail, unusedPreReservations)
         }
 
         logger.debug(s"Available seats = ${avail}")
         AvailableSeats(state.toFloorPlan(order), avail.toMap)
       }
+    }
+
+    def deductUnusedPreReservations(seatTypes: List[SeatType.Value], avail: mutable.Map[SeatType, Int], quantity: Int) = {
+      val remainder = seatTypes.foldLeft(quantity) { (q, seatType) =>
+        val toDeduct = Math.min(avail(seatType), quantity)
+        avail(seatType) -= toDeduct
+        toDeduct
+      }
+      //require (remainder == 0, {logger.error(s"Could not deduct $quantity prereservations from availability $avail: event overbooked")})
     }
 
     {
