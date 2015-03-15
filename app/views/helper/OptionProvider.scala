@@ -66,10 +66,11 @@ object OrderPaidOption {
   trait Option extends GenericOption
 
   case object WithPayments extends Option { val id = "P"; val value = "met betalingen"      }
+  case object WithIncompletePayments extends Option { val id = "I"; val value = "onvolledig"      }
   case object NoPayments   extends Option { val id = "U"; val value = "zonder betalingen" }
   case object Both         extends Option { val id = "B"; val value = "beide"        }
 
-  val options = Seq(WithPayments, NoPayments, Both)
+  val options = Seq(WithPayments, WithIncompletePayments, NoPayments, Both)
   val mapper = options.map( key => (key.id, key.value)).toSeq
   val default = Both
 

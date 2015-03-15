@@ -166,7 +166,7 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
 
     val baseQuery = OQ.where(_.processed === true).sortBy(_.date.desc)
     val paidFilterQuery = paidFilter match {
-      case OrderPaidOption.WithPayments => for {
+      case OrderPaidOption.WithPayments | OrderPaidOption.WithIncompletePayments => for {
         (order, payment) <- baseQuery.join(Payments).on(_.id === _.orderId).groupBy(_._1)
       } yield order
       case OrderPaidOption.NoPayments => for {
@@ -185,9 +185,18 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
       case false => queryF.filter(q => q.archived === false)
     }
 
-    val total = query.length.run
-    val values = paginate(query, page, pageSize).run map orderPaymentsDetail
-    Page(values, page, pageSize, offset, total)
+    paidFilter match {
+      case OrderPaidOption.WithIncompletePayments => {
+        val values = query.run map orderPaymentsDetail filter(!_.isPaid)
+        val total = values.length
+        Page(values, 1, total, 0, total)
+      }
+      case _ =>  {
+        val total = query.length.run
+        val values = paginate(query, page, pageSize).run map orderPaymentsDetail
+        Page(values, page, pageSize, offset, total)
+      }
+    }
   }
 
   def findPaidForUpcomingShows()(implicit  s: Session): List[OrderId] = {
