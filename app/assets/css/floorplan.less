@@ -20,7 +20,7 @@
 
 .seat(@item) {
     @items: '{"mine": 1, "reserved": 2, "disabled": 3, "selected": 3, "vip": 4, "unavailable": 5, "normal": 6, "free": 6 }';
-    .sprite('../images/seats_sprite.png', 32px, @item, @items);
+    .sprite('../images/seats_small_sprite.png', 21px, @item, @items);
 }
 
 .fp {
@@ -72,8 +72,8 @@
     height: @seat-size;
   }
 
-  .spacers(@spacer-size, 8);
-  .vspacers(@vspacer-size, 8);
+  .spacers(@spacer-size, 15);
+  .vspacers(@vspacer-size, 15);
 
   &.fp-edit {
       .spacer {
@@ -87,9 +87,9 @@
   }
 
   &.fp-fancy-legend {
-    @seat-size: 32px;
+    @seat-size: 21px;
     @spacer-size: @seat-size / 2;
-    @vspacer-size: 32px;
+    @vspacer-size: 21px;
 
     padding: 0;
     background-color: inherit;
@@ -130,9 +130,9 @@
   }
 
   &.fp-fancy {
-    @seat-size: 32px;
+    @seat-size: 21px;
     @spacer-size: @seat-size / 2;
-    @vspacer-size: 32px;
+    @vspacer-size: 21px;
 
     padding: 0 3em 0 3em;
     background-color: inherit;
@@ -196,15 +196,15 @@
         background-color: #f40000;
     }
 
-    .spacers(@spacer-size,8);
-    .vspacers(@vspacer-size,8);
+    .spacers(@spacer-size,15);
+    .vspacers(@vspacer-size,15);
   }
 }
 
 .fp-fancy-selection {
-  @seat-size: 32px;
+  @seat-size: 21px;
   @spacer-size: @seat-size / 2;
-  @vspacer-size: 32px;
+  @vspacer-size: 21px;
   padding-bottom: 0px;
 
   .seat {
