@@ -57,6 +57,7 @@ object admin {
     def name = event.name
     def reservationAllowed = event.reservationAllowed
     def preReservationAllowed = event.preReservationAllowed
+    def orderedShows = shows.flatMap(_.shows).sortBy(_.date)
   }
 
   case class EventPrereservationsDetail(event: Event, users: List[User], shows: List[VenueShows], prereservations: List[ShowPrereservationDetail], reservationQuota: Option[Int]) {
