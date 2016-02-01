@@ -66,6 +66,8 @@ object admin {
     def prereservationsByShow(showId: ShowId): Int = {
       prereservations.collect{case sprd if sprd.show.id == showId => sprd.quantity}.sum
     }
+
+    def orderedShows = shows.flatMap{vs => vs.shows.map((vs.venue, _))}.sortBy(_._2.date)
   }
 
   object EventReservationsDetail {

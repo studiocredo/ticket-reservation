@@ -28,7 +28,7 @@
                 @form(action = controllers.routes.Prereservations.save(info.event.id), 'class -> "form form-horizontal", 'name -> "preresForm") {
 
                     @globalFormErrors(prereservationForm)
-                    @defining(info.shows.map{ vs => vs.shows.map{(vs.venue, _)}}.flatten) { venueShows =>
+                    @defining(info.orderedShows) { venueShows =>
                     @defining(info.reservationQuota.get) { totalQuota =>
 
                     <fieldset data-ng-controller="CounterInputCtrl" data-ng-init="maxQuota = @totalQuota">
