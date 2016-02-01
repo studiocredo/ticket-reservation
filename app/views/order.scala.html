@@ -191,7 +191,7 @@
                 </div>
             }
 
-             @defining(info.shows.map{ vs => vs.shows.map{(vs.venue, _)}}.flatten) { venueShows =>
+             @defining(info.orderedShows) { venueShows =>
                 @for(((venue, show), index) <- venueShows.zipWithIndex) {
                     @orderRowNew(info.event, show, venue)
                 }

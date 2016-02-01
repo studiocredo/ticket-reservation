@@ -82,6 +82,8 @@ object admin {
       case 2 => 5
       case _ => EventReservationsDetail.maxQuantityPerReservation
     } //TODO: make number of tickets per session configurable
+
+    def orderedShows  = shows.flatMap{vs => vs.shows.map((vs.venue, _))}.sortBy(_._2.date)
   }
 
   case class ShowEdit(venueId: VenueId, date: DateTime)
