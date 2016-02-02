@@ -15,7 +15,7 @@
         <p>Evenement: @preres.event.name</p>
 
         <ul>
-        @defining(preres.shows.map{ vs => vs.shows.map{(vs.venue, _)}}.flatten) { venueShows =>
+        @defining(preres.orderedShows) { venueShows =>
             @for(((venue, show), index) <- venueShows.zipWithIndex) {
             @defining(preres.prereservationsByShow(show.id)) { quantity =>
             @if(quantity > 0) {
