@@ -7,6 +7,7 @@ import be.studiocredo.auth.Roles
 import controllers.EnumUtils
 import play.api.mvc.{PathBindable, QueryStringBindable}
 import scala.{Int, Option, Some}
+import be.studiocredo.util.Joda._
 import be.studiocredo.util.Money
 import models.admin.RichUser
 import be.studiocredo.auth.Password
@@ -228,7 +229,7 @@ object entities {
     def price = ticketOrders.map(_.price).foldLeft(Money(0))((total, amount) => total.plus(amount))
     def quantity = ticketOrders.map(_.quantity).sum
     def quantityByShow(id: ShowId) = ticketSeatOrders.count(_.ticketSeatOrder.showId == id)
-    def ticketSeatOrders = ticketOrders.flatMap(_.ticketSeatOrders)
+    def ticketSeatOrders = orderedTicketOrders.flatMap(_.ticketSeatOrders)
     def commentLines: List[String] = order.comments match {
       case None => List()
       case Some(comments) => comments.split("\n").toList
@@ -236,6 +237,7 @@ object entities {
     def billingAddressLines: List[String] = order.billingAddress.split("\n").toList
     val numberOfSeats = ticketOrders.map(_.ticketSeatOrders.length).sum
     //val numberOfSeatsByShow = ticketOrders.flatMap(_.ticketSeatOrders.map((_.show.id, )))
+    def orderedTicketOrders = ticketOrders.sortBy(_.show.date)
   }
   case class OrderDetailEdit(userId: UserId, billingName: String, billingAddress: String, comments: Option[String], seats: List[TicketSeatOrderEdit])
   case class TicketSeatOrderEdit(ticketOrderId: TicketOrderId, seat: SeatId, price: Money)

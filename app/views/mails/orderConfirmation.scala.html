@@ -60,7 +60,7 @@
             </thead>
             <tbody>
 
-            @defining(order.ticketOrders match { case head :: tail => (Some(head), tail); case _ => (None, Nil) }) { tuple =>
+            @defining(order.orderedTicketOrders match { case head :: tail => (Some(head), tail); case _ => (None, Nil) }) { tuple =>
             @defining(tuple._1) { first =>
             @defining(tuple._2) { tail =>
             @first match {
