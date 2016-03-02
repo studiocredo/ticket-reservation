@@ -127,11 +127,12 @@ object schema {
     def name = column[String]("name", O.DBType("TEXT"))
     def description = column[String]("description", O.DBType("TEXT"))
     def floorplan = column[Option[FloorPlan]]("floorplan", O.DBType("TEXT"))
+    def adminLabel = column[Option[String]]("admin_label", O.DBType("TEXT"))
 
 
-    def * = id ~ name ~ description ~ floorplan ~ archived <>(Venue.apply _, Venue.unapply _)
+    def * = id ~ name ~ description ~ floorplan ~ adminLabel ~ archived <>(Venue.apply _, Venue.unapply _)
 
-    def basic = name ~ description ~ archived
+    def basic = name ~ description ~ adminLabel ~ archived
     def edit = basic <>(VenueEdit.apply _, VenueEdit.unapply _)
     def autoInc = edit returning id
   }

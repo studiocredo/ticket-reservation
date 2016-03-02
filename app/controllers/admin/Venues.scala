@@ -19,6 +19,7 @@ class Venues @Inject()(venueService: VenueService, val authService: Authenticato
     mapping(
       "name" -> nonEmptyText,
       "description" -> text,
+      "adminLabel" -> optional(text),
       "archived" -> boolean
     )(VenueEdit.apply)(VenueEdit.unapply)
   )

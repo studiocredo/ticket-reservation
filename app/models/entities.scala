@@ -85,7 +85,7 @@ object entities {
   }
   import SeatStatus._
 
-  case class Venue(id: VenueId, name: String, description: String, floorplan: Option[FloorPlan], archived: Boolean) extends Archiveable {
+  case class Venue(id: VenueId, name: String, description: String, floorplan: Option[FloorPlan], adminLabel: Option[String], archived: Boolean) extends Archiveable {
       def totalCapacity: Int = {
         this.floorplan match {
           case Some(floorplan) => floorplan.rows.map{ _.content.count{ _.isInstanceOf[Seat]} }.sum
@@ -100,7 +100,7 @@ object entities {
         }
       }
     }
-  case class VenueEdit(         name: String, description: String, archived: Boolean)
+  case class VenueEdit(         name: String, description: String, adminLabel: Option[String], archived: Boolean)
 
   case class Show(id: ShowId, eventId: EventId, venueId: VenueId, date: DateTime, archived: Boolean) extends Archiveable with HasTime
   case class EventShow(id: ShowId, eventId: EventId, name: String, venueId: VenueId, venueName: String, date: DateTime, template: Option[String], archived: Boolean) extends Archiveable with HasTime

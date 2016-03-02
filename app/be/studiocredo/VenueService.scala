@@ -28,7 +28,7 @@ class VenueService @Inject()() {
   import models.schema.tables._
 
   val VenuesQ = Query(Venues)
-  val active = VenuesQ.filter(_.archived === false)
+  val active = VenuesQ.filter(_.archived === false).sortBy(v => (v.name, v.id))
 
 
   def page(page: Int = 0, pageSize: Int = 10, orderBy: Int = 1, filter: Option[String] = None)(implicit s: Session): Page[Venue] = {

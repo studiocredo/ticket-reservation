@@ -19,7 +19,7 @@
             @currentPage.items.map { venue =>
                 <tr>
                     <td>@venue.id</td>
-                    <td>@venue.name</td>
+                    <td>@venue.name @if(venue.adminLabel.nonEmpty){ <small>(@venue.adminLabel.get)</small> }</td>
                     <td>@venue.description</td>
                     <td>
                         <a class="btn btn-default btn-xs" href="@{routes.Venues.edit(venue.id)}">Bewerken</a>

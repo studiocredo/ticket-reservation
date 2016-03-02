@@ -6,7 +6,10 @@ import play.api.data.format.Formatter
 import play.api.data.FormError
 
 object Options {
-  val VenueRenderer = Renderer[Venue](_.id.toString, _.name)
+  val VenueRenderer = Renderer[Venue](_.id.toString, {
+    case venue if venue.adminLabel.isDefined => "%s (%s)".format(venue.name, venue.adminLabel.get)
+    case venue => venue.name
+  })
   val PaymentTypeRenderer = Renderer[PaymentType](value => value.toString, value => s"options.paymenttype.${value.toString}")
   val OrderRenderer = Renderer[Option[Order]](_.fold("")(_.id.toString), value => value.fold("(geen)")(value => s"${value.id} - ${value.billingName}"))
 

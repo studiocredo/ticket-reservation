@@ -22,18 +22,14 @@
             </thead>
 
             <tbody>
-            @info.shows.map { vs =>
-                @vs.shows.map { show =>
+            @info.orderedVenueShows.map { case (vs, show) =>
                 <tr>
                     <td>@show.id</td>
-                    <td>@vs.venue.name</td>
+                    <td>@vs.venue.name @if(vs.venue.adminLabel.nonEmpty){ <small>(@vs.venue.adminLabel.get)</small> }</td>
                     <td>@HumanDateTime.formatDateTime(show.date)</td>
-                    <td>
-                        <a class="btn btn-default btn-xs" href="@routes.EventDetails.editShow(info.id, show.id)">Bewerken</a>
-                        <td><a class="btn btn-default btn-xs" href="@{routes.Orders.show(show.id)}">Bestellingen</a></td>
-                    </td>
+                    <td><a class="btn btn-default btn-xs" href="@routes.EventDetails.editShow(info.id, show.id)">Bewerken</a></td>
+                    <td><a class="btn btn-default btn-xs" href="@{routes.Orders.show(show.id)}">Bestellingen</a></td>
                 </tr>
-                }
             }
             </tbody>
         </table>
