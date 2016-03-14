@@ -77,6 +77,9 @@ object admin {
   case class EventReservationsDetail(event: EventDetail, users: List[User], shows: List[VenueShows], pendingPrereservationsByShow: Map[ShowId, Int]) {
     def id = event.id
 
+    //TODO: WARNING the number of tickets per session should be at least equal
+    //      to the total number of prereservations for that family otherwise
+    //      they cannot order all their prereservations at once
     def totalQuota = users.length match {
       case 0 => 0
       case 1 => 5 
