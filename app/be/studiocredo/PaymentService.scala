@@ -21,7 +21,7 @@ import views.helper.PaymentRegisteredOption
 class PaymentService @Inject()() {
   val PaymentsQ = Query(Payments)
   val PaymentsQActive = PaymentsQ.where(_.archived === false)
-
+  val OrdersQ = Query(Orders)
 
   def page(page: Int = 0, showAll: Boolean, pageSize: Int = 10, orderBy: Int = 1, nameFilter: Option[String] = None, registeredFilter: PaymentRegisteredOption.Option = PaymentRegisteredOption.default)(implicit s: Session): Page[Payment] = {
     import models.queries._
@@ -76,7 +76,10 @@ class PaymentService @Inject()() {
   private def addOrderId(payment: PaymentEdit)(implicit s: Session): PaymentEdit = {
     payment.message.fold(payment) { message =>
         OrderReference.parse(message).fold(payment) { orderReference =>
-          payment.copy(orderId = Some(orderReference.order))
+          OrdersQ.where(_.id === orderReference.order).exists.run match {
+            case true => payment.copy(orderId = Some(orderReference.order))
+            case false => payment
+          }
         }
     }
   }
