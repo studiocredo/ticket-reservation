@@ -47,7 +47,7 @@ class AuthenticatorService @Inject()(store: AuthTokenStore, identityService: Ide
   def signIn(credentials: Credentials, success: => SimpleResult, failure: SignInError => SimpleResult)(implicit request: Request[_]): SimpleResult = {
     val identity = identityService.findByUserName(credentials.user)
     identity.fold(
-      failure(TryAgain("Database error"))
+      failure(InvalidCredentials)
     )(
       user => {
         if (Passwords.matches(user.user.password, credentials.password)) {
