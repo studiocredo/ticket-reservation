@@ -76,9 +76,10 @@ class PaymentService @Inject()() {
   private def addOrderId(payment: PaymentEdit)(implicit s: Session): PaymentEdit = {
     payment.message.fold(payment) { message =>
         OrderReference.parse(message).fold(payment) { orderReference =>
-          OrdersQ.where(_.id === orderReference.order).exists.run match {
-            case true => payment.copy(orderId = Some(orderReference.order))
-            case false => payment
+          if (OrdersQ.where(_.id === orderReference.order).where(_.userId === orderReference.user).where(_.archived === false).exists.run) {
+            payment.copy(orderId = Some(orderReference.order))
+          } else {
+            payment
           }
         }
     }
