@@ -34,12 +34,12 @@ class AXATransactionImporter extends TransactionImporter {
     import scala.io.Source
     
     //this is naive -> no escaping from ; delimiter
-    val headers = Source.fromFile(file).getLines().drop(8).take(1).next().split(';').toList
+    val headers = Source.fromFile(file,"iso-8859-1").getLines().slice(8, 9).next().split(';').toList
     
     val rawPaymentValues = new ListBuffer[List[String]]
 
     var lastProcessedLine: Option[List[String]] = None
-    for (line <- Source.fromFile(file).getLines().drop(9)) {
+    for (line <- Source.fromFile(file,"iso-8859-1").getLines().drop(9)) {
       val values = line.split(';').toList
       if (values.length == 1) {
         val actualLastLine = lastProcessedLine.get
