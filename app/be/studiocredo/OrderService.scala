@@ -1,11 +1,14 @@
 package be.studiocredo
 
+import be.studiocredo.util.Money
 import play.api.db.slick.Config.driver.simple._
 import models._
 import models.entities._
 import models.ids._
+
 import scala.collection.mutable
 import models.entities.SeatType._
+
 import scala.Some
 import com.google.inject.Inject
 import be.studiocredo.util.ServiceReturnValues._
@@ -15,6 +18,7 @@ import org.joda.time.DateTime
 import views.helper.OrderPaidOption
 
 class OrderService @Inject()(venueService: VenueService, paymentService: PaymentService) {
+
   import models.schema.tables._
 
   val OQ = Query(Orders)
@@ -24,8 +28,8 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
   def byShowId(id: ShowId, excludedUsers: List[UserId] = List())(implicit s: Session): List[TicketSeatOrder] = {
     val query = for {
       tso <- TSOQ if tso.showId === id
-    } yield (tso)
-    query.list.filter{ tso =>
+    } yield tso
+    query.list.filter { tso =>
       tso.userId match {
         case Some(userId) => !excludedUsers.contains(userId)
         case None => true
@@ -40,15 +44,15 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
       ticketSeatOrder <- TSOQ
       if ticketSeatOrder.ticketOrderId === ticketOrder.id
       if ticketSeatOrder.showId === showId
-    } yield (ticketOrder.orderId)
+    } yield ticketOrder.orderId
     val orderIdsForShow = orderIdsQuery.list.distinct
-    
+
     val ordersQuery = for {
       order <- OQ
       if order.id inSet orderIdsForShow
       user <- Users
       if user.id === order.userId
-    } yield(order, user)
+    } yield (order, user)
 
     val ordersUsers = ordersQuery.sortBy(_._1.date).list
     val orders = ordersUsers.map(_._1)
@@ -67,7 +71,7 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
     val showMap = mutable.Map[ShowId, EventShow]()
     val userMap = mutable.Map[UserId, User]()
 
-    ordersUsers.map(_._2).foreach( u => userMap.put(u.id, u))
+    ordersUsers.map(_._2).foreach(u => userMap.put(u.id, u))
 
     val x = ticketOrderQuery.list
     x.foreach { case (ticketOrder, ticketSeatOrder, show, event, venue) =>
@@ -77,7 +81,7 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
     }
 
     orders.map { order =>
-      val ticketOrders = orderMap.get(order.id).getOrElse(Set.empty).toList.map{ ticketOrder =>
+      val ticketOrders = orderMap.getOrElse(order.id, Set.empty).toList.map { ticketOrder =>
         val ticketSeatOrders = ticketOrderMap(ticketOrder).toList.map { ticketSeatOrder => TicketSeatOrderDetail(ticketSeatOrder, showMap(ticketSeatOrder.showId)) }
         TicketOrderDetail(ticketOrder, order, showMap(ticketOrder.showId), ticketSeatOrders)
       }
@@ -128,14 +132,14 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
     }
   }
 
-  def find(id: OrderId)(implicit  s: Session): Option[Order] = {
+  def find(id: OrderId)(implicit s: Session): Option[Order] = {
     val q = for {
       order <- OQ if (order.id === id)
     } yield (order)
     q.firstOption
   }
 
-  def all()(implicit  s: Session): List[Order] = {
+  def all()(implicit s: Session): List[Order] = {
     val q = for {
       order <- OQ
     } yield (order)
@@ -143,7 +147,7 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
   }
 
 
-  def get(id: OrderId)(implicit  s: Session): Option[OrderDetail] = {
+  def get(id: OrderId)(implicit s: Session): Option[OrderDetail] = {
     val q = for {
       order <- OQ
       if (order.id === id)
@@ -151,7 +155,7 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
     q.firstOption.map(orderDetail)
   }
 
-  def getWithPayments(id: OrderId)(implicit  s: Session): Option[OrderPayments] = {
+  def getWithPayments(id: OrderId)(implicit s: Session): Option[OrderPayments] = {
     val q = for {
       order <- OQ
       if (order.id === id)
@@ -161,6 +165,7 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
 
   def page(page: Int = 0, showAll: Boolean, pageSize: Int = 10, orderBy: Int = 1, nameFilter: Option[String] = None, paidFilter: OrderPaidOption.Option = OrderPaidOption.default)(implicit s: Session): Page[OrderPayments] = {
     import models.queries._
+    import schema.moneyType
 
     val offset = pageSize * page
 
@@ -169,14 +174,33 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
       case OrderPaidOption.WithPayments | OrderPaidOption.WithIncompletePayments => for {
         (order, payment) <- baseQuery.join(Payments).on(_.id === _.orderId).groupBy(_._1)
       } yield order
-      case OrderPaidOption.NoPayments => for {
-        (order, payment) <- baseQuery.leftJoin(Payments).on(_.id === _.orderId).where(_._2.id.isNull)
-      } yield order
-      case OrderPaidOption.Both => baseQuery
+      case OrderPaidOption.NoPayments => (for {
+        order <- baseQuery
+        ticket_order <- TicketOrders if order.id === ticket_order.orderId
+        ticket_order_seat <- TicketSeatOrders if ticket_order.id === ticket_order_seat.ticketOrderId
+      } yield (order, ticket_order_seat.price)).groupBy({
+        case (order, ticketPrice) => order
+      }).map({
+        case (order, ticketPrices) => (order, ticketPrices.map(_._2).sum)
+      }).filter(_._2 =!= Money(0)).map({
+        case (order, _) => order
+      }).leftJoin(Payments).on(_.id === _.orderId).where(_._2.id.isNull).map(_._1)
+      case OrderPaidOption.Free => (for {
+        order <- baseQuery
+        ticket_order <- TicketOrders if order.id === ticket_order.orderId
+        ticket_order_seat <- TicketSeatOrders if ticket_order.id === ticket_order_seat.ticketOrderId
+      } yield (order, ticket_order_seat.price)).groupBy({
+        case (order, ticketPrice) => order
+      }).map({
+        case (order, ticketPrices) => (order, ticketPrices.map(_._2).sum)
+      }).filter(_._2 === Money(0)).map({
+        case (order, _) => order
+      })
+      case OrderPaidOption.All => baseQuery
       case _ => baseQuery
     }
 
-    val queryF = nameFilter.foldLeft(paidFilterQuery){
+    val queryF = nameFilter.foldLeft(paidFilterQuery) {
       (query, filter) => query.filter(q => iLike(q.billingName, s"%${filter}%")) // should replace with lucene
     }
 
@@ -187,11 +211,11 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
 
     paidFilter match {
       case OrderPaidOption.WithIncompletePayments => {
-        val values = query.run map orderPaymentsDetail filter(!_.isPaid)
+        val values = query.run map orderPaymentsDetail filter (!_.isPaid)
         val total = values.length
         Page(values, 1, total, 0, total)
       }
-      case _ =>  {
+      case _ => {
         val total = query.length.run
         val values = paginate(query, page, pageSize).run map orderPaymentsDetail
         Page(values, page, pageSize, offset, total)
@@ -199,7 +223,7 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
     }
   }
 
-  def findPaidForUpcomingShows()(implicit  s: Session): List[OrderId] = {
+  def findPaidForUpcomingShows()(implicit s: Session): List[OrderId] = {
     val query = for {
       order <- OQ
       ticketOrder <- TOQ
@@ -220,7 +244,7 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
     val query = for {
       (((ticketSeatOrder, show), event), venue) <- TicketSeatOrders.leftJoin(Shows).on(_.showId === _.id).leftJoin(Events).on(_._2.eventId === _.id).leftJoin(Venues).on(_._1._2.venueId === _.id)
     } yield (ticketSeatOrder, show, event, venue)
-    query.list.map{ case (tso: TicketSeatOrder, s: Show, e: Event, v: Venue) => TicketSeatOrderDetail(tso, EventShow(s.id, e.id, e.name, s.venueId, v.name, s.date, e.template, s.archived)) }
+    query.list.map { case (tso: TicketSeatOrder, s: Show, e: Event, v: Venue) => TicketSeatOrderDetail(tso, EventShow(s.id, e.id, e.name, s.venueId, v.name, s.date, e.template, s.archived)) }
   }
 
   def prereservationSeatsByUsers(ids: List[UserId])(implicit s: Session): List[TicketSeatOrderDetail] = {
@@ -228,9 +252,9 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
       (((ticketSeatOrder, show), event), venue) <- TicketSeatOrders.leftJoin(Shows).on(_.showId === _.id).leftJoin(Events).on(_._2.eventId === _.id).leftJoin(Venues).on(_._1._2.venueId === _.id)
       if ticketSeatOrder.userId inSet ids
     } yield (ticketSeatOrder, show, event, venue)
-    query.list.map{ case (tso: TicketSeatOrder, s: Show, e: Event, v: Venue) => TicketSeatOrderDetail(tso, EventShow(s.id, e.id, e.name, s.venueId, v.name, s.date, e.template, s.archived)) }
+    query.list.map { case (tso: TicketSeatOrder, s: Show, e: Event, v: Venue) => TicketSeatOrderDetail(tso, EventShow(s.id, e.id, e.name, s.venueId, v.name, s.date, e.template, s.archived)) }
   }
-  
+
   def detailedOrdersByUser(id: UserId, f: Option[((TicketOrder, TicketSeatOrder, Show, Event, Venue)) => Boolean] = None)(implicit s: Session): List[OrderDetail] = {
     detailedOrdersByUsers(List(id), f)
   }
@@ -241,7 +265,7 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
     val query = for {
       tso <- TSOQ
       if tso.showId === show
-//      if tso.seat === (seat:SeatId)  <- THIS DOESNT WORK
+    //      if tso.seat === (seat:SeatId)  <- THIS DOESNT WORK
     } yield tso
     query.list.filter(tso => tso.seat == seat).headOption.isDefined
   }
@@ -265,12 +289,12 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
       if order.userId inSet ids
       user <- Users
       if user.id === order.userId
-    } yield(order, user)
+    } yield (order, user)
 
     val ordersUsers = ordersQuery.sortBy(_._1.date).list
     val orders = ordersUsers.map(_._1)
 
-   val ticketOrderQuery = for {
+    val ticketOrderQuery = for {
       ticketOrder <- TicketOrders if ticketOrder.orderId inSet orders.map(_.id)
       ticketSeatOrder <- TicketSeatOrders if ticketSeatOrder.ticketOrderId === ticketOrder.id
       show <- Shows if ticketOrder.showId === show.id
@@ -283,7 +307,7 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
     val showMap = mutable.Map[ShowId, EventShow]()
     val userMap = mutable.Map[UserId, User]()
 
-    ordersUsers.map(_._2).foreach( u => userMap.put(u.id, u))
+    ordersUsers.map(_._2).foreach(u => userMap.put(u.id, u))
 
     val x = f match {
       case Some(f) => ticketOrderQuery.list.withFilter(f)
@@ -296,7 +320,7 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
     }
 
     orders.map { order =>
-      val ticketOrders = orderMap.get(order.id).getOrElse(Set.empty).toList.map{ ticketOrder =>
+      val ticketOrders = orderMap.get(order.id).getOrElse(Set.empty).toList.map { ticketOrder =>
         val ticketSeatOrders = ticketOrderMap(ticketOrder).toList.map { ticketSeatOrder => TicketSeatOrderDetail(ticketSeatOrder, showMap(ticketSeatOrder.showId)) }
         TicketOrderDetail(ticketOrder, order, showMap(ticketOrder.showId), ticketSeatOrders)
       }
@@ -304,16 +328,19 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
     }.filter(!_.ticketOrders.isEmpty).toList
   }
 
-  def createDetailed(user: RichUser)(implicit s:Session): OrderDetail = get(create(user)).get
-  def create(user: RichUser)(implicit s:Session): OrderId = insert(OrderEdit(user.id, org.joda.time.DateTime.now, user.name, user.address.getOrElse("n/a"), false, false, None))
+  def createDetailed(user: RichUser)(implicit s: Session): OrderDetail = get(create(user)).get
+
+  def create(user: RichUser)(implicit s: Session): OrderId = insert(OrderEdit(user.id, org.joda.time.DateTime.now, user.name, user.address.getOrElse("n/a"), false, false, None))
+
   def insert(order: OrderEdit)(implicit s: Session): OrderId = Orders.autoInc.insert(order)
 
   def update(id: OrderId, billingName: String, billingAddress: String)(implicit s: Session) = byId(id).map(_.billingEdit).update((billingName, billingAddress))
+
   def update(id: OrderId, orderEdit: OrderDetailEdit)(implicit s: Session): Either[ServiceFailure, ServiceSuccess] = {
     import schema.seatIdType
     s.withTransaction {
       byId(id).map(_.billingCommentsEdit).update((orderEdit.userId, orderEdit.billingName, orderEdit.billingAddress, orderEdit.comments))
-      orderEdit.seats.foreach{ tsoEdit =>
+      orderEdit.seats.foreach { tsoEdit =>
         TSOQ.where(_.ticketOrderId === tsoEdit.ticketOrderId).where(_.seat === tsoEdit.seat).map(_.price).update(tsoEdit.price)
       }
     }
@@ -325,7 +352,9 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
   def insert(seatOrders: List[TicketSeatOrder])(implicit s: Session): Either[ServiceFailure, ServiceSuccess] = {
     val vQuery = for {
       (show, venue) <- Shows.leftJoin(Venues).on(_.venueId === _.id)
-      if show.id inSet seatOrders.map{_.showId}
+      if show.id inSet seatOrders.map {
+        _.showId
+      }
     } yield (show.id, venue)
     val venueMap = vQuery.list.toMap
 
@@ -342,7 +371,9 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
         seatOrders.find { case so => seatOrderExists(so.showId, so.seat) } match {
           case Some(seatOrder) => Left(serviceFailure("reservation.seat.reserved", List(seatOrder.seat.name)))
           case None => {
-            seatOrders.foreach { TicketSeatOrders.*.insert }
+            seatOrders.foreach {
+              TicketSeatOrders.*.insert
+            }
             Right(serviceSuccess("reservations.success"))
           }
         }
@@ -401,5 +432,5 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
     }
   }
 
-  private def byId(id: ids.OrderId)= OQ.where(_.id === id)
+  private def byId(id: ids.OrderId) = OQ.where(_.id === id)
 }

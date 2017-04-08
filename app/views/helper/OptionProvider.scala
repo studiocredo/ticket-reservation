@@ -71,11 +71,12 @@ object OrderPaidOption {
   case object WithPayments extends Option { val id = "P"; val value = "met betalingen"      }
   case object WithIncompletePayments extends Option { val id = "I"; val value = "onvolledig"      }
   case object NoPayments   extends Option { val id = "U"; val value = "zonder betalingen" }
-  case object Both         extends Option { val id = "B"; val value = "beide"        }
+  case object Free         extends Option { val id = "F"; val value = "gratis" }
+  case object All         extends Option { val id = "A"; val value = "alles"        }
 
-  val options = Seq(WithPayments, WithIncompletePayments, NoPayments, Both)
+  val options = Seq(WithPayments, WithIncompletePayments, Free, NoPayments, All)
   val mapper = options.map( key => (key.id, key.value)).toSeq
-  val default = Both
+  val default = All
 
   implicit val OrderPaidFormatter = new Formatter[Option] {
     val typeName = "order_paid_option"
