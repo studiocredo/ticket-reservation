@@ -87,10 +87,14 @@ POST        /admin/events/:id                       @controllers.admin.Events.up
 POST        /admin/events/:id/delete                @controllers.admin.Events.delete(id:EventId)
 
 GET         /admin/event/:id                        @controllers.admin.EventDetails.view(id:EventId)
-POST        /admin/event/:id/addshow                @controllers.admin.EventDetails.addShow(id:EventId)
+POST        /admin/event/:id/show                   @controllers.admin.EventDetails.addShow(id:EventId)
 GET         /admin/event/:id/show/:show             @controllers.admin.EventDetails.editShow(id:EventId, show:ShowId)
 POST        /admin/event/:id/show/:show             @controllers.admin.EventDetails.updateShow(id:EventId, show:ShowId)
 POST        /admin/event/:id/show/:show/delete      @controllers.admin.EventDetails.deleteShow(id:EventId, show:ShowId)
+POST        /admin/event/:id/asset                  @controllers.admin.EventDetails.addAsset(id:EventId)
+GET         /admin/event/:id/asset/:asset           @controllers.admin.EventDetails.editAsset(id:EventId, asset:AssetId)
+POST        /admin/event/:id/asset/:asset           @controllers.admin.EventDetails.updateAsset(id:EventId, asset:AssetId)
+POST        /admin/event/:id/asset/:asset/delete    @controllers.admin.EventDetails.deleteAsset(id:EventId, asset:AssetId)
 
 GET         /order/start/:id                        @controllers.Orders.start(id:EventId)
 GET         /order/:order/event/:event              @controllers.Orders.view(order:OrderId, event:EventId)

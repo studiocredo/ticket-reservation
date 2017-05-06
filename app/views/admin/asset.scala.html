@@ -1,0 +1,29 @@
+@(eventId: ids.EventId, assetId: ids.AssetId, assetForm: Form[models.admin.AssetEdit], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
+@import helper._
+@import views.Bootstrap._
+@import controllers.admin.routes
+
+
+@base("Administratie: Item bewerken")(userContext) {
+
+    <h2>Item bewerken
+        @form(routes.EventDetails.deleteAsset(eventId, assetId), 'class -> "pull-right") {
+            <input type="submit" value="Verwijderen" class="btn btn-danger">
+            }
+    </h2>
+
+    <div>
+        @form(action = routes.EventDetails.updateAsset(eventId, assetId), 'class -> "form form-horizontal") {
+        <fieldset>
+            @inputText(assetForm("name"), '_label -> "Naam", 'class -> "form-control")
+            @inputText(assetForm("price"), '_label -> "Prijs", 'class -> "form-control")
+            @inputText(assetForm("availableStart"), '_label -> "Beschikbaar van", 'class -> "form-control")
+            @inputText(assetForm("availableEnd"), '_label -> "Beschikbaar tot", 'class -> "form-control")
+            @twCheckbox(assetForm("archived"), '_label -> "Gearchiveerd")
+        </fieldset>
+        @twFormActions {
+            <input type="submit" value="Aanpassen" class="btn btn-primary">
+        }
+    }
+    </div>
+}

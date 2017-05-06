@@ -1,20 +1,19 @@
 package models
 
-import scala.Predef._
-import scala.slick.lifted.MappedTypeMapper
-import org.joda.time.DateTime
-import be.studiocredo.auth.Roles
-import controllers.EnumUtils
-import play.api.mvc.{PathBindable, QueryStringBindable}
-import scala.{Int, Option, Some}
+import java.io.{File, FileOutputStream}
+
+import be.studiocredo.auth.{Password, Roles}
 import be.studiocredo.util.Joda._
 import be.studiocredo.util.Money
+import controllers.EnumUtils
 import models.admin.RichUser
-import be.studiocredo.auth.Password
 import models.schema.PersistableEnumeration
-import java.io.{FileOutputStream, File}
+import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
-import play.api.http.MimeTypes
+import play.api.mvc.{PathBindable, QueryStringBindable}
+
+import scala.Predef._
+import scala.slick.lifted.MappedTypeMapper
 
 object entities {
 
@@ -33,8 +32,8 @@ object entities {
     }
   }
 
-  import interfaces._
   import Roles._
+  import interfaces._
 
   case class Identity(user: RichUser, roles: List[Role], otherUsers: List[User]) {
     def id = user.id
@@ -102,6 +101,7 @@ object entities {
     }
   case class VenueEdit(         name: String, description: String, adminLabel: Option[String], archived: Boolean)
 
+  case class Asset(id: AssetId, eventId: EventId, name: String, price: Option[Money], availableStart: DateTime, availableEnd: Option[DateTime], archived: Boolean) extends Archiveable
   case class Show(id: ShowId, eventId: EventId, venueId: VenueId, date: DateTime, archived: Boolean) extends Archiveable with HasTime
   case class EventShow(id: ShowId, eventId: EventId, name: String, venueId: VenueId, venueName: String, date: DateTime, template: Option[String], archived: Boolean) extends Archiveable with HasTime
 
@@ -356,7 +356,7 @@ object ids {
   case class EventId(id: Long) extends AnyVal with TypedId
   case class VenueId(id: Long) extends AnyVal with TypedId
   case class ShowId(id: Long) extends AnyVal with TypedId
-  case class DvdId(id: Long) extends AnyVal with TypedId
+  case class AssetId(id: Long) extends AnyVal with TypedId
   case class OrderId(id: Long) extends AnyVal with TypedId
   case class TicketOrderId(id: Long) extends AnyVal with TypedId
   case class PaymentId(id: Long) extends AnyVal with TypedId
@@ -366,7 +366,7 @@ object ids {
   implicit object EventId extends IdFactory[EventId]
   implicit object VenueId extends IdFactory[VenueId]
   implicit object ShowId extends IdFactory[ShowId]
-  implicit object DvdId extends IdFactory[DvdId]
+  implicit object AssetId extends IdFactory[AssetId]
   implicit object OrderId extends IdFactory[OrderId]
   implicit object TicketOrderId extends IdFactory[TicketOrderId]
   implicit object PaymentId extends IdFactory[PaymentId]
