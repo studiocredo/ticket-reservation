@@ -31,6 +31,8 @@ class EventDetails @Inject()(eventService: EventService, showService: ShowServic
       "price" -> optional(of[Money]),
       "availableStart" -> jodaDate("yyyy-MM-dd HH:mm"),
       "availableEnd" -> optional(jodaDate("yyyy-MM-dd HH:mm")),
+      "downloadable" -> boolean,
+      "objectKey" -> optional(text),
       "archived" -> boolean
     )(AssetEdit.apply)(AssetEdit.unapply)
   )
@@ -54,7 +56,7 @@ class EventDetails @Inject()(eventService: EventService, showService: ShowServic
     assetForm.bindFromRequest.fold(
       formWithErrors => page(id, showForm, formWithErrors, BadRequest),
       newAsset => {
-        assetService.insert(id, AssetEdit(newAsset.name, newAsset.price, newAsset.availableStart, newAsset.availableEnd, newAsset.archived))
+        assetService.insert(id, AssetEdit(newAsset.name, newAsset.price, newAsset.availableStart, newAsset.availableEnd, newAsset.downloadable, newAsset.objectKey, newAsset.archived))
 
         Redirect(routes.EventDetails.view(id)).flashing("success" -> "Item toegevoegd")
       }
@@ -87,7 +89,7 @@ class EventDetails @Inject()(eventService: EventService, showService: ShowServic
     assetService.get(assetId) match {
       case None => BadRequest(s"Item $id niet gevonden")
       case Some(asset) =>
-        status(views.html.admin.asset(id, assetId, assetForm.fill(AssetEdit(asset.name, asset.price, asset.availableStart, asset.availableEnd, asset.archived)), userContext))
+        status(views.html.admin.asset(id, assetId, assetForm.fill(AssetEdit(asset.name, asset.price, asset.availableStart, asset.availableEnd, asset.downloadable, asset.objectKey, asset.archived)), userContext))
     }
   }
 

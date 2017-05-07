@@ -159,12 +159,14 @@ object schema {
     def price = column[Option[Money]]("price")
     def availableStart = column[DateTime]("available-start")
     def availableEnd = column[Option[DateTime]]("available-end")
+    def downloadable = column[Boolean]("downloadable")
+    def objectKey = column[Option[String]]("object-key")
     def archived = column[Boolean]("archived", O.Default(false))
 
-    def edit = name ~ price ~ availableStart ~ availableEnd ~ archived <>(AssetEdit.apply _, AssetEdit.unapply _)
-    def autoInc = eventId ~ name ~ price ~ availableStart ~ availableEnd ~ archived returning id
+    def edit = name ~ price ~ availableStart ~ availableEnd ~ downloadable ~ objectKey ~ archived <>(AssetEdit.apply _, AssetEdit.unapply _)
+    def autoInc = eventId ~ name ~ price ~ availableStart ~ availableEnd ~ downloadable ~ objectKey ~ archived returning id
 
-    def * = id ~ eventId ~ name ~ price ~ availableStart ~ availableEnd ~ archived <>(Asset.apply _, Asset.unapply _)
+    def * = id ~ eventId ~ name ~ price ~ availableStart ~ availableEnd ~ downloadable ~ objectKey ~ archived <>(Asset.apply _, Asset.unapply _)
 
     def event = foreignKey("event_fk", eventId, Events)(_.id)
   }

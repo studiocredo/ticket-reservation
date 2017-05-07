@@ -110,7 +110,7 @@ object admin {
 
   case class ShowEdit(venueId: VenueId, date: DateTime)
 
-  case class AssetEdit(name: String, price: Option[Money], availableStart: DateTime, availableEnd: Option[DateTime], archived: Boolean)
+  case class AssetEdit(name: String, price: Option[Money], availableStart: DateTime, availableEnd: Option[DateTime], downloadable: Boolean, objectKey: Option[String], archived: Boolean)
 
   case class VenueShows(venue: Venue, shows: List[Show])
 

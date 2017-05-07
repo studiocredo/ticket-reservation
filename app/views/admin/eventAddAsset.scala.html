@@ -16,6 +16,8 @@
                     @inputText(assetForm("price"), '_label -> "Prijs", 'class -> "form-control")
                     @inputText(assetForm("availableStart"), '_label -> "Beschikbaar van", 'class -> "form-control")
                     @inputText(assetForm("availableEnd"), '_label -> "Beschikbaar tot", 'class -> "form-control")
+                    @twCheckbox(assetForm("downloadable"), '_label -> "Met download?")
+                    @inputText(assetForm("objectKey"), '_label -> "Download key", 'class -> "form-control")
 
                     </fieldset>
                     @twFormActions {

@@ -101,7 +101,7 @@ object entities {
     }
   case class VenueEdit(         name: String, description: String, adminLabel: Option[String], archived: Boolean)
 
-  case class Asset(id: AssetId, eventId: EventId, name: String, price: Option[Money], availableStart: DateTime, availableEnd: Option[DateTime], archived: Boolean) extends Archiveable
+  case class Asset(id: AssetId, eventId: EventId, name: String, price: Option[Money], availableStart: DateTime, availableEnd: Option[DateTime], downloadable: Boolean, objectKey: Option[String], archived: Boolean) extends Archiveable
   case class Show(id: ShowId, eventId: EventId, venueId: VenueId, date: DateTime, archived: Boolean) extends Archiveable with HasTime
   case class EventShow(id: ShowId, eventId: EventId, name: String, venueId: VenueId, venueName: String, date: DateTime, template: Option[String], archived: Boolean) extends Archiveable with HasTime
 

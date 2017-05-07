@@ -32,7 +32,7 @@ class AssetService @Inject()() {
 
   def getEdit(id: AssetId)(implicit s: Session): Option[AssetEdit] = editById(id).firstOption
 
-  def insert(id: EventId, asset: AssetEdit)(implicit s: Session): AssetId = Assets.autoInc.insert((id, asset.name, asset.price, asset.availableStart, asset.availableEnd, asset.archived))
+  def insert(id: EventId, asset: AssetEdit)(implicit s: Session): AssetId = Assets.autoInc.insert((id, asset.name, asset.price, asset.availableStart, asset.availableEnd, asset.downloadable, asset.objectKey, asset.archived))
 
   def update(id: AssetId, asset: AssetEdit)(implicit s: Session): Int = editById(id).update(asset)
 
