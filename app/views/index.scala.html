@@ -1,4 +1,4 @@
-@(nextShows: List[entities.ShowAvailability], events: List[models.admin.EventDetail], availableAssets: List[models.entities.Asset], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
+@(nextShows: List[entities.ShowAvailability], events: List[models.admin.EventDetail], availableAssets: List[models.admin.RichAsset], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
 @import controllers.auth
 @import helper._
 @import play.api.Play.current
@@ -164,11 +164,15 @@
     <div class="col-lg-3">
         <div class="panel panel-default upcoming-button">
             <div class="panel-body">
-                <h4 class="text-info">@asset.name</h4>
+                <h4 class="text-info">@asset.event.name</h4>
+
+                <p>
+                    <strong>@asset.name</strong><br/>
+                </p>
 
                 @if(asset.price.isDefined) {
                 <p>
-                    <strong>Prijs: @CurrencyFormat.format(asset.price.get)</strong><br/>
+                    <span class="text-default">Prijs: @CurrencyFormat.format(asset.price.get)</span><br/>
                 </p>
                 <p>
                     <a class="btn btn-default btn-sm" href="#">Bestellen &raquo;</a><!-- TODO -->
@@ -176,8 +180,10 @@
                 }
                 @if(asset.downloadable) {
                     @if(asset.objectKey.isDefined) {
-                        <button class="btn btn-primary btn-md"><span class="glyphicon glyphicon-download"></span> Download</button>
-                        <br>
+                <p>
+                        <a class="btn btn-primary btn-md" href="@routes.Downloads.download(asset.id)"><span class="glyphicon glyphicon-download"></span> Download</a>
+                        <br/>
+                </p>
                     } else {
                         <p>
                             <span class="text-muted"><em>Link nog niet beschikbaar</em></span><br/>

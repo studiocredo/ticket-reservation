@@ -37,10 +37,13 @@ object ApplicationBuild extends Build {
 
     "org.mindrot" % "jbcrypt" % "0.3m",
 
-    "org.codemonkey.simplejavamail" % "simple-java-mail" % "2.1"
+    "org.codemonkey.simplejavamail" % "simple-java-mail" % "2.1",
+
+    "com.amazonaws" % "aws-java-sdk" % "1.9.33",
+    "commons-io" % "commons-io" % "2.4"
   )
 
-  val main = Project(appName, appVersion, appDependencies).settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*).settings(
+  val main: Project = Project(appName, appVersion, appDependencies).settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*).settings(
     organization := "be.studiocredo"
     , scalaVersion := "2.10.3"
     , scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-language:implicitConversions")

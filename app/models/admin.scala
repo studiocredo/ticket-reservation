@@ -110,6 +110,11 @@ object admin {
 
   case class ShowEdit(venueId: VenueId, date: DateTime)
 
+  object RichAsset {
+    def init(e: Event, a: Asset) = RichAsset(a.id, e, a.name, a.price, a.availableStart, a.availableEnd, a.downloadable, a.objectKey, a.archived)
+  }
+  case class RichAsset(id: AssetId, event: Event, name: String, price: Option[Money], availableStart: DateTime, availableEnd: Option[DateTime], downloadable: Boolean, objectKey: Option[String], archived: Boolean)
+
   case class AssetEdit(name: String, price: Option[Money], availableStart: DateTime, availableEnd: Option[DateTime], downloadable: Boolean, objectKey: Option[String], archived: Boolean)
 
   case class VenueShows(venue: Venue, shows: List[Show])

@@ -32,6 +32,7 @@ GET         /password                               @controllers.auth.PasswordCh
 POST        /password                               @controllers.auth.PasswordChange.handlePasswordChange
 GET         /profile                                @controllers.Profile.edit
 POST        /profile                                @controllers.Profile.update
+GET         /download/:assetId                      @controllers.Downloads.download(assetId: AssetId)
 
 
 # Admin

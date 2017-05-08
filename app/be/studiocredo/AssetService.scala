@@ -4,7 +4,7 @@ import be.studiocredo.util.Joda
 import com.github.tototoshi.slick.JodaSupport._
 import com.google.inject.Inject
 import models._
-import models.admin.{AssetEdit, VenueShows}
+import models.admin.{AssetEdit, RichAsset, VenueShows}
 import models.entities._
 import models.ids._
 import models.schema.Assets
@@ -39,10 +39,14 @@ class AssetService @Inject()() {
   def delete(id: AssetId)(implicit s: Session): Int = (for (v <- AssetsQ if v.id === id) yield v.archived).update(true)
 
 
-  def nextAssets(limit: Int)(implicit s: Session): List[Asset] = {
+  def nextAssets(limit: Int)(implicit s: Session): List[RichAsset] = {
     val now = DateTime.now()
-    active.filter(_.availableStart <= now).filter{ m =>
-      m.availableEnd.isNull || m.availableEnd >= now }.sortBy(sortFunction).take(limit).list
+    val q = for (
+      a <- active.filter(_.availableStart <= now).filter{ m =>
+        m.availableEnd.isNull || m.availableEnd >= now }.sortBy(sortFunction);
+      e <- a.event
+    ) yield (e,a)
+    q.take(limit).list.map{ case (e,a) => RichAsset.init(e,a)}
   }
 
   def listForEvent(id: EventId)(implicit s: Session): List[Asset] = {
