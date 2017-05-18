@@ -1,4 +1,4 @@
-@(nextShows: List[entities.ShowAvailability], events: List[models.admin.EventDetail], availableAssets: List[models.admin.RichAsset], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
+@(nextShows: List[entities.ShowAvailability], events: List[models.admin.EventDetail], maybeAvailableAssets: Option[List[models.admin.RichAsset]], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
 @import controllers.auth
 @import helper._
 @import play.api.Play.current
@@ -155,6 +155,7 @@
 </div>
 }
 
+@maybeAvailableAssets.map { availableAssets =>
 @if(!availableAssets.isEmpty && request.currentUser.isDefined) {
 <div class="row">
     <div class="col-lg-12">
@@ -195,6 +196,7 @@
     </div>
     }
 </div>
+}
 }
 
 }

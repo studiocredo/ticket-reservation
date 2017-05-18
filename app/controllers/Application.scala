@@ -15,8 +15,7 @@ class Application @Inject()(showService: ShowService, eventService: EventService
       Ok(views.html.reject())
     } else {
       val nextShows = Play.current.configuration.getInt("application.next-shows").getOrElse(4)
-      val availableAssets = Play.current.configuration.getInt("application.assets").getOrElse(4)
-      Ok(views.html.index(showService.nextShows(nextShows), eventService.listUpcoming, assetService.nextAssets(availableAssets), userContext))
+      Ok(views.html.index(showService.nextShows(nextShows), eventService.listUpcoming, assetService.listAvailable(request.user.map{_.id}), userContext))
     }
   }
 

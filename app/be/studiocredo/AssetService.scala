@@ -39,18 +39,18 @@ class AssetService @Inject()() {
   def delete(id: AssetId)(implicit s: Session): Int = (for (v <- AssetsQ if v.id === id) yield v.archived).update(true)
 
 
-  def nextAssets(limit: Int)(implicit s: Session): List[RichAsset] = {
-    val now = DateTime.now()
-    val q = for (
-      a <- active.filter(_.availableStart <= now).filter{ m =>
-        m.availableEnd.isNull || m.availableEnd >= now }.sortBy(sortFunction);
-      e <- a.event
-    ) yield (e,a)
-    q.take(limit).list.map{ case (e,a) => RichAsset.init(e,a)}
+  def listAvailable(userId: Option[UserId])(implicit s: Session): Option[List[RichAsset]] = {
+    userId.map { _ =>
+      val q = for (
+        a <- available.sortBy(sortFunction);
+        e <- a.event
+      ) yield (e, a)
+      q.list.map { case (e, a) => RichAsset.init(e, a) }
+    }
   }
 
   def listForEvent(id: EventId)(implicit s: Session): List[Asset] = {
-    active.sortBy(sortFunction).where(_.eventId === id).list()
+    available.sortBy(sortFunction).where(_.eventId === id).list()
   }
 
 
@@ -67,4 +67,11 @@ class AssetService @Inject()() {
   private def editById(id: ids.AssetId) = byId(id).map(_.edit)
 
   private def sortFunction: (Assets) => scala.slick.lifted.Ordered = { m => (m.availableStart, m.availableEnd, m.eventId, m.name) }
+
+  private def available = {
+    val now = DateTime.now()
+    active.filter(_.availableStart <= now).filter { m =>
+      m.availableEnd.isNull || m.availableEnd >= now
+    }
+  }
 }
