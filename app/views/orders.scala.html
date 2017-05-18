@@ -1,0 +1,106 @@
+@(orders: List[models.entities.OrderPayments], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
+@import helper._
+@import controllers.routes
+@import be.studiocredo.util.Money
+
+@orderName(user: models.entities.User, billingName: String)= {
+@billingName @if(user.name != billingName){
+<small>(via @user.name)</small>
+}
+}
+
+@paymentMessage(order: models.entities.OrderPayments)= {
+    @if(order.balance.amount < 0){
+        Volgens onze informatie heb je te veel betaald voor deze bestelling. Contacteer ons voor verdere informatie.
+    } else {
+        Gelieve het verschuldigde bedrag van @CurrencyFormat.format(order.balance) over te schrijven op onze rekenening met mededeling @order.order.order.reference
+    }
+}
+
+@base("Mijn bestellingen")(userContext) {
+
+<div class="page-header">
+    <h1>Mijn bestellingen</h1>
+</div>
+
+<div>
+    @if(orders.isEmpty) {
+    <p class="disabled">Geen bestellingen gevonden.</p>
+    } else {
+
+    <div data-ng-controller="DismissModalCtrl">
+
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th>Datum</th>
+                <th>Naam</th>
+                <th>Show</th>
+                <th># Tickets</th>
+                <th>Prijs</th>
+                <th>Saldo</th>
+                <th/>
+            </tr>
+            </thead>
+            @orders.zipWithIndex.map { case (order, orderIndex) =>
+            @defining(if (orderIndex % 2 == 0) "tbody-even" else "tbody-odd") { bgClass =>
+            <tbody class="@bgClass">
+            @if(order.order.ticketOrders.isEmpty) {
+            <tr class="danger">
+                <td>@HumanDateTime.formatDateTimeCompact(order.order.order.date)</td>
+                <td>@orderName(order.order.user,order.order.order.billingName)</td>
+                <td/>
+                <td/>
+                <td>@CurrencyFormat.format(order.order.price)</td>
+                <td>
+                    @if(order.isPaid) {
+                    <span class="badge badge-success">BETAALD</span>
+                    } else {
+                    <span class="@if(order.balance.amount < 0){ text-danger } else { text-warning }">@CurrencyFormat.format(order.balance)</span>
+                    }
+                </td>
+                <td>
+                    <button type="button" class="btn btn-warning btn-xs" data-popover-placement="left" data-popover="@paymentMessage(order)">
+                        <span class="glyphicon glyphicon-comment"></span>
+                    </button>
+                </td>
+            </tr>
+            }
+            @order.order.ticketOrders.zipWithIndex.map { case (ticketOrder, index) =>
+            @defining(index ==0) { first =>
+            <tr>
+                <td>@if(first) { @HumanDateTime.formatDateTimeCompact(order.order.order.date) }</td>
+                <td>@if(first) { @orderName(order.order.user,order.order.order.billingName) }</td>
+                <td>@helper.showName(ticketOrder.show)&nbsp;<a href="@routes.Events.viewShow(ticketOrder.show.eventId, ticketOrder.show.id)"><span class="glyphicon glyphicon-share-alt"></span></a></td>
+                <td><a href="#" class="seat-popovers" data-tooltip-placement="left" data-tooltip='@{ticketOrder.ticketSeatOrders.map(_.ticketSeatOrder.seat.name).sorted.mkString(" , ")}'><span class="badge badge-primary">@ticketOrder.ticketSeatOrders.length</span></a></td>
+                <td>@if(first) { @CurrencyFormat.format(order.order.price) }</td>
+                <td>
+                    @if(first) {
+                    @if(order.isPaid) { <span class="badge badge-success">BETAALD</span> }
+                    @if(!order.isPaid && !order.payments.isEmpty) { <span class="@if(order.balance.amount < 0){ text-danger } else { text-warning }">@CurrencyFormat.format(order.balance)</span> }
+                    }
+                </td>
+                <td>
+                    @if(first) {
+                    @if(!order.isPaid) {
+                    <button type="button" class="btn btn-warning btn-xs" data-popover-placement="left" data-popover="@paymentMessage(order)">
+                        <span class="glyphicon glyphicon-comment"></span>
+                    </button>
+                    }
+                    }
+                </td>
+            </tr>
+            }
+            }
+            </tbody>
+            }
+            }
+        </table>
+
+
+    </div>
+
+    }
+</div>
+}
+

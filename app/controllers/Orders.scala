@@ -1,47 +1,31 @@
 package controllers
 
-import com.google.inject.Inject
+import akka.pattern.ask
+import akka.util.Timeout
 import be.studiocredo._
-import be.studiocredo.auth._
-import play.api.mvc.Controller
-import models.ids._
+import be.studiocredo.auth.{SecuredDBRequest, _}
+import be.studiocredo.reservations.FloorProtocol.Response
+import be.studiocredo.reservations.{CapacityExceededException, FloorProtocol, MissingOrderException, ReservationEngineMonitorService}
+import be.studiocredo.util.Money
+import com.google.inject.Inject
+import controllers.auth.Mailer
+import models.HumanDateTime
 import models.entities.FloorPlanJson._
+import models.entities.SeatType.SeatType
+import models.entities.{Identity, Order, SeatId, SeatType, _}
+import models.ids._
+import play.api.Logger
+import play.api.Play.current
+import play.api.cache.Cache
 import play.api.data.Form
 import play.api.data.Forms._
-import controllers.auth.Mailer
-import scala.Some
 import play.api.libs.json.{JsError, Json}
-import be.studiocredo.reservations.{MissingOrderException, FloorProtocol, ReservationEngineMonitorService}
+import play.api.mvc.{Controller, SimpleResult}
+
 import scala.collection.immutable.Set
-import be.studiocredo.util.Money
-import scala.concurrent.duration._
-import akka.util.Timeout
-import akka.pattern.ask
-import play.api.Play.current
-import scala.concurrent.Future
-import be.studiocredo.reservations.FloorProtocol.StartOrder
-import play.api.Logger
-import play.api.cache.Cache
-import models.entities.SeatType.SeatType
-import models.entities._
-import be.studiocredo.reservations.FloorProtocol.Response
-import play.api.mvc.SimpleResult
-import be.studiocredo.reservations.CapacityExceededException
-import be.studiocredo.auth.SecuredDBRequest
-import models.entities.SeatType.SeatType
-import models.entities.SeatType
-import be.studiocredo.reservations.MissingOrderException
-import scala.Some
-import play.api.mvc.SimpleResult
-import models.entities.Identity
-import be.studiocredo.reservations.FloorProtocol.Response
-import models.entities.SeatId
-import be.studiocredo.reservations.FloorProtocol.StartOrder
-import models.entities.Order
-import be.studiocredo.reservations.CapacityExceededException
-import be.studiocredo.auth.SecuredDBRequest
-import models.HumanDateTime
 import scala.collection.mutable
+import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration._
 
 
 case class StartSeatOrderForm(quantity: Int, priceCategory: String, availableSeatTypes: List[SeatType])
@@ -75,7 +59,7 @@ class Orders @Inject()(ticketService: TicketService, eventService: EventService,
     )(OrderBillingData.apply)(OrderBillingData.unapply)
   )
 
-  implicit val ec = play.api.libs.concurrent.Akka.system.dispatcher
+  implicit val ec: ExecutionContext = play.api.libs.concurrent.Akka.system.dispatcher
 
   def start(id: EventId) = AuthDBAction { implicit rs =>
     val users = rs.currentUser match {
@@ -97,6 +81,16 @@ class Orders @Inject()(ticketService: TicketService, eventService: EventService,
     ensureOrderAccess(order) {
       viewPage(order, event)
     }
+  }
+
+  def listActive() = AuthDBAction { implicit rs =>
+    rs.currentUser.fold(BadRequest("Not logged in")) { user =>
+      Ok(views.html.orders(orderService.orderPaymentsByUsers(user.allUsers, Some(activeOrderFilter)), userContext))
+    }
+  }
+
+  private def activeOrderFilter(t: (TicketOrder, TicketSeatOrder, Show, Event, Venue)): Boolean = {
+    !t._3.archived && !t._4.archived
   }
 
   def ticketDetails(reference: String) = AuthDBAction { implicit rs =>

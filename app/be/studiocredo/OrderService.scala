@@ -283,6 +283,10 @@ class OrderService @Inject()(venueService: VenueService, paymentService: Payment
     detailedOrdersByUsersInternal(OQ, ids, f)
   }
 
+  def orderPaymentsByUsers(ids: List[UserId], f: Option[((TicketOrder, TicketSeatOrder, Show, Event, Venue)) => Boolean] = None)(implicit s: Session): List[OrderPayments] = {
+    detailedOrdersByUsersInternal(OQ, ids, f).map{ o => OrderPayments(o, paymentService.find(o.id)) }
+  }
+
   private def detailedOrdersByUsersInternal(startQuery: Query[schema.Orders, Order], ids: List[UserId], f: Option[((TicketOrder, TicketSeatOrder, Show, Event, Venue)) => Boolean] = None)(implicit s: Session): List[OrderDetail] = {
     val ordersQuery = for {
       order <- startQuery
