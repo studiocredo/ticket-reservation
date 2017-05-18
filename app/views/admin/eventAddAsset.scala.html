@@ -1,0 +1,31 @@
+@(eventId: ids.EventId, assetForm: Form[models.admin.AssetEdit])(implicit lang: Lang)
+@import helper._
+@import views.Bootstrap._
+@import controllers.admin.routes
+
+
+    <div class="col-md-6">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Item toevoegen</h3>
+            </div>
+            <div class="panel-body">
+                @form(action = routes.EventDetails.addAsset(eventId), 'class -> "form form-horizontal") {
+                    <fieldset>
+                    @inputText(assetForm("name"), '_label -> "Name", 'class -> "form-control")
+                    @inputText(assetForm("price"), '_label -> "Prijs", 'class -> "form-control")
+                    @inputText(assetForm("availableStart"), '_label -> "Beschikbaar van", 'class -> "form-control")
+                    @inputText(assetForm("availableEnd"), '_label -> "Beschikbaar tot", 'class -> "form-control")
+                    @twCheckbox(assetForm("downloadable"), '_label -> "Met download?")
+                    @inputText(assetForm("objectKey"), '_label -> "Download key", 'class -> "form-control")
+
+                    </fieldset>
+                    @twFormActions {
+                        <input type="submit" value="Item toevoegen" class="btn btn-primary">
+                    }
+                }
+            </div>
+        </div>
+
+    </div>
+

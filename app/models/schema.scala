@@ -3,9 +3,10 @@ package models
 import org.joda.time.DateTime
 import play.api.db.slick.Config.driver.simple._
 import com.github.tototoshi.slick.JodaSupport._
-import be.studiocredo.auth.{Roles, EmailToken, AuthToken, Password}
+import be.studiocredo.auth.{AuthToken, EmailToken, Password, Roles}
 import play.api.libs.json.Json
 import be.studiocredo.util.Money
+import models.admin.AssetEdit
 import models.entities.PaymentType.PaymentType
 
 object schema {
@@ -19,7 +20,7 @@ object schema {
     val Events = new Events
     val Venues = new Venues
     val Shows = new Shows
-    val Dvds = new Dvds
+    val Assets = new Assets
     val EventPrices = new EventPrices
 
     val Orders = new Orders
@@ -151,16 +152,21 @@ object schema {
     def venue = foreignKey("venue_fk", venueId, Venues)(_.id)
   }
 
-  class Dvds extends Table[(DvdId, EventId, String, Int, DateTime, Option[DateTime], Boolean)]("dvd") {
-    def id = column[DvdId]("id", O.PrimaryKey, O.AutoInc)
+  class Assets extends Table[Asset]("asset") {
+    def id = column[AssetId]("id", O.PrimaryKey, O.AutoInc)
     def eventId = column[EventId]("event_id")
     def name = column[String]("name", O.DBType("TEXT"))
-    def price = column[Int]("price")
+    def price = column[Option[Money]]("price")
     def availableStart = column[DateTime]("available-start")
     def availableEnd = column[Option[DateTime]]("available-end")
+    def downloadable = column[Boolean]("downloadable")
+    def objectKey = column[Option[String]]("object-key")
     def archived = column[Boolean]("archived", O.Default(false))
 
-    def * = id ~ eventId ~ name ~ price ~ availableStart ~ availableEnd ~ archived
+    def edit = name ~ price ~ availableStart ~ availableEnd ~ downloadable ~ objectKey ~ archived <>(AssetEdit.apply _, AssetEdit.unapply _)
+    def autoInc = eventId ~ name ~ price ~ availableStart ~ availableEnd ~ downloadable ~ objectKey ~ archived returning id
+
+    def * = id ~ eventId ~ name ~ price ~ availableStart ~ availableEnd ~ downloadable ~ objectKey ~ archived <>(Asset.apply _, Asset.unapply _)
 
     def event = foreignKey("event_fk", eventId, Events)(_.id)
   }
@@ -183,7 +189,7 @@ object schema {
 
     def billingEdit = billingName ~ billingAddress
     def billingCommentsEdit = userId ~ billingName ~ billingAddress ~ comments
-    
+
     def user = foreignKey("user_fk", userId, Users)(_.id)
   }
 
@@ -227,7 +233,7 @@ object schema {
     def quota = column[Int]("quota")
 
     def * = eventId ~ userId ~ quota <>(ReservationQuotum.apply _, ReservationQuotum.unapply _)
-    
+
     def pk = primaryKey("event-user_pkey", (eventId, userId))
 
     def event = foreignKey("event_fk", eventId, Events)(_.id)
@@ -312,7 +318,7 @@ object schema {
   implicit val eventIdType = MappedTypeMapper.base[EventId, Long](_.id, new EventId(_))
   implicit val venueIdType = MappedTypeMapper.base[VenueId, Long](_.id, new VenueId(_))
   implicit val showIdType = MappedTypeMapper.base[ShowId, Long](_.id, new ShowId(_))
-  implicit val dvdIdType = MappedTypeMapper.base[DvdId, Long](_.id, new DvdId(_))
+  implicit val assetIdType = MappedTypeMapper.base[AssetId, Long](_.id, new AssetId(_))
   implicit val orderIdType = MappedTypeMapper.base[OrderId, Long](_.id, new OrderId(_))
   implicit val ticketOrderIdType = MappedTypeMapper.base[TicketOrderId, Long](_.id, new TicketOrderId(_))
   implicit val paymentIdType = MappedTypeMapper.base[PaymentId, Long](_.id, new PaymentId(_))

@@ -7,7 +7,7 @@ import be.studiocredo._
 import com.google.inject.Inject
 import be.studiocredo.auth.{Secure, AuthenticatorService}
 
-class Application @Inject()(showService: ShowService, eventService: EventService, val authService: AuthenticatorService, val notificationService: NotificationService, val userService: UserService) extends Controller with Secure with UserContextSupport with BrowserDetectionSupport {
+class Application @Inject()(showService: ShowService, eventService: EventService, assetService: AssetService, val authService: AuthenticatorService, val notificationService: NotificationService, val userService: UserService) extends Controller with Secure with UserContextSupport with BrowserDetectionSupport {
   val defaultAuthorization = None
 
   def index = AuthAwareDBAction { implicit request =>
@@ -15,7 +15,8 @@ class Application @Inject()(showService: ShowService, eventService: EventService
       Ok(views.html.reject())
     } else {
       val nextShows = Play.current.configuration.getInt("application.next-shows").getOrElse(4)
-      Ok(views.html.index(showService.nextShows(nextShows), eventService.listUpcoming, userContext))
+      val availableAssets = Play.current.configuration.getInt("application.assets").getOrElse(4)
+      Ok(views.html.index(showService.nextShows(nextShows), eventService.listUpcoming, assetService.nextAssets(availableAssets), userContext))
     }
   }
 

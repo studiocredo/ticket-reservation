@@ -1,8 +1,9 @@
 package be.studiocredo
 
 import com.google.inject.{AbstractModule, Singleton}
-import net.codingwell.scalaguice.{ScalaMultibinder, ScalaModule}
+import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
 import be.studiocredo.auth.AuthTokenExpireService
+import be.studiocredo.aws.DownloadService
 import be.studiocredo.reservations.ReservationEngineMonitorService
 
 object Modules {
@@ -22,6 +23,7 @@ object Modules {
       bind[PaymentService].in[Singleton]
       bind[TicketService].in[Singleton]
       bind[ReservationEngineMonitorService].asEagerSingleton()
+      bind[DownloadService].asEagerSingleton()
 
       bind[controllers.Application].in[Singleton]
       bind[controllers.admin.EventDetails].in[Singleton]
@@ -49,6 +51,7 @@ object Modules {
       val multi = ScalaMultibinder.newSetBinder[Service](binder)
       multi.addBinding().to[AuthTokenExpireService]
       multi.addBinding().to[ReservationEngineMonitorService]
+      multi.addBinding().to[DownloadService]
 
       bind[controllers.auth.Auth].in[Singleton]
       bind[controllers.auth.LoginPage].in[Singleton]

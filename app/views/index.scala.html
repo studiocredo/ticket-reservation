@@ -1,4 +1,4 @@
-@(nextShows: List[entities.ShowAvailability], events: List[models.admin.EventDetail], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
+@(nextShows: List[entities.ShowAvailability], events: List[models.admin.EventDetail], availableAssets: List[models.admin.RichAsset], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
 @import controllers.auth
 @import helper._
 @import play.api.Play.current
@@ -154,5 +154,48 @@
     }
 </div>
 }
+
+@if(!availableAssets.isEmpty && request.currentUser.isDefined) {
+<div class="row">
+    <div class="col-lg-12">
+        <h3>Nu beschikbaar</h3>
+    </div>
+    @availableAssets.map { asset =>
+    <div class="col-lg-3">
+        <div class="panel panel-default upcoming-button">
+            <div class="panel-body">
+                <h4 class="text-info">@asset.event.name</h4>
+
+                <p>
+                    <strong>@asset.name</strong><br/>
+                </p>
+
+                @if(asset.price.isDefined) {
+                <p>
+                    <span class="text-default">Prijs: @CurrencyFormat.format(asset.price.get)</span><br/>
+                </p>
+                <p>
+                    <a class="btn btn-default btn-sm" href="#">Bestellen &raquo;</a><!-- TODO -->
+                </p>
+                }
+                @if(asset.downloadable) {
+                    @if(asset.objectKey.isDefined) {
+                <p>
+                        <a class="btn btn-primary btn-md" href="@routes.Downloads.download(asset.id)"><span class="glyphicon glyphicon-download"></span> Download</a>
+                        <br/>
+                </p>
+                    } else {
+                        <p>
+                            <span class="text-muted"><em>Link nog niet beschikbaar</em></span><br/>
+                        </p>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+    }
+</div>
+}
+
 }
 }
