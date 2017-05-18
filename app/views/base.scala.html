@@ -91,6 +91,8 @@
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">@request.currentUser.get.name (@request.currentUser.get.username) <b class="caret"></b></a>
                                 <ul class="dropdown-menu">
                                     @loginGroup(userContext)
+                                    <li><a href="@routes.Orders.list()">Mijn bestellingen</a></li>
+                                    <li class="divider"></li>
                                     <li><a href="@routes.Profile.edit()">Profiel aanpassen</a></li>
                                     <li><a href="@auth.routes.PasswordChange.page()">Wachtwoord aanpassen</a></li>
                                     <li class="divider"></li>

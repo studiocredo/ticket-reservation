@@ -45,7 +45,9 @@ import scala.collection.mutable
 
 
 case class StartSeatOrderForm(quantity: Int, priceCategory: String, availableSeatTypes: List[SeatType])
+
 case class OrderComments(comments: Option[String], keepUnusedPrereservations: Option[Boolean])
+
 case class OrderBillingData(billingName: String, billingAddress: String)
 
 class Orders @Inject()(ticketService: TicketService, eventService: EventService, orderService: OrderService, showService: ShowService, preReservationService: PreReservationService, venueService: VenueService, val authService: AuthenticatorService, val notificationService: NotificationService, val userService: UserService, orderEngine: ReservationEngineMonitorService) extends Controller with Secure with UserContextSupport {
@@ -93,6 +95,16 @@ class Orders @Inject()(ticketService: TicketService, eventService: EventService,
     }
   }
 
+  def list() = AuthDBAction { implicit rs =>
+    rs.currentUser.fold(BadRequest("Not logged in")) { user =>
+      Ok(views.html.orders(orderService.detailedOrdersByUsers(user.allUsers, Some(activeOrderFilter)), userContext))
+    }
+  }
+
+  private def activeOrderFilter(t: (TicketOrder, TicketSeatOrder, Show, Event, Venue)): Boolean = {
+    !t._3.archived && !t._4.archived
+  }
+
   def view(order: OrderId, event: EventId) = AuthDBAction { implicit rs =>
     ensureOrderAccess(order) {
       viewPage(order, event)
@@ -119,7 +131,7 @@ class Orders @Inject()(ticketService: TicketService, eventService: EventService,
                     }
                   }
                   if (!order.isPaid) {
-                    messages("error") =  "Bestelling is nog niet (volledig) betaald"
+                    messages("error") = "Bestelling is nog niet (volledig) betaald"
                   }
                   Ok(views.html.ticket(reference, Some(order), messages.toMap, userContext))
                 }
@@ -178,7 +190,7 @@ class Orders @Inject()(ticketService: TicketService, eventService: EventService,
       }
     }
   }
-  
+
   def cancel(id: OrderId) = AuthDBAction { implicit rs =>
     import FloorProtocol._
 
@@ -242,7 +254,7 @@ class Orders @Inject()(ticketService: TicketService, eventService: EventService,
       }
   }
 
-  private def startSeatOrderFailed(order: OrderId, event: EventId ,msg: String = "Er is een fout opgetreden bij het opstarten van de reservatie"): SimpleResult = {
+  private def startSeatOrderFailed(order: OrderId, event: EventId, msg: String = "Er is een fout opgetreden bij het opstarten van de reservatie"): SimpleResult = {
     Redirect(routes.Orders.view(order, event)).flashing("start-order" -> msg)
   }
 
@@ -301,15 +313,15 @@ class Orders @Inject()(ticketService: TicketService, eventService: EventService,
       logger.warn(s"$orderId: Order not found")
       BadRequest(s"Order $orderId niet gevonden")
     })(
-        order => {
-          if (rs.user.allUsers.contains(order.userId) || rs.user.roles.contains(Roles.Admin))
-            action
-          else {
-            logger.warn(s"$order: Order for user ${order.userId} but ${rs.user.id} attempted to use it")
-            BadRequest(s"Geen toegang tot order ${orderId}")
-          }
+      order => {
+        if (rs.user.allUsers.contains(order.userId) || rs.user.roles.contains(Roles.Admin))
+          action
+        else {
+          logger.warn(s"$order: Order for user ${order.userId} but ${rs.user.id} attempted to use it")
+          BadRequest(s"Geen toegang tot order ${orderId}")
         }
-      )
+      }
+    )
   }
 
 
@@ -320,15 +332,15 @@ class Orders @Inject()(ticketService: TicketService, eventService: EventService,
       logger.warn(s"$orderId: Order not found")
       Future.successful(BadRequest(s"Order $orderId niet gevonden"))
     })(
-          order => {
-            if (order.userId == rs.user.id)
-              action
-            else {
-              logger.warn(s"$order: Order for user ${order.userId} but ${rs.user.id} attempted to use it")
-              Future.successful(BadRequest(s"Geen toegang tot order $order"))
-            }
-          }
-        )
+      order => {
+        if (order.userId == rs.user.id)
+          action
+        else {
+          logger.warn(s"$order: Order for user ${order.userId} but ${rs.user.id} attempted to use it")
+          Future.successful(BadRequest(s"Geen toegang tot order $order"))
+        }
+      }
+    )
   }
 
   def viewSeatOrder(id: ShowId, order: OrderId) = AuthDBAction.async { implicit rs =>
@@ -337,18 +349,18 @@ class Orders @Inject()(ticketService: TicketService, eventService: EventService,
     }
   }
 
- def cancelTicketOrder(order: OrderId, event: EventId, ticket: TicketOrderId) = AuthDBAction { implicit rs =>
-   import FloorProtocol._
+  def cancelTicketOrder(order: OrderId, event: EventId, ticket: TicketOrderId) = AuthDBAction { implicit rs =>
+    import FloorProtocol._
 
-   ensureOrderAccess(order) {
-     orderService.destroyTicketOrders(ticket) match {
-       case 0 => BadRequest(s"Bestelling $ticket niet gevonden")
-       case _ => {
-         (orderEngine.floors) ! ReloadFullState()
-         Redirect(routes.Orders.view(order, event))
-       }
-     }
-   }
+    ensureOrderAccess(order) {
+      orderService.destroyTicketOrders(ticket) match {
+        case 0 => BadRequest(s"Bestelling $ticket niet gevonden")
+        case _ => {
+          (orderEngine.floors) ! ReloadFullState()
+          Redirect(routes.Orders.view(order, event))
+        }
+      }
+    }
   }
 
 
@@ -362,7 +374,9 @@ class Orders @Inject()(ticketService: TicketService, eventService: EventService,
       implicit val timeout = Timeout(30.seconds)
 
       (orderEngine.floors ? CurrentStatus(id, order)).map {
-        case status: Response => { Ok(toJson(status)) }
+        case status: Response => {
+          Ok(toJson(status))
+        }
       }.recover({
         case error: MissingOrderException => {
           NotFound(Json.obj("error" -> "missing", "redirect" -> controllers.routes.Orders.view(order, toEventId(id)).url))
@@ -376,6 +390,7 @@ class Orders @Inject()(ticketService: TicketService, eventService: EventService,
   }
 
   case class AjaxMove(target: SeatId, seats: Option[List[SeatId]])
+
   implicit val ajaxMoveFMT = Json.format[AjaxMove]
 
   def ajaxMove(id: ShowId, order: OrderId) = AuthDBAction.async(parse.json) { implicit rs =>
