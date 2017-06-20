@@ -47,8 +47,12 @@ class ShowService @Inject()(venueService: VenueService, preReservationService: P
   }
 
   def nextShows(limit: Int)(implicit s: Session): List[ShowAvailability] = {
-    val next = active.filter(_.date >= DateTime.now())
-    val list = (for (s <- next; e <- s.event; v <- s.venue) yield (s, e, v)).sortBy(_._1.date).take(limit).list
+    val next = for {
+      s <- active.filter(_.date >= DateTime.now())
+      e <- s.event.where(_.archived === false)
+      v <- s.venue
+    } yield (s, e, v)
+    val list = next.sortBy(_._1.date).take(limit).list
 
     list map {
       case (show, event, venue) => preReservationService.availability(EventShow(show.id, event.id, event.name, show.venueId, venue.name, show.date, event.template, show.archived))
