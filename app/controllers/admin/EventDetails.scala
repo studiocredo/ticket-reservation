@@ -75,9 +75,9 @@ class EventDetails @Inject()(eventService: EventService, showService: ShowServic
   }
 
   def showPage(id: EventId, showId: ShowId, showForm: Form[ShowEdit] = showForm, status: Status = Ok)(implicit rs: SecuredDBRequest[_]): SimpleResult = {
-    eventService.eventDetails(id) match {
-      case None => BadRequest(s"Evenement $id niet gevonden")
-      case Some(details) => status(views.html.admin.event(details, views.html.admin.eventAddShow(id, showForm, Options.apply(venueService.list(), Options.VenueRenderer)), views.html.admin.eventAddAsset(id, assetForm), userContext))
+    showService.get(showId) match {
+      case None => BadRequest(s"Show $id niet gevonden")
+      case Some(show) => status(views.html.admin.show(id, showId, showForm.fill(ShowEdit(show.venueId, show.date)), Options.apply(venueService.list(), Options.VenueRenderer),  userContext))
     }
   }
 
