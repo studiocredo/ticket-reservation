@@ -1,5 +1,6 @@
 package be.studiocredo
 
+import be.studiocredo.auth.Roles
 import play.api.mvc.Controller
 import be.studiocredo.util.DBSupport._
 import models.entities.UserContext
@@ -12,7 +13,7 @@ trait UserContextSupport extends Controller {
     DB.withSession {
       implicit session =>
         request.currentUser match {
-          case Some(identity) => Some(UserContext(notificationService.get(identity.allUsers), identity.otherUsers))
+          case Some(identity) => Some(UserContext(notificationService.get(identity.allUsers), identity.otherUsers, identity.roles.contains(Roles.Admin)))
           case None => None
         }
     }

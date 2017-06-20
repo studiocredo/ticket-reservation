@@ -18,7 +18,7 @@
         </td>
         <td>@ticketOrder.ticketSeatOrders.length</td>
         <td>@CurrencyFormat.format(ticketOrder.price)</td>
-        <td/>
+        <td></td>
     </tr>
 }
 
@@ -68,7 +68,7 @@
         <h1>Bestelling @info.event.name <small>@order.user.name</small></h1>
     </div>
 
-    @if(info.event.reservationAllowed) {
+    @if(info.event.reservationAllowed || userContext.exists(_.reservationAllowed)) {
     @if(!order.order.processed) {
 
         @request.flash.get("error").map { msg =>
@@ -133,7 +133,7 @@
                 <tr class="success">
                     <th colspan="3" class="h3">Totaal</th>
                     <th class="h3">@CurrencyFormat.format(order.price)</th>
-                    <th/>
+                    <th></th>
                 </tr>
                 </tfoot>
             </table>

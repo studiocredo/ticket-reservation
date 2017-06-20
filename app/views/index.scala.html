@@ -19,7 +19,7 @@
                         @events.filter(_.preReservationAllowed).headOption.map { event =>
                              <a href="@routes.Prereservations.start(event.id)" class="btn btn-primary btn-lg">Pre-reservaties &raquo;</a>
                         }
-                        @events.filter(_.reservationAllowed).headOption.map { event =>
+                        @events.filter(_.reservationAllowed || userContext.exists(_.reservationAllowed)).headOption.map { event =>
                             <a href="@routes.Orders.start(event.id)" class="btn btn-primary btn-lg">Bestellen &raquo;</a>
                         }
                     </p>
@@ -47,7 +47,7 @@
                 <a href="@routes.Prereservations.start(event.id)" class="btn btn-primary btn-lg btn-block">Pre-reservaties &raquo;</a>
             </p>
         }
-        @events.filter(_.reservationAllowed).headOption.map { event =>
+        @events.filter(_.reservationAllowed || userContext.exists(_.reservationAllowed)).headOption.map { event =>
             <p>
                 <a href="@routes.Orders.start(event.id)" class="btn btn-primary btn-lg btn-block">Bestellen &raquo;</a>
             </p>
