@@ -7,9 +7,10 @@ import play.api.libs.concurrent.Akka
 import play.api.mvc.RequestHeader
 import be.studiocredo.auth.EmailToken
 import models.admin.{EventPrereservationsDetail, RichUser}
-import models.entities.{TicketDocument, OrderDetail}
+import models.entities.{OrderDetail, TicketDocument}
+
 import scala.io.Source
-import org.codemonkey.simplejavamail.Email
+import org.codemonkey.simplejavamail.{Email, TransportStrategy}
 import javax.mail.internet.MimeUtility
 import javax.mail.Message.RecipientType
 
@@ -18,18 +19,24 @@ case class Attachment(name: String, data: Source, mimeType: String)
 object Mailer {
   val logger = Logger("mailer")
 
-  val fromAddress = current.configuration.getString("smtp.from.address").get
-  val fromName = current.configuration.getString("smtp.from.name").get
+  val fromAddress: String = current.configuration.getString("smtp.from.address").get
+  val fromName: String = current.configuration.getString("smtp.from.name").get
   val subjectPrefix = "[Studio Credo Ticket Reservatie]"
-  val adminAddress = current.configuration.getString("mail.admin")
+  val adminAddress: Option[String] = current.configuration.getString("mail.admin")
 
-  val host = current.configuration.getString("smtp.host").getOrElse("localhost")
-  val port = current.configuration.getInt("smtp.port").getOrElse(25)
-  val user = current.configuration.getString("smtp.user").getOrElse("")
-  val password = current.configuration.getString("smtp.password").getOrElse("")
+  val host: String = current.configuration.getString("smtp.host").getOrElse("localhost")
+  val port: Int = current.configuration.getInt("smtp.port").getOrElse(25)
+  val user: String = current.configuration.getString("smtp.user").getOrElse("")
+  val password: String = current.configuration.getString("smtp.password").getOrElse("")
+
+  val transportStrategy: TransportStrategy = current.configuration.getString("smtp.transport").getOrElse("plain") match {
+    case "tls" => TransportStrategy.SMTP_TLS
+    case "ssl" => TransportStrategy.SMTP_SSL
+    case _ => TransportStrategy.SMTP_PLAIN
+  }
 
   import org.codemonkey.simplejavamail.Mailer
-  def mailer = new Mailer(host, port, user, password)
+  def mailer = new Mailer(host, port, user, password, transportStrategy)
 
   def sendSignUpEmail(to: String, token: EmailToken)(implicit request: RequestHeader)  {
     val txtAndHtml  = (None, Some(views.html.mails.signUpEmail(token.id)))
@@ -42,42 +49,38 @@ object Mailer {
     sendEmail(s"$subjectPrefix Instructies om je wachtwoord te wijzigen", to, txtAndHtml)
   }
 
-  def sendPasswordChangedNotification(to: String, user: RichUser)(implicit request: RequestHeader) = {
+  def sendPasswordChangedNotification(to: String, user: RichUser)(implicit request: RequestHeader): Unit = {
     val txtAndHtml = (None, Some(views.html.mails.passwordChangedNotice(user)))
     sendEmail(s"$subjectPrefix  Wachtwoord gewijzigd", to, txtAndHtml)
   }
 
-  def sendPrereservationSavedEmail(user: RichUser, preres: Option[EventPrereservationsDetail])(implicit request: RequestHeader) = {
-    preres match {
-      case Some(preres) => {
+  def sendPrereservationSavedEmail(user: RichUser, maybePreres: Option[EventPrereservationsDetail])(implicit request: RequestHeader): Unit = {
+    maybePreres match {
+      case Some(preres) =>
         user.email match {
-          case Some(email) => {
+          case Some(email) =>
             val txtAndHtml = (None, Some(views.html.mails.prereservationSaved(user, preres)))
             sendEmail(s"$subjectPrefix Pre-reservaties geregistreerd", email, txtAndHtml)
-          }
           case None => ()
         }
-      }
       case None => ()
     }
   }
 
-  def sendProfileCreatedEmail(user: RichUser)(implicit request: RequestHeader) = {
+  def sendProfileCreatedEmail(user: RichUser)(implicit request: RequestHeader): Unit = {
     user.email match {
-      case Some(email) => {
+      case Some(email) =>
         val txtAndHtml = (None, Some(views.html.mails.profileCreated(user)))
         sendEmail(s"$subjectPrefix Gebruikersprofiel aangemaakt", email, txtAndHtml)
-      }
       case None => ()
     }
   }
 
-  def sendProfileUpdatedEmail(user: RichUser)(implicit request: RequestHeader) = {
+  def sendProfileUpdatedEmail(user: RichUser)(implicit request: RequestHeader): Unit = {
     user.email match {
-      case Some(email) => {
+      case Some(email) =>
         val txtAndHtml = (None, Some(views.html.mails.profileUpdated(user)))
         sendEmail(s"$subjectPrefix Gebruikersprofiel gewijzigd", email, txtAndHtml)
-      }
       case None => ()
     }
   }
@@ -87,32 +90,29 @@ object Mailer {
     sendEmail(s"$subjectPrefix Instructies om je wachtwoord in te stellen", to, txtAndHtml)
   }
 
-  def sendOrderConfirmationEmail(user: RichUser, order: OrderDetail) = {
+  def sendOrderConfirmationEmail(user: RichUser, order: OrderDetail): Unit = {
     user.email match {
-      case Some(email) => {
+      case Some(email) =>
         val txtAndHtml = (None, Some(views.html.mails.orderConfirmation(user, order)))
         sendEmail(s"$subjectPrefix Overzicht bestelling", email, txtAndHtml)
-      }
       case None => ()
     }
   }
 
-  def sendOrderWithCommentsToAdmin(order: OrderDetail) = {
+  def sendOrderWithCommentsToAdmin(order: OrderDetail): Unit = {
     adminAddress match {
-      case Some(email) => {
+      case Some(email) =>
         val txtAndHtml = (None, Some(views.html.mails.orderWithComments(order)))
         sendEmail(s"$subjectPrefix Bestelling met commentaar", email, txtAndHtml)
-      }
       case None => ()
     }
   }
 
-  def sendTicketEmail(user: RichUser, ticket: TicketDocument) = {
+  def sendTicketEmail(user: RichUser, ticket: TicketDocument): Unit = {
     user.email match {
-      case Some(email) => {
+      case Some(email) =>
         val txtAndHtml = (None, Some(views.html.mails.ticket(user, ticket)))
         sendEmail(s"$subjectPrefix Tickets", email, txtAndHtml, List(Attachment(ticket.filename, Source.fromRawBytes(ticket.pdf), ticket.mimetype)))
-      }
       case None => ()
     }
   }
