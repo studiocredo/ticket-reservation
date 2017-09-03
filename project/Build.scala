@@ -1,9 +1,15 @@
+import com.typesafe.sbt.packager.archetypes.JavaServerAppPackaging
+import com.typesafe.sbt.packager.docker.DockerPlugin
+import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.Docker
 import sbt._
 import sbt.Keys._
 import play.Project
 import play.Keys._
+import com.typesafe.sbt.packager.docker.DockerKeys
+import com.typesafe.sbt.packager.NativePackagerKeys
 
-object ApplicationBuild extends Build {
+
+object ApplicationBuild extends Build with DockerKeys with NativePackagerKeys {
   val appName = "ticket-reservation"
   val appVersion = "1.0-SNAPSHOT"
 
@@ -43,7 +49,12 @@ object ApplicationBuild extends Build {
     "commons-io" % "commons-io" % "2.4"
   )
 
-  val main: Project = Project(appName, appVersion, appDependencies).settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*).settings(
+  val main: Project = Project(appName, appVersion, appDependencies)
+    .enablePlugins(JavaServerAppPackaging)
+    .enablePlugins(DockerPlugin)
+    .settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*)
+    .settings()
+    .settings(
     organization := "be.studiocredo"
     , scalaVersion := "2.10.3"
     , scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-language:implicitConversions")
@@ -52,5 +63,7 @@ object ApplicationBuild extends Build {
     , resolvers += Resolver.url("sbt-plugin-releases", new URL("http://repo.scala-sbt.org/scalasbt/sbt-plugin-releases/"))(Resolver.ivyStylePatterns)
     , resolvers += Resolver.url("mcveat.github.com", url("http://mcveat.github.com/releases"))(Resolver.ivyStylePatterns)
     , initialCommands in console := scala.io.Source.fromFile("./scripts/play-console.scala").mkString
+    , packageName in Docker := "credo/ticket-reservation"
+    , version in Docker := "1"
   )
 }

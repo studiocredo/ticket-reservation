@@ -1,3 +1,4 @@
+conf.local/*
 conf/secrets.conf
 conf/generated.keystore
 logs

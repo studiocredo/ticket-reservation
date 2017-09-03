@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="false" scan="false" scanPeriod="5 seconds">
+
+    <logger name="be.studiocredo" level="warn"/>
+    <logger name="be.studiocredo.requests" level="warn"/>
+    <logger name="play" level="warn" />
+    <logger name="mailer" level="debug" />
+
+    <logger name="scala.slick" level="warn"/>
+    <logger name="scala.slick.compiler" level="warn"/>
+    <logger name="scala.slick.session" level="warn"/>
+
+    <logger name="com.jolbox.bonecp" level="OFF"/>
+  
+    <conversionRule conversionWord="coloredLevel" converterClass="play.api.Logger$ColoredLevel" />
+  
+    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+       <file>${application.home}/logs/application.log</file>
+       <encoder>
+         <pattern>%date - [%level] - from %logger in %thread %n%message%n%xException%n</pattern>
+       </encoder>
+     </appender>
+
+    <root level="warn">
+        <appender-ref ref="FILE"/>
+    </root>
+
+</configuration>
