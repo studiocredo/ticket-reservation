@@ -49,10 +49,13 @@ class AssetService @Inject()() {
     }
   }
 
-  def listForEvent(id: EventId)(implicit s: Session): List[Asset] = {
+  def listActiveForEvent(id: EventId)(implicit s: Session): List[Asset] = {
     available.sortBy(sortFunction).where(_.eventId === id).list()
   }
 
+  def listAllForEvent(id: EventId)(implicit s: Session): List[Asset] = {
+    AssetsQ.sortBy(sortFunction).where(_.eventId === id).list()
+  }
 
   def listActive(implicit s: Session): Set[AssetId] = {
     val q = for (

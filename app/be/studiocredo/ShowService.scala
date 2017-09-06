@@ -31,15 +31,22 @@ class ShowService @Inject()(venueService: VenueService, preReservationService: P
 
   def get(id: ShowId)(implicit s: Session): Option[Show] =  byId(id).firstOption
   def insert(id: EventId, show: ShowEdit)(implicit s: Session): ShowId = Shows.autoInc.insert((id, show.venueId, show.date))
-  def update(id: ShowId, show: ShowEdit)(implicit s: Session) =  byId(id).map(_.edit).update((show.venueId, show.date))
+  def update(id: ShowId, show: ShowEdit)(implicit s: Session) =  byId(id).map(_.edit).update((show.venueId, show.date, show.archived))
 
   def delete(id: ShowId)(implicit s: Session) = (for (v <- ShowsQ if v.id === id) yield v.archived).update(true)
 
+  def listAllForEvent(id: EventId)(implicit s: Session): List[VenueShows] = {
+    listForEvent(id, ShowsQ.sortBy(_.date))
+  }
 
-  def listForEvent(id: EventId)(implicit s: Session): List[VenueShows] = {
+  def listActiveForEvent(id: EventId)(implicit s: Session): List[VenueShows] = {
+    listForEvent(id, active.sortBy(_.date))
+  }
+
+  private def listForEvent(id: EventId, baseQuery: Query[schema.Shows, entities.Show])(implicit s: Session): List[VenueShows] = {
     import Joda._
     val q = for (
-      s <- active.sortBy(_.date);
+      s <- baseQuery;
       v <- s.venue if s.eventId === id
     ) yield (s, v)
 

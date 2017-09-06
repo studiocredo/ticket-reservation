@@ -101,7 +101,7 @@ class EventService @Inject()(showService: ShowService, preReservationService: Pr
   def delete(id: EventId)(implicit s: Session) = (for (v <- EventsQ if v.id === id) yield v.archived).update(true)
 
   def eventDetails(id: EventId)(implicit s: Session): Option[EventDetail] = {
-    get(id).map{(event) => EventDetail(event, showService.listForEvent(event.id), getPricing(id), assetService.listForEvent(event.id))}
+    get(id).map{(event) => EventDetail(event, showService.listAllForEvent(event.id), getPricing(id), assetService.listAllForEvent(event.id))}
   }
 
   def getPricing(id: EventId)(implicit s: Session): Option[EventPricing] = {
@@ -114,11 +114,11 @@ class EventService @Inject()(showService: ShowService, preReservationService: Pr
   }
 
   def eventPrereservationDetails(id: EventId, users: List[UserId])(implicit s: Session): Option[EventPrereservationsDetail] = {
-    get(id).map{(event) => EventPrereservationsDetail(event, userService.findUsers(users), showService.listForEvent(event.id), preReservationService.preReservationsByUsersAndEvent(users, event.id), preReservationService.totalQuotaByUsersAndEvent(users, event.id))}
+    get(id).map{(event) => EventPrereservationsDetail(event, userService.findUsers(users), showService.listActiveForEvent(event.id), preReservationService.preReservationsByUsersAndEvent(users, event.id), preReservationService.totalQuotaByUsersAndEvent(users, event.id))}
   }
 
   def eventReservationDetails(id: EventId, users: List[UserId])(implicit s: Session): Option[EventReservationsDetail] = {
-    get(id).map{(event) => EventReservationsDetail(EventDetail(event, showService.listForEvent(event.id), getPricing(id), Nil /*Not needed*/), userService.findUsers(users), showService.listForEvent(event.id), preReservationService.pendingPrereservationsByUsersAndEvent(users, event.id))}
+    get(id).map{(event) => EventReservationsDetail(EventDetail(event, showService.listActiveForEvent(event.id), getPricing(id), Nil /*Not needed*/), userService.findUsers(users), showService.listActiveForEvent(event.id), preReservationService.pendingPrereservationsByUsersAndEvent(users, event.id))}
   }
 
   private def byId(id: ids.EventId)=  EventsQ.where(_.id === id)

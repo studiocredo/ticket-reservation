@@ -145,14 +145,14 @@ object schema {
     def date = column[DateTime]("date")
 
     def * = id ~ eventId ~ venueId ~ date ~ archived <>(Show.apply _, Show.unapply _)
-    def edit = venueId ~ date
+    def edit = venueId ~ date ~ archived
     def autoInc = (eventId ~ venueId ~ date) returning id
 
     def event = foreignKey("event_fk", eventId, Events)(_.id)
     def venue = foreignKey("venue_fk", venueId, Venues)(_.id)
   }
 
-  class Assets extends Table[Asset]("asset") {
+  class Assets extends Table[Asset]("asset") with Archiveable {
     def id = column[AssetId]("id", O.PrimaryKey, O.AutoInc)
     def eventId = column[EventId]("event_id")
     def name = column[String]("name", O.DBType("TEXT"))
@@ -161,7 +161,6 @@ object schema {
     def availableEnd = column[Option[DateTime]]("available-end")
     def downloadable = column[Boolean]("downloadable")
     def objectKey = column[Option[String]]("object-key")
-    def archived = column[Boolean]("archived", O.Default(false))
 
     def edit = name ~ price ~ availableStart ~ availableEnd ~ downloadable ~ objectKey ~ archived <>(AssetEdit.apply _, AssetEdit.unapply _)
     def autoInc = eventId ~ name ~ price ~ availableStart ~ availableEnd ~ downloadable ~ objectKey ~ archived returning id

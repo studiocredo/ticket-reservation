@@ -23,7 +23,7 @@
 
             <tbody>
             @info.orderedVenueShows.map { case (vs, show) =>
-                <tr>
+                <tr class="@if(show.archived){text-warning}">
                     <td>@show.id</td>
                     <td>@vs.venue.name @if(vs.venue.adminLabel.nonEmpty){ <small>(@vs.venue.adminLabel.get)</small> }</td>
                     <td>@HumanDateTime.formatDateTime(show.date)</td>
@@ -57,7 +57,7 @@
 
         <tbody>
         @info.assets.map { case (asset) =>
-        <tr>
+        <tr class="@if(asset.archived){text-warning}">
             <td>@asset.id</td>
             <td>@asset.name</td>
             <td>@HumanDateTime.formatDateTime(asset.availableStart)</td>

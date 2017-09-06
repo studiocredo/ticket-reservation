@@ -21,7 +21,8 @@ class EventDetails @Inject()(eventService: EventService, showService: ShowServic
   val showForm = Form(
     mapping(
       "venue" -> of[VenueId],
-      "date" -> jodaDate("yyyy-MM-dd HH:mm")
+      "date" -> jodaDate("yyyy-MM-dd HH:mm"),
+      "archived" -> boolean
     )(ShowEdit.apply)(ShowEdit.unapply)
   )
 
@@ -45,7 +46,7 @@ class EventDetails @Inject()(eventService: EventService, showService: ShowServic
     showForm.bindFromRequest.fold(
       formWithErrors => page(id, formWithErrors, assetForm, BadRequest),
       newShow => {
-        showService.insert(id, ShowEdit(newShow.venueId, newShow.date))
+        showService.insert(id, ShowEdit(newShow.venueId, newShow.date, newShow.archived))
 
         Redirect(routes.EventDetails.view(id)).flashing("success" -> "Voorstelling toegevoegd")
       }
@@ -77,7 +78,7 @@ class EventDetails @Inject()(eventService: EventService, showService: ShowServic
   def showPage(id: EventId, showId: ShowId, showForm: Form[ShowEdit] = showForm, status: Status = Ok)(implicit rs: SecuredDBRequest[_]): SimpleResult = {
     showService.get(showId) match {
       case None => BadRequest(s"Show $id niet gevonden")
-      case Some(show) => status(views.html.admin.show(id, showId, showForm.fill(ShowEdit(show.venueId, show.date)), Options.apply(venueService.list(), Options.VenueRenderer),  userContext))
+      case Some(show) => status(views.html.admin.show(id, showId, showForm.fill(ShowEdit(show.venueId, show.date, show.archived)), Options.apply(venueService.list(), Options.VenueRenderer),  userContext))
     }
   }
 
