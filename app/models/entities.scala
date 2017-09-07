@@ -69,7 +69,17 @@ object entities {
 
   case class EventEdit(name: String, description: String, preReservationStart: Option[DateTime], preReservationEnd: Option[DateTime], reservationStart: Option[DateTime], reservationEnd: Option[DateTime], template: Option[String], archived: Boolean)
 
+  object EventWithPriceEdit {
+    def create(event: EventEdit, eventPricing: Option[EventPricing]) = EventWithPriceEdit(event.name, event.description, event.preReservationStart, event.preReservationEnd, event.reservationStart, event.reservationEnd, event.template, event.archived, eventPricing.map(_.prices.map(ep => EventPriceEdit(ep.category, ep.price))))
+  }
+  case class EventWithPriceEdit(name: String, description: String, preReservationStart: Option[DateTime], preReservationEnd: Option[DateTime], reservationStart: Option[DateTime], reservationEnd: Option[DateTime], template: Option[String], archived: Boolean, pricing: Option[List[EventPriceEdit]]) {
+    val event = EventEdit(name, description, preReservationStart, preReservationEnd, reservationStart, reservationEnd, template, archived)
+    def eventPricing(eventId: EventId): Option[EventPricing] = pricing.map{p => EventPricing(eventId, p.map(pe => EventPrice(eventId, pe.category, pe.price)))}
+  }
+
   case class EventPrice(id: EventId, category: String, price: Money)
+
+  case class EventPriceEdit(category: String, price: Money)
 
   case class EventPricing(id: EventId, prices: List[EventPrice])
 
@@ -396,6 +406,8 @@ object entities {
     val remainder: Long = TicketDistribution.calcRemainder(order, serial)
     val reference = s"${"%04d".format(serial)}-${"%05d".format(order.id)}-${TicketDistribution.datetimeformat.print(date)}-${"%03d".format(remainder)}"
   }
+
+  case class PriceCategory(key: String)
 
 }
 

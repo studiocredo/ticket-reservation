@@ -1,7 +1,8 @@
-@(eventForm: Form[entities.EventEdit])(implicit lang: Lang)
+@(eventForm: Form[entities.EventWithPriceEdit])(implicit lang: Lang)
 
 @import helper._
 @import views.Bootstrap._
+@import math.max
 
 @globalFormErrors(eventForm)
 
@@ -15,4 +16,44 @@
     @inputText(eventForm("reservationEnd"), '_label -> "Einde reservaties", 'class -> "form-control")
     @inputText(eventForm("template"), '_label -> "Ticket template",  'class -> "form-control", '_help -> "Bestandsnaam van het PDF template bestand voor tickets")
     @twCheckbox(eventForm("archived"), '_label -> "Gearchiveerd")
+
 </fieldset>
+
+<h2>Prijs</h2>
+
+<div class="pricing">
+
+    @defining(eventForm("pricing").indexes.length) { numberPricings =>
+    @repeat(eventForm("pricing"), min = max(numberPricings,1)) { pricingFrom =>
+
+        <fieldset>
+            <div class="row">
+                @inputText(pricingFrom("category"), '_label -> "Categorie", 'labelClass -> "col-sm-3 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Categorie", 'class -> "pricing-category form-control form-inline-control")
+            </div>
+            <div class="row">
+                @inputText(pricingFrom("price"), '_label -> "Prijs", 'labelClass -> "col-sm-3 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Prijs in euro", 'class -> "pricing-price form-control form-inline-control")
+            </div>
+
+            <div class="row">
+                <div class="col-sm-12" >
+                    <div class="pricing-delete text-right @if(numberPricings<=1){ hidden }">
+                        <button type="button" class="btn btn-danger btn-xs"><span class="glyphicon glyphicon-trash"></span></button>
+                    </div>
+                </div>
+            </div>
+
+            <hr>
+        </fieldset>
+    }
+    }
+
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="pricing-add text-right">
+                <button type="button" class="btn btn-primary btn-xs"><span class="glyphicon glyphicon-plus"></span></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type='text/javascript' src='@routes.Assets.at("js/event-price-edit.js")'></script>

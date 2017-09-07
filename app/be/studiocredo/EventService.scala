@@ -97,6 +97,7 @@ class EventService @Inject()(showService: ShowService, preReservationService: Pr
 
   def get(id: EventId)(implicit s: Session): Option[Event] = byId(id).firstOption
   def getEdit(id: EventId)(implicit s: Session): Option[EventEdit] = editById(id).firstOption
+  def getEditWithPrice(id: EventId)(implicit s: Session): Option[EventWithPriceEdit] = editById(id).firstOption.map(EventWithPriceEdit.create(_, getPricing(id)))
 
   def delete(id: EventId)(implicit s: Session) = (for (v <- EventsQ if v.id === id) yield v.archived).update(true)
 

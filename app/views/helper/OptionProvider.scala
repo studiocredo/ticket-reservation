@@ -1,9 +1,10 @@
 package views.helper
 
-import models.entities.{Order, Venue}
+import models.entities.{Order, PriceCategory, Venue}
 import models.entities.PaymentType.PaymentType
 import play.api.data.format.Formatter
 import play.api.data.FormError
+import play.api.i18n.Messages
 
 object Options {
   val VenueRenderer = Renderer[Venue](_.id.toString, {
@@ -12,6 +13,8 @@ object Options {
   })
   val PaymentTypeRenderer = Renderer[PaymentType](value => value.toString, value => s"options.paymenttype.${value.toString}")
   val OrderRenderer = Renderer[Option[Order]](_.fold("")(_.id.toString), value => value.fold("(geen)")(value => s"${value.id} - ${value.billingName}"))
+
+  val PriceCategoryRenderer = Renderer[PriceCategory](pc => pc.key, pc => Messages(pc.key))
 
   def apply[T](options: Seq[T], renderer: Renderer[T]) = new Options[T](options, renderer)
 }
@@ -123,4 +126,8 @@ object PaymentRegisteredOption {
       Map(key -> value.id)
     }
   }
+}
+
+object PricingCategoryOption {
+
 }
