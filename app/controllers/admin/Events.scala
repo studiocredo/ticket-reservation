@@ -79,7 +79,7 @@ class Events @Inject()(eventService: EventService, val authService: Authenticato
     bindedForm.bindFromRequest.fold(
       formWithErrors => BadRequest(views.html.admin.eventsEditForm(id, formWithErrors, priceCategoryOptions, userContext)),
       event => {
-        eventService.update(id, event.event).fold(
+        eventService.update(id, event).fold(
           error => BadRequest(views.html.admin.eventsEditForm(id, bindedForm.withGlobalError(serviceMessage(error)), priceCategoryOptions, userContext)),
           success => ListPage.flashing("success" -> "Evenement '%s' aangepast".format(event.name))
         )

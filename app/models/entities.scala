@@ -24,13 +24,25 @@ object entities {
   object interfaces {
 
     trait Archiveable {
-      def archived: Boolean
+      val archived: Boolean
     }
 
     trait HasTime {
-      def date: DateTime
+      val date: DateTime
 
-      def isDone: Boolean = date.isBeforeNow
+      val isDone: Boolean = date.isBeforeNow
+    }
+
+    trait HasAmount {
+      val amount: Money
+    }
+
+    trait Priced {
+      val price: Money
+    }
+
+    trait MaybePriced {
+      val price: Option[Money]
     }
 
   }
@@ -77,9 +89,9 @@ object entities {
     def eventPricing(eventId: EventId): Option[EventPricing] = pricing.map{p => EventPricing(eventId, p.map(pe => EventPrice(eventId, pe.category, pe.price)))}
   }
 
-  case class EventPrice(id: EventId, category: String, price: Money)
+  case class EventPrice(id: EventId, category: String, price: Money) extends Priced
 
-  case class EventPriceEdit(category: String, price: Money)
+  case class EventPriceEdit(category: String, price: Money) extends Priced
 
   case class EventPricing(id: EventId, prices: List[EventPrice])
 
@@ -118,7 +130,7 @@ object entities {
 
   case class VenueEdit(name: String, description: String, adminLabel: Option[String], archived: Boolean)
 
-  case class Asset(id: AssetId, eventId: EventId, name: String, price: Option[Money], availableStart: DateTime, availableEnd: Option[DateTime], downloadable: Boolean, objectKey: Option[String], archived: Boolean) extends Archiveable
+  case class Asset(id: AssetId, eventId: EventId, name: String, price: Option[Money], availableStart: DateTime, availableEnd: Option[DateTime], downloadable: Boolean, objectKey: Option[String], archived: Boolean) extends Archiveable with MaybePriced
 
   case class Show(id: ShowId, eventId: EventId, venueId: VenueId, date: DateTime, archived: Boolean) extends Archiveable with HasTime
 
@@ -254,7 +266,7 @@ object entities {
 
   case class OrderEdit(userId: UserId, date: DateTime, billingName: String, billingAddress: String, processed: Boolean, archived: Boolean, comments: Option[String])
 
-  case class OrderDetail(order: Order, user: User, ticketOrders: List[TicketOrderDetail]) {
+  case class OrderDetail(order: Order, user: User, ticketOrders: List[TicketOrderDetail]) extends Priced {
     val id: OrderId = order.id
     val price: Money = ticketOrders.map(_.price).foldLeft(Money(0))((total, amount) => total.plus(amount))
     val quantity: Int = ticketOrders.map(_.quantity).sum
@@ -277,7 +289,7 @@ object entities {
 
   case class OrderDetailEdit(userId: UserId, billingName: String, billingAddress: String, comments: Option[String], seats: List[TicketSeatOrderEdit])
 
-  case class TicketSeatOrderEdit(ticketOrderId: TicketOrderId, seat: SeatId, price: Money)
+  case class TicketSeatOrderEdit(ticketOrderId: TicketOrderId, seat: SeatId, price: Money) extends Priced
 
   case class OrderPayments(order: OrderDetail, payments: List[Payment]) {
     val balance: Money = payments.map(_.amount).foldLeft(order.price)((total, amount) => total.minus(amount))
@@ -286,18 +298,18 @@ object entities {
 
   case class TicketOrder(id: TicketOrderId, orderId: OrderId, showId: ShowId)
 
-  case class TicketOrderDetail(ticketOrder: TicketOrder, order: Order, show: EventShow, ticketSeatOrders: List[TicketSeatOrderDetail]) {
-    def id: TicketOrderId = ticketOrder.id
+  case class TicketOrderDetail(ticketOrder: TicketOrder, order: Order, show: EventShow, ticketSeatOrders: List[TicketSeatOrderDetail]) extends Priced {
+    val id: TicketOrderId = ticketOrder.id
 
-    def quantity: Int = ticketSeatOrders.length
+    val quantity: Int = ticketSeatOrders.length
 
-    def price: Money = ticketSeatOrders.map(_.price).foldLeft(Money(0))((total, amount) => total.plus(amount))
+    val price: Money = ticketSeatOrders.map(_.price).foldLeft(Money(0))((total, amount) => total.plus(amount))
   }
 
-  case class TicketSeatOrder(ticketOrderId: TicketOrderId, showId: ShowId, userId: Option[UserId], seat: SeatId, price: Money)
+  case class TicketSeatOrder(ticketOrderId: TicketOrderId, showId: ShowId, userId: Option[UserId], seat: SeatId, price: Money) extends Priced
 
-  case class TicketSeatOrderDetail(ticketSeatOrder: TicketSeatOrder, show: EventShow) {
-    def price: Money = ticketSeatOrder.price
+  case class TicketSeatOrderDetail(ticketSeatOrder: TicketSeatOrder, show: EventShow) extends Priced {
+    val price: Money = ticketSeatOrder.price
   }
 
   case class ReservationQuotum(eventId: EventId, userId: UserId, quota: Int)
@@ -363,9 +375,9 @@ object entities {
 
   import PaymentType._
 
-  case class Payment(id: PaymentId, paymentType: PaymentType, importId: Option[String], orderId: Option[OrderId], debtor: String, amount: Money, message: Option[String], details: Option[String], date: DateTime, archived: Boolean) extends HasTime with Archiveable
+  case class Payment(id: PaymentId, paymentType: PaymentType, importId: Option[String], orderId: Option[OrderId], debtor: String, amount: Money, message: Option[String], details: Option[String], date: DateTime, archived: Boolean) extends HasTime with Archiveable with HasAmount
 
-  case class PaymentEdit(paymentType: PaymentType, importId: Option[String], orderId: Option[OrderId], debtor: String, amount: Money, message: Option[String], details: Option[String], date: DateTime, archived: Boolean) extends HasTime with Archiveable
+  case class PaymentEdit(paymentType: PaymentType, importId: Option[String], orderId: Option[OrderId], debtor: String, amount: Money, message: Option[String], details: Option[String], date: DateTime, archived: Boolean) extends HasTime with Archiveable with HasAmount
 
   case class TicketDocument(order: OrderDetail, filename: String, pdf: Array[Byte], mimetype: String) {
     def saveAs(file: File) {
