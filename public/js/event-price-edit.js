@@ -8,7 +8,7 @@
                 var attr = $(element).attr('for');
                 $(element).attr('for', attr.replace(/pricing_[\d+]_/, 'pricing_' + index + '_'));
             });
-            $(fieldset).find('input').each(function(i, element){
+            $(fieldset).find('input,select').each(function(i, element){
                 element.id = element.id.replace(/pricing_[\d+]_/, 'pricing_' + index + '_');
                 element.name = element.name.replace(/pricing\[[\d+]\]/, 'pricing[' + index + ']');
             });

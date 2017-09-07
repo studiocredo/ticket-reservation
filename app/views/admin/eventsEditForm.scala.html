@@ -13,7 +13,7 @@
 
     @form(action = routes.Events.update(id), 'class -> "form form-horizontal") {
 
-        @eventsForm(eventForm)
+        @eventsForm(eventForm, priceOptions)
 
         @twFormActions {
             <input type="submit" value="Aanpassen" class="btn btn-primary">

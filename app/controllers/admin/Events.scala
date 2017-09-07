@@ -20,7 +20,7 @@ class Events @Inject()(eventService: EventService, val authService: Authenticato
 
   val getPriceCategories: Seq[PriceCategory] = {
     current.configuration.getList("pricing").map{ config =>
-      config.unwrapped().toArray.toSeq.map(c => PriceCategory(c.toString))
+      config.unwrapped().toArray.toSeq.map(c => PriceCategory(s"pricing.$c"))
     }.getOrElse(Nil)
   }
 

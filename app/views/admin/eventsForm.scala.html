@@ -1,4 +1,4 @@
-@(eventForm: Form[entities.EventWithPriceEdit])(implicit lang: Lang)
+@(eventForm: Form[entities.EventWithPriceEdit], priceOptions: views.helper.Options[entities.PriceCategory])(implicit lang: Lang)
 
 @import helper._
 @import views.Bootstrap._
@@ -28,7 +28,7 @@
 
         <fieldset>
             <div class="row">
-                @inputText(pricingFrom("category"), '_label -> "Categorie", 'labelClass -> "col-sm-3 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Categorie", 'class -> "pricing-category form-control form-inline-control")
+                @rselect(pricingFrom("category"), priceOptions, '_label -> "Categorie",  '_showConstraints -> false, '_label -> "Categorie", 'labelClass -> "col-sm-3 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Categorie", 'class -> "pricing-category form-control form-inline-control")
             </div>
             <div class="row">
                 @inputText(pricingFrom("price"), '_label -> "Prijs", 'labelClass -> "col-sm-3 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Prijs in euro", 'class -> "pricing-price form-control form-inline-control")
