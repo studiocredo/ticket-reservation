@@ -5,7 +5,6 @@ import be.studiocredo.util.Joda._
 import be.studiocredo.util.Money
 import models.entities._
 import models.ids._
-import models.schema.Archiveable
 import org.joda.time.DateTime
 
 object admin {
@@ -56,10 +55,10 @@ object admin {
   case class EventReservationsDetail(event: EventDetail, users: List[User], shows: List[VenueShows], pendingPrereservationsByShow: Map[ShowId, Int]) {
     val id: EventId = event.id
 
-    //TODO: WARNING the number of tickets per session should be at least equal
+    //WARNING the number of tickets per session should be at least equal
     //      to the total number of prereservations for that family otherwise
     //      they cannot order all their prereservations at once
-    val totalQuota: Int = event.event.quota.map(_.quota(users.length)).getOrElse(Int.MaxValue) //TODO
+    val totalQuota: Option[Int] = event.event.quota.map(_.quota(users.length))
 
     val orderedShows: List[(Venue, Show)] = shows.flatMap { vs => vs.shows.map((vs.venue, _)) }.sortBy(_._2.date)
   }

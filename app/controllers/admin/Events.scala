@@ -1,19 +1,18 @@
 package controllers.admin
 
-import play.api.data.{Form, Forms}
-import play.api.data.Forms._
-import models.ids._
-import models.entities._
-import be.studiocredo.{EventService, NotificationService, UserContextSupport, UserService}
-import com.google.inject.Inject
 import be.studiocredo.auth.AuthenticatorService
 import be.studiocredo.util.Money
 import be.studiocredo.util.ServiceReturnValues._
+import be.studiocredo.{EventService, NotificationService, UserContextSupport, UserService}
+import com.google.inject.Inject
+import models.entities._
+import models.ids._
 import play.api.Play.current
+import play.api.data.Forms._
+import play.api.data.{Form, Forms}
+import play.api.mvc.SimpleResult
 import views.helper.Options
 import views.helper.Options._
-
-import scala.Some
 
 class Events @Inject()(eventService: EventService, val authService: AuthenticatorService, val notificationService: NotificationService, val userService: UserService) extends AdminController with UserContextSupport {
 
@@ -25,7 +24,7 @@ class Events @Inject()(eventService: EventService, val authService: Authenticato
 
   val priceCategoryOptions = Options.apply(getPriceCategories, PriceCategoryRenderer)
 
-  val ListPage = Redirect(routes.Events.list())
+  val ListPage: SimpleResult = Redirect(routes.Events.list())
 
   val eventForm = Form(
     mapping(
@@ -38,7 +37,7 @@ class Events @Inject()(eventService: EventService, val authService: Authenticato
       "template" -> optional(text),
       "quota" -> optional(mapping(
         "default" -> number.verifying("format.numeric.positive", n => n > 0),
-        "values" -> of[Map[Int, Int]](jsonMapFormatter)
+        "values" -> of[Map[Int, Int]](jsonMapFormatter).verifying(EventQuotaConstraints.validEventQuota)
         )(EventQuota.apply)(EventQuota.unapply)
       ),
       "archived" -> boolean,

@@ -37,6 +37,9 @@ error.money.invalid=Ongeldig bedrag
 error.paymentType.invalid=Ongeldige betalingswijze
 error.date=Ongeldige datum
 error.id=Ongeldige ID waarde
+error.event.userquota.keys.consecutive=Sleutels moeten opeenvolgende waarden zijn beginnend van 1
+error.event.userquota.values.positive=Waarden moeten positieve getallen zijn
+error.event.userquota.values.increasing=Waarden moeten oplopend zijn
 
 #No need to translate JSON conversion errors
 #error.expected.date=Datum verwacht

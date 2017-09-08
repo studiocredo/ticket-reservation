@@ -1,7 +1,7 @@
 #!/bin/bash
 cmd=$1
 if [ -z "$cmd" ]; then
-  cmd=start
+  cmd=run
 fi
 
 dir=$(dirname "$0")

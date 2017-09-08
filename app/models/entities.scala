@@ -11,12 +11,13 @@ import models.schema.PersistableEnumeration
 import org.joda.time.DateTime
 import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
 import play.api.data.FormError
+import play.api.data.validation.{Constraint, Invalid, Valid, ValidationError}
 import play.api.mvc.{PathBindable, QueryStringBindable}
 
 import scala.Predef._
 import scala.slick.lifted.{BaseTypeMapper, MappedTypeMapper}
-import scala.util.{Failure, Success, Try}
 import scala.util.matching.Regex
+import scala.util.{Success, Try}
 
 object entities {
 
@@ -86,8 +87,8 @@ object entities {
 
   object EventQuotaJson {
 
-    import play.api.libs.json._
     import play.api.libs.functional.syntax._
+    import play.api.libs.json._
 
     //no implicit conversion here as it is not generic enough
     val mapFmt: Format[Map[Int, Int]] = {
@@ -118,6 +119,20 @@ object entities {
     }
   }
 
+  object EventQuotaConstraints {
+    def validEventQuota: Constraint[Map[Int, Int]] = Constraint[Map[Int, Int]]("constraint.event.userquota", Nil) { q =>
+      validations.filter(!_._1(q)).map(_._2) match {
+        case Nil => Valid
+        case other => Invalid(other)
+      }
+    }
+
+    private val validations: Seq[(Map[Int, Int] => Boolean, ValidationError)] = Seq(
+      ((m: Map[Int, Int]) => m.keys == (1 to m.size).toSet, ValidationError("error.event.userquota.keys.consecutive", Nil)),
+      ((m: Map[Int, Int])  => m.values.forall(_ > 0), ValidationError("error.event.userquota.values.postive", Nil)),
+      ((m: Map[Int, Int])  => m.keys.toSeq.sorted.map(m(_)) == m.values.toSeq.sorted, ValidationError("error.event.userquota.values.increasing", Nil))
+    )
+  }
 
   case class EventEdit(name: String, description: String, preReservationStart: Option[DateTime], preReservationEnd: Option[DateTime], reservationStart: Option[DateTime], reservationEnd: Option[DateTime], template: Option[String], quota: Option[EventQuota], archived: Boolean)
 
@@ -645,7 +660,7 @@ object ids {
     // 1:6, 2:4
     // all keys must be consecutive numbers starting from 1, values must increase with each user
     private def unmarshall(maybeInput: Option[String]): Try[Map[Int, Int]] = {
-      maybeInput.filter(!"".equals(_)).fold(Success(Map()).asInstanceOf[Try[Map[Int, Int]]]) { input =>
+      maybeInput.filter(!"".equals(_)).fold(Success(Map()): Try[Map[Int, Int]]) { input =>
         Try {
           input.split(",").map(_.replaceAll(" ", "")).map{ element =>
             val splitElements = element.split(":", 2)
@@ -655,7 +670,7 @@ object ids {
       }
     }
 
-    private def marshall(map: Map[Int, Int]): String = map.map { case (key, value) => s"$key:$value" }.mkString(",")
+    private def marshall(map: Map[Int, Int]): String = map.keys.toSeq.sorted.map { key => s"$key:${map(key)}" }.mkString(", ")
   }
 
   import play.api.libs.json._
