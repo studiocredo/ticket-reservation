@@ -1,15 +1,13 @@
 package controllers
 
-import com.google.inject.Inject
 import be.studiocredo._
-import be.studiocredo.auth.{Authorization, Secure, AuthenticatorService}
-import play.api.mvc.Controller
-import models.ids.{VenueId, ShowId, EventId}
-import models.entities._
-import play.api.libs.json.Json
+import be.studiocredo.auth.{AuthenticatorService, Authorization, Secure}
 import be.studiocredo.util.DBSupport._
-import scala.Some
-import models.entities.UserContext
+import com.google.inject.Inject
+import models.entities.{UserContext, _}
+import models.ids.{EventId, ShowId, VenueId}
+import play.api.libs.json.Json
+import play.api.mvc.Controller
 
 class Events @Inject()(venueService: VenueService, eventService: EventService, showService: ShowService, preReservationService: PreReservationService, orderService: OrderService, val authService: AuthenticatorService, val notificationService: NotificationService, val userService : UserService) extends Controller with Secure with UserContextSupport {
 
@@ -22,19 +20,24 @@ class Events @Inject()(venueService: VenueService, eventService: EventService, s
   def view(id: EventId) = AuthAwareDBAction { implicit rs =>
     eventService.eventDetails(id) match {
       case None => BadRequest(s"Evenement $id niet gevonden")
-      case Some(details) => {
-        details.shows.headOption match {
-          case None => BadRequest(s"Evenement $id heeft geen shows")
-          case Some(venueShow) => {
-            venueShow.shows.headOption match {
-              case None => BadRequest(s"Evenement $id heeft geen shows")
-              case Some(show) => {
-                Redirect(routes.Events.viewShow(id, show.id))
+      case Some(details) =>
+        if (details.event.archived) {
+          BadRequest(s"Evenement $id niet beschikbaar")
+        } else {
+          details.shows.headOption match {
+            case None => BadRequest(s"Evenement $id heeft geen shows")
+            case Some(venueShow) =>
+              venueShow.shows.headOption match {
+                case None => BadRequest(s"Evenement $id heeft geen shows")
+                case Some(show) =>
+                  if (show.archived) {
+                    BadRequest(s"Show ${show.id} van evenement $id niet beschikbaar")
+                  } else {
+                    Redirect(routes.Events.viewShow(id, show.id))
+                  }
               }
-            }
           }
         }
-      }
     }
   }
 
@@ -42,22 +45,28 @@ class Events @Inject()(venueService: VenueService, eventService: EventService, s
     implicit rs =>
       eventService.eventDetails(eventId) match {
         case None => BadRequest(s"Evenement $eventId niet gevonden")
-        case Some(details) => {
-          val currentUserContext = userContext
-          details.shows.flatMap(_.shows).find(_.id == showId) match {
-            case None => BadRequest(s"Evenement $eventId heeft geen shows")
-            case Some(show) => {
-              val showAvailability = preReservationService.availability(showService.getEventShow(show.id))
-              Ok(views.html.event(details, showAvailability, hasQuota(eventId, currentUserContext), currentUserContext))
+        case Some(details) =>
+          if (details.event.archived) {
+            BadRequest(s"Evenement $eventId niet beschikbaar")
+          } else {
+            val currentUserContext = userContext
+            details.shows.flatMap(_.shows).find(_.id == showId) match {
+              case None => BadRequest(s"Evenement $eventId heeft geen shows")
+              case Some(show) =>
+                if (show.archived) {
+                  BadRequest(s"Show $showId van evenement $eventId niet beschikbaar")
+                } else {
+                val showAvailability = preReservationService.availability(showService.getEventShow(show.id))
+                Ok(views.html.event(details, showAvailability, hasQuota(eventId, currentUserContext), currentUserContext))
+                }
             }
           }
-        }
       }
   }
 
   private def hasQuota(eventId: EventId, userContext: Option[UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_]): Boolean = {
     request.currentUser match {
-      case Some(identity) => {
+      case Some(identity) =>
         DB.withSession {
           implicit session =>
             preReservationService.totalQuotaByUsersAndEvent(identity.allUsers, eventId) match {
@@ -65,7 +74,6 @@ class Events @Inject()(venueService: VenueService, eventService: EventService, s
               case None => false
             }
         }
-      }
       case None => false
     }
   }
@@ -82,21 +90,20 @@ class Events @Inject()(venueService: VenueService, eventService: EventService, s
   }
 
   def ajaxAvailabilityFloorplan(id: ShowId) = AuthAwareDBAction { implicit rs =>
-    val plan = for {
+    val maybePlan = for {
       show <- showService.get(id)
       venue <- venueService.get(show.venueId)
       fp <- venue.floorplan
-    } yield (fp)
+    } yield fp
 
-    plan match {
+    maybePlan match {
       case None => BadRequest(s"Zaalplan voor show $id niet gevonden")
-      case Some(plan) => {
+      case Some(plan) =>
         val users = rs.user match {
           case None => Nil
           case Some(identity) => identity.allUsers
         }
         Ok(Json.toJson(venueService.fillFloorplan(plan, orderService.detailsByShowId(id), users)))
-      }
     }
   }
 }

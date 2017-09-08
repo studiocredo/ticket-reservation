@@ -4,7 +4,7 @@
         <div class="panel-heading">Voorstellingen</div>
 
         <div class="list-group">
-            @info.orderedShows.map { show =>
+            @info.orderedShows.filter{!_.archived}.map { show =>
                 <a href="@routes.Events.viewShow(info.id, show.id)" class="list-group-item @views.Utils.active(Some(active), show.id)" >
                 @HumanDateTime.formatDateTime(show.date)
                 </a>

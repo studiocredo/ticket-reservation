@@ -67,7 +67,7 @@ class Orders @Inject()(ticketService: TicketService, eventService: EventService,
       case Some(identity) => identity.allUsers
     }
     eventService.eventReservationDetails(id, users) match {
-      case Some(event) if event.event.reservationAllowed || userContext.exists(_.reservationAllowed) =>
+      case Some(event) if !event.event.event.archived && (event.event.reservationAllowed || userContext.exists(_.reservationAllowed)) =>
         //assume that there is max only one unprocessed order per usergroup
         //if no order is found, create a new one
         val order = orderService.unprocessedOrdersByUsers(users).headOption.getOrElse(orderService.create(rs.currentUser.get.user))
@@ -423,22 +423,24 @@ class Orders @Inject()(ticketService: TicketService, eventService: EventService,
   }
 
 
-  private def viewPage(id: OrderId, event: EventId, status: Status = Ok)(implicit rs: SecuredDBRequest[_]) = {
+  private def viewPage(id: OrderId, eventId: EventId, status: Status = Ok)(implicit rs: SecuredDBRequest[_]) = {
     val users = rs.currentUser match {
       case None => List()
       case Some(identity) => identity.allUsers
     }
-    eventService.eventReservationDetails(event, users) match {
+    eventService.eventReservationDetails(eventId, users) match {
       case None => BadRequest(s"Evenement $id niet gevonden")
-      case Some(event) => {
-        orderService.get(id) match {
-          case None => BadRequest(s"Bestelling $id niet gevonden")
-          case Some(order) if !order.order.processed => {
-            status(views.html.order(event, order, getSeatTypes(rs.user), userContext))
+      case Some(event) =>
+        if (event.event.event.archived) {
+          BadRequest(s"Evenement $id niet beschikbaar")
+        } else {
+          orderService.get(id) match {
+            case None => BadRequest(s"Bestelling $id niet gevonden")
+            case Some(order) if !order.order.processed =>
+              status(views.html.order(event, order, getSeatTypes(rs.user), userContext))
+            case _ => BadRequest(s"Bestelling $id is afgesloten")
           }
-          case _ => BadRequest(s"Bestelling $id is afgesloten")
         }
-      }
     }
   }
 

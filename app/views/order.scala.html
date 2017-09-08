@@ -44,7 +44,7 @@
 }
 
 @orderRowNew(event: models.admin.EventDetail, show: models.entities.Show, venue: models.entities.Venue)= {
-    @defining(info.totalQuota.map(_ - order.numberOfSeats)) { maybeMax =>
+    @defining(info.totalQuota.map(_ - order.numberOfSeats).getOrElse(99)) { max =>
     @defining(info.pendingPrereservationsByShow(show.id)) { startValue =>
     @defining(Json.toJson(seatTypes.map(_.toString))) { seatTypesJ =>
     <div class="row">
@@ -54,7 +54,7 @@
         </div>
         <div class="col-md-6">
             @form(action = controllers.routes.Orders.startSeatOrder(show.id, order.id, info.id), 'class -> "form form-horizontal", 'name -> "orderForm") {
-                <div data-order-input quantity="@startValue" @maybeMax.map { max => max="@max" } price-category="@event.pricing.get.prices.head.category" seat-types='@seatTypesJ' class="quantity-input-sm div-inline"></div>
+                <div data-order-input quantity="@startValue" max="@max" price-category="@event.pricing.get.prices.head.category" seat-types='@seatTypesJ' class="quantity-input-sm div-inline"></div>
             }
         </div>
     </div>
