@@ -105,9 +105,10 @@ object schema {
     def reservationStart = column[Option[DateTime]]("reservationStart")
     def reservationEnd = column[Option[DateTime]]("reservationEnd")
     def template = column[Option[String]]("template", O.DBType("TEXT"))
+    def quota = column[Option[EventQuota]]("quota", O.DBType("TEXT"))
 
-    def * = id ~ name ~ description ~ preReservationStart ~ preReservationEnd ~ reservationStart ~ reservationEnd ~ template ~ archived <>(Event.apply _, Event.unapply _)
-    def edit = name ~ description ~ preReservationStart ~ preReservationEnd ~ reservationStart ~ reservationEnd ~ template ~ archived <>(EventEdit.apply _, EventEdit.unapply _)
+    def * = id ~ name ~ description ~ preReservationStart ~ preReservationEnd ~ reservationStart ~ reservationEnd ~ template ~ quota ~ archived <>(Event.apply _, Event.unapply _)
+    def edit = name ~ description ~ preReservationStart ~ preReservationEnd ~ reservationStart ~ reservationEnd ~ template ~ quota ~ archived <>(EventEdit.apply _, EventEdit.unapply _)
     def autoInc = edit returning id
   }
 
@@ -327,4 +328,7 @@ object schema {
 
   import FloorPlanJson._
   implicit val floorplanType = MappedTypeMapper.base[FloorPlan, String]({ plan => Json.stringify(Json.toJson(plan))}, { plan => Json.parse(plan).as[FloorPlan]})
+
+  import EventQuotaJson._
+  implicit val eventQuotaType = MappedTypeMapper.base[EventQuota, String]({ quota => Json.stringify(Json.toJson(quota))}, { quota => Json.parse(quota).as[EventQuota]})
 }

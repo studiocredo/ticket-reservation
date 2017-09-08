@@ -1,3 +1,12 @@
-confDir=$(dirname "$0")/conf.local
-pkFile=$(find "$confDir" -name '*.der' | head -1)
-sbt "run -Dconfig.file=$confDir/application.local.conf -Daws.key-pair.private-key.path=$pkFile -Djava.library.path=$(dirname "$0")/../jnotify"
+#!/bin/bash
+cmd=$1
+if [ -z "$cmd" ]; then
+  cmd=start
+fi
+
+dir=$(dirname "$0")
+conf_dir="$dir/conf.local"
+pkFile=$(find "$conf_dir" -name '*.der' | head -1)
+conf="$conf_dir/application.local.conf"
+
+_JAVA_OPTIONS="-Dconfig.file=$conf -Daws.key-pair.private-key.path=$pkFile -Djava.library.path=$dir/../jnotify" sbt play "$cmd"

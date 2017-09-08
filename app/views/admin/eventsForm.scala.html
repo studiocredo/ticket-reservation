@@ -15,6 +15,8 @@
     @inputText(eventForm("reservationStart"), '_label -> "Start reservaties", 'class -> "form-control")
     @inputText(eventForm("reservationEnd"), '_label -> "Einde reservaties", 'class -> "form-control")
     @inputText(eventForm("template"), '_label -> "Ticket template",  'class -> "form-control", '_help -> "Bestandsnaam van het PDF template bestand voor tickets")
+    @inputText(eventForm("quota.default"), '_label -> "Standaard quota",  'class -> "form-control", '_help -> "Het standaard maximum aantal tickets per bestelling")
+    @inputText(eventForm("quota.values"), '_label -> "Gebruikersquota",  'class -> "form-control", '_help -> "Het maximum aantal tickets per aantal gekoppelde gebruikers")
     @twCheckbox(eventForm("archived"), '_label -> "Gearchiveerd")
 
 </fieldset>

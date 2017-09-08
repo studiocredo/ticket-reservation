@@ -11,10 +11,12 @@ constraint.email=Email
 # --- Formats
 format.date=Datum (''{0}'')
 format.numeric=Getal
+format.numeric.positive=Getal groter dan 0
 format.real=Kommagetal
 format.money=Bedrag in euro
 format.paymentType=Betalingswijze
 format.id=ID
+format.event.userquota=Komma lijst van aantal gebruikers en quota, bv: '1:4, 2:6'
 
 # --- Errors
 error.invalid=Ongeldige waarde

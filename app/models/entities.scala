@@ -15,6 +15,7 @@ import play.api.mvc.{PathBindable, QueryStringBindable}
 
 import scala.Predef._
 import scala.slick.lifted.{BaseTypeMapper, MappedTypeMapper}
+import scala.util.{Failure, Success, Try}
 import scala.util.matching.Regex
 
 object entities {
@@ -74,18 +75,57 @@ object entities {
 
   case class UserRole(id: UserId, role: Roles.Role)
 
-  case class Event(id: EventId, name: String, description: String, preReservationStart: Option[DateTime], preReservationEnd: Option[DateTime], reservationStart: Option[DateTime], reservationEnd: Option[DateTime], template: Option[String], archived: Boolean) extends Archiveable {
+  case class Event(id: EventId, name: String, description: String, preReservationStart: Option[DateTime], preReservationEnd: Option[DateTime], reservationStart: Option[DateTime], reservationEnd: Option[DateTime], template: Option[String], quota: Option[EventQuota], archived: Boolean) extends Archiveable {
     val preReservationAllowed: Boolean = preReservationStart.forall(!archived && _.isBeforeNow && preReservationEnd.exists(_.isAfterNow))
     val reservationAllowed: Boolean = reservationStart.forall(!archived && _.isBeforeNow && reservationEnd.exists(_.isAfterNow))
   }
 
-  case class EventEdit(name: String, description: String, preReservationStart: Option[DateTime], preReservationEnd: Option[DateTime], reservationStart: Option[DateTime], reservationEnd: Option[DateTime], template: Option[String], archived: Boolean)
+  case class EventQuota(defaultValue: Int, values: Map[Int, Int] = Map()) {
+    def quota(number: Int): Int = values.getOrElse(number, defaultValue)
+  }
+
+  object EventQuotaJson {
+
+    import play.api.libs.json._
+    import play.api.libs.functional.syntax._
+
+    //no implicit conversion here as it is not generic enough
+    val mapFmt: Format[Map[Int, Int]] = {
+      new Format[Map[Int, Int]] {
+        def writes(m: Map[Int, Int]): JsValue = {
+          JsArray(m.toSeq.map { case (key, value) => JsObject(Seq("u" -> JsNumber(key), "v" -> JsNumber(value))) })
+        }
+
+        def reads(json: JsValue): JsResult[Map[Int, Int]] = {
+          json.validate[Seq[Map[String, Int]]].map(_.map { newMap =>
+            newMap("u") -> newMap("v")
+          }.toMap)
+        }
+      }
+    }
+
+    implicit val eventQuotaReads: Reads[EventQuota] = (
+      (__ \ 'default).read[Int] and
+      (__ \ 'values).readNullable[Map[Int, Int]](mapFmt)
+      )((default, maybeValues) => EventQuota(default, maybeValues.getOrElse(Map())))
+
+
+    implicit val eventQuotaWrites: Writes[EventQuota] = new Writes[EventQuota] {
+      override def writes(o: EventQuota): JsValue = {
+        val default = Json.obj("default" -> o.defaultValue)
+        Some(o.values).filter(_.nonEmpty).fold(default)(values => default ++ Json.obj("values" -> mapFmt.writes(values)))
+      }
+    }
+  }
+
+
+  case class EventEdit(name: String, description: String, preReservationStart: Option[DateTime], preReservationEnd: Option[DateTime], reservationStart: Option[DateTime], reservationEnd: Option[DateTime], template: Option[String], quota: Option[EventQuota], archived: Boolean)
 
   object EventWithPriceEdit {
-    def create(event: EventEdit, eventPricing: Option[EventPricing]) = EventWithPriceEdit(event.name, event.description, event.preReservationStart, event.preReservationEnd, event.reservationStart, event.reservationEnd, event.template, event.archived, eventPricing.map(_.prices.map(ep => EventPriceEdit(ep.category, ep.price))))
+    def create(event: EventEdit, eventPricing: Option[EventPricing]) = EventWithPriceEdit(event.name, event.description, event.preReservationStart, event.preReservationEnd, event.reservationStart, event.reservationEnd, event.template, event.quota, event.archived, eventPricing.map(_.prices.map(ep => EventPriceEdit(ep.category, ep.price))))
   }
-  case class EventWithPriceEdit(name: String, description: String, preReservationStart: Option[DateTime], preReservationEnd: Option[DateTime], reservationStart: Option[DateTime], reservationEnd: Option[DateTime], template: Option[String], archived: Boolean, pricing: Option[List[EventPriceEdit]]) {
-    val event = EventEdit(name, description, preReservationStart, preReservationEnd, reservationStart, reservationEnd, template, archived)
+  case class EventWithPriceEdit(name: String, description: String, preReservationStart: Option[DateTime], preReservationEnd: Option[DateTime], reservationStart: Option[DateTime], reservationEnd: Option[DateTime], template: Option[String], quota: Option[EventQuota], archived: Boolean, pricing: Option[List[EventPriceEdit]]) {
+    val event = EventEdit(name, description, preReservationStart, preReservationEnd, reservationStart, reservationEnd, template, quota, archived)
     def eventPricing(eventId: EventId): Option[EventPricing] = pricing.map{p => EventPricing(eventId, p.map(pe => EventPrice(eventId, pe.category, pe.price)))}
   }
 
@@ -97,19 +137,19 @@ object entities {
 
   object SeatType extends Enumeration {
     type SeatType = Value
-    val Normal = Value("normal")
-    val Vip = Value("vip")
-    val Disabled = Value("disabled")
+    val Normal: entities.SeatType.Value = Value("normal")
+    val Vip: entities.SeatType.Value = Value("vip")
+    val Disabled: entities.SeatType.Value = Value("disabled")
   }
 
   import SeatType._
 
   object SeatStatus extends Enumeration {
     type SeatStatus = Value
-    val Free = Value("free")
-    val Reserved = Value("reserved")
-    val Unavailable = Value("unavailable")
-    val Mine = Value("mine")
+    val Free: entities.SeatStatus.Value = Value("free")
+    val Reserved: entities.SeatStatus.Value = Value("reserved")
+    val Unavailable: entities.SeatStatus.Value = Value("unavailable")
+    val Mine: entities.SeatStatus.Value = Value("mine")
   }
 
   import SeatStatus._
@@ -350,15 +390,15 @@ object entities {
   case class Notification(title: String, entries: List[NotificationEntry])
 
   case class PendingPrereservationNotificationEntry(subject: EventShow, value: Int, disabled: Boolean = false) extends NotificationEntry {
-    val notificationType = PendingPrereservation
+    val notificationType: entities.NotificationType.Value = PendingPrereservation
   }
 
   case class UnusedQuotaNotificationEntry(subject: Event, value: Int, disabled: Boolean = false) extends NotificationEntry {
-    val notificationType = UnusedQuota
+    val notificationType: entities.NotificationType.Value = UnusedQuota
   }
 
   case class DefaultNotificationEntry(subject: String, disabled: Boolean = false) extends NotificationEntry {
-    val notificationType = Default
+    val notificationType: entities.NotificationType.Value = Default
   }
 
   case class UserContext(notifications: List[Notification], otherUsers: List[User], isAdmin: Boolean) {
@@ -368,9 +408,9 @@ object entities {
 
   object PaymentType extends PersistableEnumeration {
     type PaymentType = Value
-    val Cash = Value("cash")
-    val WireTransfer = Value("wire")
-    val OnlineTransaction = Value("online")
+    val Cash: entities.PaymentType.Value = Value("cash")
+    val WireTransfer: entities.PaymentType.Value = Value("wire")
+    val OnlineTransaction: entities.PaymentType.Value = Value("online")
   }
 
   import PaymentType._
@@ -474,7 +514,7 @@ object ids {
 
   implicit def longToId[T <: TypedId](untypedId: Long)(implicit create: IdFactory[T]): T = create(untypedId)
 
-  implicit def longToIdOption[T <: TypedId](untypedId: Long)(implicit create: IdFactory[T]) = Option(create(untypedId))
+  implicit def longToIdOption[T <: TypedId](untypedId: Long)(implicit create: IdFactory[T]): Option[T] = Option(create(untypedId))
 
   implicit def longToId[T <: TypedId](untypedId: Option[Long])(implicit create: IdFactory[T]): Option[T] = untypedId.map(create)
 
@@ -508,7 +548,7 @@ object ids {
 
   import play.api.data.FormError
 
-  implicit val moneyFormatter = new Formatter[Money] {
+  implicit val moneyFormatter: Formatter[Money] = new Formatter[Money] {
     override val format = Some(("format.money", Nil))
 
     override def bind(key: String, data: Map[String, String]): Either[Seq[FormError], Money] = {
@@ -529,7 +569,7 @@ object ids {
   import models.entities.SeatType
   import models.entities.SeatType.SeatType
 
-  implicit val seatTypeFormatter = new Formatter[SeatType] {
+  implicit val seatTypeFormatter: Formatter[SeatType] = new Formatter[SeatType] {
     override val format = Some(("format.seatType", Nil))
 
     override def bind(key: String, data: Map[String, String]): Either[Seq[FormError], SeatType] = {
@@ -552,7 +592,7 @@ object ids {
   import models.entities.PaymentType
   import models.entities.PaymentType.PaymentType
 
-  implicit val paymentTypeFormatter = new Formatter[PaymentType] {
+  implicit val paymentTypeFormatter: Formatter[PaymentType] = new Formatter[PaymentType] {
     override val format = Some(("format.paymentType", Nil))
 
     override def bind(key: String, data: Map[String, String]): Either[Seq[FormError], PaymentType] = {
@@ -574,7 +614,7 @@ object ids {
 
   import models.entities.SeatId
 
-  implicit val seatFormatter = new Formatter[SeatId] {
+  implicit val seatFormatter: Formatter[SeatId] = new Formatter[SeatId] {
     override val format = Some(("format.seat", Nil))
 
     override def bind(key: String, data: Map[String, String]): Either[Seq[FormError], SeatId] = {
@@ -586,9 +626,41 @@ object ids {
     override def unbind(key: String, seat: SeatId) = Map(key -> seat.name)
   }
 
+  //no implicit formatter here, because we only want to use this in specific cases
+  val jsonMapFormatter: Formatter[Map[Int, Int]] = new Formatter[Map[Int, Int]] {
+    override val format = Some(("format.event.userquota", Nil))
+
+    override def bind(key: String, data: Map[String, String]): Either[Seq[FormError], Map[Int, Int]] = {
+      unmarshall(data.get(key)).transform(
+        s => Success(Right(s)),
+        f => Success(error(key, "error.invalid"))).get
+    }
+
+    override def unbind(key: String, value: Map[Int, Int]): Map[String, String] = {
+      Map(key -> marshall(value))
+    }
+
+    private def error(key: String, msg: String) = Left(List(FormError(key, msg)))
+
+    // 1:6, 2:4
+    // all keys must be consecutive numbers starting from 1, values must increase with each user
+    private def unmarshall(maybeInput: Option[String]): Try[Map[Int, Int]] = {
+      maybeInput.filter(!"".equals(_)).fold(Success(Map()).asInstanceOf[Try[Map[Int, Int]]]) { input =>
+        Try {
+          input.split(",").map(_.replaceAll(" ", "")).map{ element =>
+            val splitElements = element.split(":", 2)
+            Integer.parseInt(splitElements(0)) -> Integer.parseInt(splitElements(1))
+          }.toMap
+        }
+      }
+    }
+
+    private def marshall(map: Map[Int, Int]): String = map.map { case (key, value) => s"$key:$value" }.mkString(",")
+  }
+
   import play.api.libs.json._
 
-  implicit val typeIdWrites = new Writes[TypedId] {
+  implicit val typeIdWrites: Writes[TypedId] = new Writes[TypedId] {
     def writes(c: TypedId): JsValue = JsNumber(c.id)
   }
 

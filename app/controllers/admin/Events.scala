@@ -9,7 +9,6 @@ import com.google.inject.Inject
 import be.studiocredo.auth.AuthenticatorService
 import be.studiocredo.util.Money
 import be.studiocredo.util.ServiceReturnValues._
-import models.entities.EventEdit
 import play.api.Play.current
 import views.helper.Options
 import views.helper.Options._
@@ -37,6 +36,11 @@ class Events @Inject()(eventService: EventService, val authService: Authenticato
       "reservationStart" -> optional(jodaDate("yyyy-MM-dd HH:mm")),
       "reservationEnd" -> optional(jodaDate("yyyy-MM-dd HH:mm")),
       "template" -> optional(text),
+      "quota" -> optional(mapping(
+        "default" -> number.verifying("format.numeric.positive", n => n > 0),
+        "values" -> of[Map[Int, Int]](jsonMapFormatter)
+        )(EventQuota.apply)(EventQuota.unapply)
+      ),
       "archived" -> boolean,
       "pricing" -> optional(Forms.list(mapping(
         "category" -> text,

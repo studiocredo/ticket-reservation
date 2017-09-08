@@ -53,22 +53,13 @@ object admin {
     val orderedShows: List[(Venue, Show)] = shows.flatMap { vs => vs.shows.map((vs.venue, _)) }.sortBy(_._2.date)
   }
 
-  object EventReservationsDetail {
-    val maxQuantityPerReservation = 10
-  }
-
   case class EventReservationsDetail(event: EventDetail, users: List[User], shows: List[VenueShows], pendingPrereservationsByShow: Map[ShowId, Int]) {
     val id: EventId = event.id
 
     //TODO: WARNING the number of tickets per session should be at least equal
     //      to the total number of prereservations for that family otherwise
     //      they cannot order all their prereservations at once
-    val totalQuota: Int = users.length match {
-      case 0 => 0
-      case 1 => 5
-      case 2 => 8
-      case _ => 10
-    } //TODO: make number of tickets per session configurable
+    val totalQuota: Int = event.event.quota.map(_.quota(users.length)).getOrElse(Int.MaxValue) //TODO
 
     val orderedShows: List[(Venue, Show)] = shows.flatMap { vs => vs.shows.map((vs.venue, _)) }.sortBy(_._2.date)
   }
