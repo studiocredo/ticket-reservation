@@ -1,7 +1,9 @@
-@(form: Form[_])(implicit lang: Lang)
+@(form: Form[_], args: (Symbol,Any)*)(implicit lang: Lang)
+
+@cssClass = @{ args.toMap.get('class).map(_.toString).getOrElse("alert alert-warning") }
 
 @form.globalErrors.map(e => play.api.i18n.Messages(e.message, e.args: _*)).map { error =>
-    <div class="alert alert-warning">
+    <div class="@cssClass">
         @error
     </div>
 }

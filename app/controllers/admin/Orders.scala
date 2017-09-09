@@ -106,7 +106,7 @@ class Orders @Inject()(ticketService: TicketService, preReservationService: PreR
 
   def update(id: OrderId) = AuthDBAction { implicit rs =>
     val bindedForm = orderForm.bindFromRequest
-    bindedForm.bindFromRequest.fold(
+    bindedForm.fold(
       formWithErrors => BadRequest(views.html.admin.orderEditForm(id, formWithErrors, userContext)),
       order => {
         orderService.update(id, order).fold(

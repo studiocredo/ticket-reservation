@@ -15,6 +15,7 @@
     @inputText(eventForm("reservationStart"), '_label -> "Start reservaties", 'class -> "form-control")
     @inputText(eventForm("reservationEnd"), '_label -> "Einde reservaties", 'class -> "form-control")
     @inputText(eventForm("template"), '_label -> "Ticket template",  'class -> "form-control", '_help -> "Bestandsnaam van het PDF template bestand voor tickets")
+    @formErrors(eventForm, "quota", 'class -> "col-lg-10 col-lg-offset-2 alert alert-warning")
     @inputText(eventForm("quota.default"), '_label -> "Standaard quota",  'class -> "form-control", '_help -> "Het standaard maximum aantal tickets per bestelling")
     @inputText(eventForm("quota.values"), '_label -> "Gebruikersquota",  'class -> "form-control", '_help -> "Het maximum aantal tickets per aantal gekoppelde gebruikers (bv. '1:3, 2:5'). Moet sleutels bevatten voor 1 gebruiker en opeenvolgende aantallen. De waarden moet oplopen en kleiner zijn dat de standaard quota")
 
@@ -31,6 +32,8 @@
 <h2>Prijs</h2>
 
 <div class="pricing">
+
+    @formErrors(eventForm, "pricing", 'class -> "col-lg-10 col-lg-offset-2 alert alert-warning")
 
     @defining(eventForm("pricing").indexes.length) { numberPricings =>
     @repeat(eventForm("pricing"), min = max(numberPricings,1)) { pricingFrom =>

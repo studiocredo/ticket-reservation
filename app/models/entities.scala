@@ -120,10 +120,18 @@ object entities {
   }
 
   object EventQuotaConstraints {
-    def validEventQuota: Constraint[Map[Int, Int]] = Constraint[Map[Int, Int]]("constraint.event.userquota", Nil) { q =>
+    def validUserQuota: Constraint[Map[Int, Int]] = Constraint[Map[Int, Int]]("constraint.event.userquota", Nil) { q =>
       validations.filter(!_._1(q)).map(_._2) match {
         case Nil => Valid
         case other => Invalid(other)
+      }
+    }
+
+    def validEventQuota: Constraint[EventQuota] = Constraint[EventQuota]("constraint.event.quota", Nil) { q =>
+      if (q.defaultValue >= q.values.values.max) {
+        Valid
+      } else {
+        Invalid(ValidationError("error.event.quota.default_gt_values", Nil))
       }
     }
 

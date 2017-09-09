@@ -23,6 +23,7 @@
                     <td>@event.id</td>
                     <td><a href="@routes.EventDetails.view(event.id)" class="@if(event.archived){text-warning}">@event.name</a></td>
                     <td>@event.description</td>
+                    <td>@if(!event.archived) { <a class="btn btn-default btn-xs" href="@{controllers.routes.Orders.start(event.id)}">Bestellen</a> }</td>
                     <td><a class="btn btn-default btn-xs" href="@{routes.Events.edit(event.id)}">Bewerken</a></td>
                 </tr>
             }

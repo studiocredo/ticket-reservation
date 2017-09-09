@@ -37,15 +37,16 @@ class Events @Inject()(eventService: EventService, val authService: Authenticato
       "template" -> optional(text),
       "quota" -> optional(mapping(
         "default" -> number.verifying("format.numeric.positive", n => n > 0),
-        "values" -> of[Map[Int, Int]](jsonMapFormatter).verifying(EventQuotaConstraints.validEventQuota)
+        "values" -> of[Map[Int, Int]](jsonMapFormatter).verifying(EventQuotaConstraints.validUserQuota)
         )(EventQuota.apply)(EventQuota.unapply)
+        .verifying(EventQuotaConstraints.validEventQuota)
       ),
       "archived" -> boolean,
       "pricing" -> optional(Forms.list(mapping(
         "category" -> text,
-        "price" -> of[Money]
+        "price" -> of[Money].verifying("format.money.positive", m => m.amount >= 0)
         )(EventPriceEdit.apply)(EventPriceEdit.unapply)
-      ))
+      ).verifying("error.event.price.category.unique", p => p.map(_.category).distinct.length == p.length))
     )(EventWithPriceEdit.apply)(EventWithPriceEdit.unapply)
   )
 
@@ -79,7 +80,7 @@ class Events @Inject()(eventService: EventService, val authService: Authenticato
   }
   def update(id: EventId) = AuthDBAction { implicit rs =>
     val bindedForm = eventForm.bindFromRequest
-    bindedForm.bindFromRequest.fold(
+    bindedForm.fold(
       formWithErrors => BadRequest(views.html.admin.eventsEditForm(id, formWithErrors, priceCategoryOptions, userContext)),
       event => {
         eventService.update(id, event).fold(

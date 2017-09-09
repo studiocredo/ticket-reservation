@@ -1,0 +1,9 @@
+@(form: Form[_], key: String, args: (Symbol,Any)*)(implicit lang: Lang)
+
+@cssClass = @{ args.toMap.get('class).map(_.toString).getOrElse("alert alert-warning") }
+
+@form.errors.filter(_.key == key).map(e => play.api.i18n.Messages(e.message, e.args: _*)).map { error =>
+<div class="@cssClass">
+    @error
+</div>
+}

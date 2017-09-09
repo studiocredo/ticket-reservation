@@ -112,7 +112,7 @@ class Payments @Inject()(paymentService: PaymentService, orderService: OrderServ
 
   def update(id: PaymentId) = AuthDBAction { implicit rs =>
     val bindedForm = paymentForm.bindFromRequest
-    bindedForm.bindFromRequest.fold(
+    bindedForm.fold(
       formWithErrors => BadRequest(views.html.admin.paymentsEditForm(id, formWithErrors, getOrderOptions(orderService.all), paymentTypeOptions, userContext)),
       payment => {
         paymentService.update(id, payment).fold(

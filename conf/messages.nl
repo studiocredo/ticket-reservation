@@ -12,6 +12,7 @@ constraint.email=Email
 format.date=Datum (''{0}'')
 format.numeric=Getal
 format.numeric.positive=Getal groter dan 0
+format.money.positive=Bedrag groter dan 0
 format.real=Kommagetal
 format.money=Bedrag in euro
 format.paymentType=Betalingswijze
@@ -40,6 +41,8 @@ error.id=Ongeldige ID waarde
 error.event.userquota.keys.consecutive=Sleutels moeten opeenvolgende waarden zijn beginnend van 1
 error.event.userquota.values.positive=Waarden moeten positieve getallen zijn
 error.event.userquota.values.increasing=Waarden moeten oplopend zijn
+error.event.quota.default_gt_values=Standaard quota moet minstens even groot zijn als gebruikersquota
+error.event.price.category.unique=Categorie moet uniek zijn
 
 #No need to translate JSON conversion errors
 #error.expected.date=Datum verwacht
