@@ -25,6 +25,9 @@
                 'class -> "form-control"
             )
 
+            @inputText(showForm("reservationStart"), '_label -> "Start reservaties", 'class -> "form-control", '_help -> "Datum ('yyyy-MM-dd HH:mm'). Laat leeg indien zelfde als evenement")
+            @inputText(showForm("reservationEnd"), '_label -> "Einde reservaties", 'class -> "form-control", '_help -> "Datum ('yyyy-MM-dd HH:mm'). Laat leeg indien zelfde als evenement")
+
             @twCheckbox(showForm("archived"), '_label -> "Gearchiveerd")
         </fieldset>
         @twFormActions {

@@ -63,7 +63,7 @@ object admin {
     val orderedShows: List[(Venue, Show)] = shows.flatMap { vs => vs.shows.map((vs.venue, _)) }.sortBy(_._2.date)
   }
 
-  case class ShowEdit(venueId: VenueId, date: DateTime, archived: Boolean)
+  case class ShowEdit(venueId: VenueId, date: DateTime, reservationStart: Option[DateTime], reservationEnd: Option[DateTime], archived: Boolean)
 
   object RichAsset {
     def init(e: Event, a: Asset) = RichAsset(a.id, e, a.name, a.price, a.availableStart, a.availableEnd, a.downloadable, a.objectKey, a.archived)

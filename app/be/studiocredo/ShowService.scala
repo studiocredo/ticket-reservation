@@ -1,17 +1,13 @@
 package be.studiocredo
 
-import play.api.db.slick.Config.driver.simple._
+import com.github.tototoshi.slick.JodaSupport._
+import com.google.inject.Inject
 import models._
+import models.admin.{ShowEdit, VenueShows}
 import models.entities._
 import models.ids._
 import org.joda.time.DateTime
-import com.github.tototoshi.slick.JodaSupport._
-import be.studiocredo.util.Joda
-import models.admin.{ShowEdit, VenueShows}
-import scala.collection.{mutable, immutable}
-import scala.collection.mutable.Builder
-import com.google.inject.Inject
-import models.entities.SeatType.SeatType
+import play.api.db.slick.Config.driver.simple._
 
 class ShowService @Inject()(venueService: VenueService, preReservationService: PreReservationService) {
   import models.queries._
@@ -19,7 +15,7 @@ class ShowService @Inject()(venueService: VenueService, preReservationService: P
 
   val ShowsQ = Query(Shows)
 
-  val active = ShowsQ.filter(_.archived === false)
+  val active: Query[schema.Shows, Show] = ShowsQ.filter(_.archived === false)
 
   def page(page: Int = 0, pageSize: Int = 10)(implicit s: Session): Page[Show] = {
     val offset = pageSize * page
@@ -30,10 +26,10 @@ class ShowService @Inject()(venueService: VenueService, preReservationService: P
 
 
   def get(id: ShowId)(implicit s: Session): Option[Show] =  byId(id).firstOption
-  def insert(id: EventId, show: ShowEdit)(implicit s: Session): ShowId = Shows.autoInc.insert((id, show.venueId, show.date))
-  def update(id: ShowId, show: ShowEdit)(implicit s: Session) =  byId(id).map(_.edit).update((show.venueId, show.date, show.archived))
+  def insert(id: EventId, show: ShowEdit)(implicit s: Session): ShowId = Shows.autoInc.insert((id, show.venueId, show.date, show.reservationStart, show.reservationEnd, show.archived))
+  def update(id: ShowId, show: ShowEdit)(implicit s: Session): Int =  byId(id).map(_.edit).update(show.venueId, show.date, show.reservationStart, show.reservationEnd, show.archived)
 
-  def delete(id: ShowId)(implicit s: Session) = (for (v <- ShowsQ if v.id === id) yield v.archived).update(true)
+  def delete(id: ShowId)(implicit s: Session): Int = (for (v <- ShowsQ if v.id === id) yield v.archived).update(true)
 
   def listAllForEvent(id: EventId)(implicit s: Session): List[VenueShows] = {
     listForEvent(id, ShowsQ.sortBy(_.date))
@@ -44,7 +40,6 @@ class ShowService @Inject()(venueService: VenueService, preReservationService: P
   }
 
   private def listForEvent(id: EventId, baseQuery: Query[schema.Shows, entities.Show])(implicit s: Session): List[VenueShows] = {
-    import Joda._
     val q = for (
       s <- baseQuery;
       v <- s.venue if s.eventId === id
@@ -72,7 +67,7 @@ class ShowService @Inject()(venueService: VenueService, preReservationService: P
       s <- active;
       e <- s.event if !e.archived;
       v <- s.venue if v.floorplan.isNotNull
-    ) yield (s.id)
+    ) yield s.id
     q.to[Set]
   }
 
@@ -84,12 +79,12 @@ class ShowService @Inject()(venueService: VenueService, preReservationService: P
       v <- s.venue
       if v.floorplan.isNotNull
     ) yield (s.id, e.reservationStart, e.reservationEnd)
-    q.list.collect{ case (sid: ShowId, rStart: Option[DateTime], rEnd: Option[DateTime]) if (rStart.isEmpty || (rStart.get.minusHours(1).isBeforeNow() && rEnd.get.plusHours(1).isAfterNow()))=> sid}
+    q.list.collect{ case (sid: ShowId, rStart: Option[DateTime], rEnd: Option[DateTime]) if rStart.isEmpty || (rStart.get.minusHours(1).isBeforeNow && rEnd.get.plusHours(1).isAfterNow) => sid}
   }
 
   def getEventShow(id: ShowId)(implicit s: Session): EventShow = {
     val q = for (s <- byId(id); e <- s.event; v <- s.venue) yield (s.id, e.id, e.name, s.venueId, v.name, s.date, e.template, s.archived)
-    (EventShow.apply _) tupled q.first
+    EventShow.apply _ tupled q.first
   }
 
   private def byId(id: ids.ShowId)=  ShowsQ.where(_.id === id)

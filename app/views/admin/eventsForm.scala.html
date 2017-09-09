@@ -4,16 +4,16 @@
 @import views.Bootstrap._
 @import math.max
 
-@globalFormErrors(eventForm)
+@globalFormErrors(eventForm, 'class -> "col-lg-10 col-lg-offset-2 alert alert-warning")
 
 <fieldset>
 
     @inputText(eventForm("name"), '_label -> "Naam",  'class -> "form-control")
     @inputText(eventForm("description"), '_label -> "Beschrijving", 'class -> "form-control")
-    @inputText(eventForm("preReservationStart"), '_label -> "Start pre-reservaties", 'class -> "form-control")
-    @inputText(eventForm("preReservationEnd"), '_label -> "Einde pre-reservaties", 'class -> "form-control")
-    @inputText(eventForm("reservationStart"), '_label -> "Start reservaties", 'class -> "form-control")
-    @inputText(eventForm("reservationEnd"), '_label -> "Einde reservaties", 'class -> "form-control")
+    @inputText(eventForm("preReservationStart"), '_label -> "Start pre-reservaties", 'class -> "form-control", '_help -> "Datum ('yyyy-MM-dd HH:mm'). Laat leeg indien geen pre-reservaties")
+    @inputText(eventForm("preReservationEnd"), '_label -> "Einde pre-reservaties", 'class -> "form-control", '_help -> "Datum ('yyyy-MM-dd HH:mm'). Laat leeg indien geen pre-reservaties")
+    @inputText(eventForm("reservationStart"), '_label -> "Start reservaties", 'class -> "form-control", '_help -> "Datum ('yyyy-MM-dd HH:mm'). Laat leeg indien geen periode voor reservaties")
+    @inputText(eventForm("reservationEnd"), '_label -> "Einde reservaties", 'class -> "form-control", '_help -> "Datum ('yyyy-MM-dd HH:mm'). Laat leeg indien geen periode voor reservaties")
     @inputText(eventForm("template"), '_label -> "Ticket template",  'class -> "form-control", '_help -> "Bestandsnaam van het PDF template bestand voor tickets")
     @formErrors(eventForm, "quota", 'class -> "col-lg-10 col-lg-offset-2 alert alert-warning")
     @inputText(eventForm("quota.default"), '_label -> "Standaard quota",  'class -> "form-control", '_help -> "Het standaard maximum aantal tickets per bestelling")

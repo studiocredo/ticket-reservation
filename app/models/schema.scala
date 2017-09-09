@@ -143,11 +143,13 @@ object schema {
     def id = column[ShowId]("id", O.PrimaryKey, O.AutoInc)
     def eventId = column[EventId]("event_id")
     def venueId = column[VenueId]("venue_id")
+    def reservationStart = column[Option[DateTime]]("reservationStart")
+    def reservationEnd = column[Option[DateTime]]("reservationEnd")
     def date = column[DateTime]("date")
 
-    def * = id ~ eventId ~ venueId ~ date ~ archived <>(Show.apply _, Show.unapply _)
-    def edit = venueId ~ date ~ archived
-    def autoInc = (eventId ~ venueId ~ date) returning id
+    def * = id ~ eventId ~ venueId ~ date ~ reservationStart ~ reservationEnd ~ archived <>(Show.apply _, Show.unapply _)
+    def edit = venueId ~ date ~ reservationStart ~ reservationEnd ~ archived
+    def autoInc = (eventId ~ venueId ~ date ~ reservationStart ~ reservationEnd ~ archived) returning id
 
     def event = foreignKey("event_fk", eventId, Events)(_.id)
     def venue = foreignKey("venue_fk", venueId, Venues)(_.id)
