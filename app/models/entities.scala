@@ -77,7 +77,7 @@ object entities {
   case class UserRole(id: UserId, role: Roles.Role)
 
   case class Event(id: EventId, name: String, description: String, preReservationStart: Option[DateTime], preReservationEnd: Option[DateTime], reservationStart: Option[DateTime], reservationEnd: Option[DateTime], template: Option[String], quota: Option[EventQuota], archived: Boolean) extends Archiveable {
-    val preReservationAllowed: Boolean = preReservationStart.forall(!archived && _.isBeforeNow && preReservationEnd.exists(_.isAfterNow))
+    val preReservationAllowed: Boolean = preReservationStart.exists(!archived && _.isBeforeNow && preReservationEnd.exists(_.isAfterNow))
     val reservationAllowed: Boolean = reservationStart.forall(!archived && _.isBeforeNow && reservationEnd.exists(_.isAfterNow))
   }
 
