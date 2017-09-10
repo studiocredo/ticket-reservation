@@ -47,14 +47,14 @@
                         <dt>Tarief</dt>
                         <dd>
                             @pricing.prices match {
-                            case price :: Nil => { @CurrencyFormat.format(price.price) }
+                            case price :: Nil => { @CurrencyFormat.format(price.price) }
                             case prices => {
                             @defining(prices match { case head :: tail => (Some(head), tail); case _ => (None, Nil) }) { tuple =>
                             @defining(tuple._1) { head =>
                             @defining(tuple._2) { tail =>
                             @head match {
                             case Some(head) => { @priceDetail(head) }
-                            case None => { }
+                            case None => { }
                             }
                             @tail.map { price =>
                             <br/>

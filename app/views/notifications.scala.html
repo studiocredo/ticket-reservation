@@ -10,7 +10,7 @@
         case UnusedQuotaNotificationEntry(event, quantity, _) => {  <li class="@cssClass"><a href="@controllers.routes.Prereservations.start(event.id)">@event.name (@quantity)</a></li> }
         case PendingPrereservationNotificationEntry(show, quantity, _) => {  <li class="@cssClass"><a href="@controllers.routes.Orders.start(show.eventId)">@show.name @HumanDateTime.formatDateTimeCompact(show.date) (@quantity)</a></li> }
         case DefaultNotificationEntry(message, _) => {  <li class="@cssClass"><a href="#">@message</a></li> }
-        case _ => { <li class="@cssClass"><a href="#">@notificationEntry.notificationType</a></li> }
+        case _ => { <li class="@cssClass"><a href="#">@notificationEntry.notificationType</a></li> }
     }
     }
     }
@@ -32,7 +32,7 @@
             @defining(tuple._2) { tail =>
                 @head match {
                     case Some(head) => { @notificationListElement(head) }
-                    case None => { }
+                    case None => { }
                 }
                 @tail.map { notification =>
                     <li class="divider"></li>

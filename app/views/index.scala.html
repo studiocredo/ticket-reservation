@@ -74,39 +74,36 @@
 
             <p>@event.event.description</p>
 
-            @event.event.preReservationStart match {
-                case None => { }
-                case Some(date) => {
-                    @if(date.isAfterNow) {
-                        <p>De pre-reservaties gaan van start op @HumanDateTime.formatDateOrDateTime(date).</p>
-                    } else {
-                        @event.event.preReservationEnd match {
-                            case None => { }
-                            case Some(date) => {
-                                @if(date.isAfterNow) {
-                                    <p>De pre-reservaties lopen tot @HumanDateTime.formatDateOrDateTime(date).</p>
-                                }
-                            }
-                        }
+            @for(startDate <- event.event.preReservationStart) {
+                @if(startDate.isAfterNow) {
+                    <p>De pre-reservaties gaan van start op @HumanDateTime.formatDateOrDateTime(startDate).</p>
+                } else {
+                    @for(endDate <- event.event.preReservationEnd.filter(_.isAfterNow)) {
+                        <p>De pre-reservaties lopen tot @HumanDateTime.formatDateOrDateTime(endDate).</p>
                     }
                 }
             }
             @event.event.reservationStart match {
-                case None => { <p><a href="@routes.Orders.start(event.id)">Reserveer</a> je tickets.</p> }
-                case Some(date) => {
-                    @if(date.isAfterNow) {
-                        <p>De reservaties gaan van start op @HumanDateTime.formatDateOrDateTime(date).</p>
+                case None => { <p><a href="@routes.Orders.start(event.id)">Reserveer</a> je tickets.</p> }
+                case Some(startDate) => {
+                    @if(startDate.isAfterNow) {
+                        <p>De reservaties gaan van start op @HumanDateTime.formatDateOrDateTime(startDate).</p>
                     } else {
-                        @event.event.reservationEnd match {
-                            case None => { }
-                            case Some(date) => {
-                                @if(date.isAfterNow) {
-                                    <p>Je kan op dit moment tickets <a href="@routes.Orders.start(event.id)">reserveren</a>.</p>
-                                }
-                            }
+                        @for(endDate <- event.event.reservationEnd.filter(_.isAfterNow)) {
+                            <p>Je kan op dit moment tickets <a href="@routes.Orders.start(event.id)">reserveren</a>.</p>
                         }
                     }
                 }
+            }
+            @for(show <- event.shows.map(_.shows).flatten.filter(_.reservationStart.isDefined)) {
+                <p>Voor de show van @HumanDateTime.formatDateOrDateTime(show.date)
+                @(show.reservationStart, show.reservationEnd) match {
+                    case (Some(startDate), Some(endDate)) => { lopen de reservaties van @HumanDateTime.formatDateOrDateTime(startDate) tot @HumanDateTime.formatDateOrDateTime(endDate). }
+                    case (Some(startDate), _) => { beginnen de reservaties op @HumanDateTime.formatDateOrDateTime(startDate). }
+                    case (_, Some(endDate)) => { lopen de reservaties tot @HumanDateTime.formatDateOrDateTime(endDate). }
+                    case _ => { none }
+                }
+                </p>
             }
             @event.pricing match {
                 case None => {}

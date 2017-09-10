@@ -3,9 +3,11 @@ package models
 import be.studiocredo.auth.Password
 import be.studiocredo.util.Joda._
 import be.studiocredo.util.Money
+import models.entities.EventQuotaConstraints.validations
 import models.entities._
 import models.ids._
 import org.joda.time.DateTime
+import play.api.data.validation.{Constraint, Invalid, Valid}
 
 object admin {
 
@@ -64,6 +66,17 @@ object admin {
   }
 
   case class ShowEdit(venueId: VenueId, date: DateTime, reservationStart: Option[DateTime], reservationEnd: Option[DateTime], archived: Boolean)
+
+  object ShowConstraints {
+    val constraints: Seq[Constraint[ShowEdit]] = Seq(
+      Constraint[ShowEdit]("constraint.show.date.start", Nil) { q =>
+        Valid
+      },
+      Constraint[ShowEdit]("constraint.show.date.end", Nil) { q =>
+        Valid
+      }
+    )
+  }
 
   object RichAsset {
     def init(e: Event, a: Asset) = RichAsset(a.id, e, a.name, a.price, a.availableStart, a.availableEnd, a.downloadable, a.objectKey, a.archived)

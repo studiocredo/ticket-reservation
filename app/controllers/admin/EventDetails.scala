@@ -45,12 +45,17 @@ class EventDetails @Inject()(eventService: EventService, showService: ShowServic
   }
 
   def addShow(id: EventId) = AuthDBAction { implicit rs =>
-    showForm.bindFromRequest.fold(
+    val formWithBindings = showForm.bindFromRequest
+    formWithBindings.fold(
       formWithErrors => page(id, formWithErrors, assetForm, BadRequest),
       newShow => {
-        showService.insert(id, ShowEdit(newShow.venueId, newShow.date, newShow.reservationStart, newShow.reservationEnd, newShow.archived))
+        eventService.get(id).fold {
+          page(id, formWithBindings.withGlobalError("event.not_found"), assetForm, BadRequest) //TODO
+        } { event =>
+          showService.insert(id, ShowEdit(newShow.venueId, newShow.date, newShow.reservationStart, newShow.reservationEnd, newShow.archived))
+          Redirect(routes.EventDetails.view(id)).flashing("success" -> "Voorstelling toegevoegd")
+        }
 
-        Redirect(routes.EventDetails.view(id)).flashing("success" -> "Voorstelling toegevoegd")
       }
     )
   }
