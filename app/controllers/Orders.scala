@@ -67,7 +67,7 @@ class Orders @Inject()(ticketService: TicketService, eventService: EventService,
       case Some(identity) => identity.allUsers
     }
     eventService.eventReservationDetails(id, users) match {
-      case Some(event) if !event.event.event.archived && (event.event.reservationAllowed || userContext.exists(_.reservationAllowed)) =>
+      case Some(event) if !event.event.event.archived && (event.event.event.reservationAllowed || userContext.exists(_.reservationAllowed)) =>
         //assume that there is max only one unprocessed order per usergroup
         //if no order is found, create a new one
         val order = orderService.unprocessedOrdersByUsers(users).headOption.getOrElse(orderService.create(rs.currentUser.get.user))

@@ -68,7 +68,7 @@
         <h1>Bestelling @info.event.name <small>@order.user.name</small></h1>
     </div>
 
-    @if(info.event.reservationAllowed || userContext.exists(_.reservationAllowed)) {
+    @if(info.event.event.reservationAllowed || userContext.exists(_.reservationAllowed)) {
     @if(!order.order.processed) {
 
         @request.flash.get("error").map { msg =>

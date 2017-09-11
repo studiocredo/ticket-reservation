@@ -38,7 +38,7 @@ object admin {
   case class EventDetail(event: Event, shows: List[VenueShows], pricing: Option[EventPricing], assets: List[Asset]) {
     val id: EventId = event.id
     val name: String = event.name
-    val reservationAllowed: Boolean = event.reservationAllowed
+    def reservationAllowed(showId: ShowId): Boolean = event.reservationAllowed && shows.flatMap(_.shows).find(_.id == showId).exists(_.reservationAllowed)
     val preReservationAllowed: Boolean = event.preReservationAllowed
     val orderedShows: List[Show] = shows.flatMap(_.shows).sortBy(_.date)
     val orderedVenueShows: List[(VenueShows, Show)] = shows.flatMap(vs => vs.shows.map((vs, _))).sortBy(_._2.date)
@@ -67,7 +67,7 @@ object admin {
 
   case class ShowEdit(venueId: VenueId, date: DateTime, reservationStart: Option[DateTime], reservationEnd: Option[DateTime], archived: Boolean)
 
-  object ShowConstraints {  //TODO
+  object ShowConstraints {
     def forEvent(event: Event): Seq[Constraint[ShowEdit]] = Seq(
       Constraint[ShowEdit]("constraint.show.date.start", Nil) { show =>
         show.reservationStart match {

@@ -9,26 +9,26 @@
             </div>
         </div>
         <div class="visible-md visible-lg col-md-3" >
-            @if(info.event.reservationAllowed || userContext.exists(_.reservationAllowed)) {
-            @defining(if (info.event.preReservationAllowed && hasQuota) "26px" else "46px") { marginTop =>
+            @if(info.reservationAllowed(show.show.id) || userContext.exists(_.reservationAllowed)) {
+            @defining(if (info.preReservationAllowed && hasQuota) "26px" else "46px") { marginTop =>
                 <a href="@routes.Orders.start(info.id)" class="btn btn-success btn-block btn-lg" style="margin-top: @marginTop;">Kaarten bestellen</a>
             }
             }
-            @if(info.event.preReservationAllowed && hasQuota) {
-            @defining(if (info.event.reservationAllowed || userContext.exists(_.reservationAllowed)) "10px" else "46px") { marginTop =>
-            @defining(if (info.event.reservationAllowed || userContext.exists(_.reservationAllowed)) "10px" else "0px") { marginBottom =>
+            @if(info.preReservationAllowed && hasQuota) {
+            @defining(if (info.reservationAllowed(show.show.id) || userContext.exists(_.reservationAllowed)) "10px" else "46px") { marginTop =>
+            @defining(if (info.reservationAllowed(show.show.id) || userContext.exists(_.reservationAllowed)) "10px" else "0px") { marginBottom =>
                 <a href="@routes.Prereservations.start(info.id)" class="btn btn-success btn-block btn-lg" style="margin-top: @marginTop; margin-bottom: @marginBottom">Pre-reservaties</a>
             }
             }
             }
         </div>
         <div class="visible-xs visible-sm col-xs-12" >
-            @if(info.event.reservationAllowed || userContext.exists(_.reservationAllowed)) {
-            @defining(if (info.event.preReservationAllowed && hasQuota) "0px" else "10px") { marginBottom =>
+            @if(info.reservationAllowed(show.show.id) || userContext.exists(_.reservationAllowed)) {
+            @defining(if (info.preReservationAllowed && hasQuota) "0px" else "10px") { marginBottom =>
                 <a href="@routes.Orders.start(info.id)" class="btn btn-success btn-block btn-lg" style="margin-bottom: @marginBottom;">Kaarten bestellen</a>
             }
             }
-            @if(info.event.preReservationAllowed && hasQuota) {
+            @if(info.preReservationAllowed && hasQuota) {
             <a href="@routes.Prereservations.start(info.id)" class="btn btn-success btn-block btn-lg" style="margin-top: 10px; margin-bottom: 10px">Pre-reservaties</a>
             }
         </div>
