@@ -20,17 +20,19 @@ import play.api.Play.current
 import play.api.cache.Cache
 import play.api.data.Form
 import play.api.data.Forms._
-import play.api.libs.json.{JsError, Json}
-import play.api.mvc.{Controller, SimpleResult}
+import play.api.libs.json._
+import play.api.mvc.{Action, AnyContent, Controller, SimpleResult}
 
 import scala.collection.immutable.Set
 import scala.collection.mutable
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 
 
 case class StartSeatOrderForm(quantity: Int, priceCategory: String, availableSeatTypes: List[SeatType])
+
 case class OrderComments(comments: Option[String], keepUnusedPrereservations: Option[Boolean])
+
 case class OrderBillingData(billingName: String, billingAddress: String)
 
 class Orders @Inject()(ticketService: TicketService, eventService: EventService, orderService: OrderService, showService: ShowService, preReservationService: PreReservationService, venueService: VenueService, val authService: AuthenticatorService, val notificationService: NotificationService, val userService: UserService, orderEngine: ReservationEngineMonitorService) extends Controller with Secure with UserContextSupport {
@@ -96,14 +98,14 @@ class Orders @Inject()(ticketService: TicketService, eventService: EventService,
   def ticketDetails(reference: String) = AuthDBAction { implicit rs =>
     TicketDistribution.parse(reference) match {
       case None => BadRequest(views.html.ticket(reference, None, Map("error" -> s"Ongeldige referentie $reference"), userContext))
-      case Some(ticket) => {
+      case Some(ticket) =>
         ensureOrderAccess(ticket.order) {
           orderService.getWithPayments(ticket.order) match {
             case None => BadRequest(views.html.ticket(reference, None, Map("error" -> s"Bestelling ${ticket.order} niet gevonden"), userContext))
-            case Some(order) => {
+            case Some(order) =>
               ticketService.find(ticket.order) match {
-                case Nil => BadRequest(views.html.ticket(reference, None, Map("error" -> s"Referentie ${reference} niet gevonden"), userContext))
-                case last :: other => {
+                case Nil => BadRequest(views.html.ticket(reference, None, Map("error" -> s"Referentie $reference niet gevonden"), userContext))
+                case last :: other =>
                   var messages = mutable.Map[String, String]()
                   if (last != ticket) {
                     if (!other.contains(ticket)) {
@@ -113,16 +115,12 @@ class Orders @Inject()(ticketService: TicketService, eventService: EventService,
                     }
                   }
                   if (!order.isPaid) {
-                    messages("error") =  "Bestelling is nog niet (volledig) betaald"
+                    messages("error") = "Bestelling is nog niet (volledig) betaald"
                   }
                   Ok(views.html.ticket(reference, Some(order), messages.toMap, userContext))
-                }
               }
-
-            }
           }
         }
-      }
     }
   }
 
@@ -133,16 +131,15 @@ class Orders @Inject()(ticketService: TicketService, eventService: EventService,
         formWithErrors => BadRequest(s"Bestelling $order niet afgesloten ${formWithErrors.errorsAsJson}"),
         comments => {
           val currentUser = rs.currentUser.get
-          preReservationService.cleanupPrereservationsAndCloseOrder(order, comments.comments, event, currentUser.allUsers, comments.keepUnusedPrereservations.getOrElse(false)) match {
-            case false => BadRequest(s"Bestelling $order niet afgesloten")
-            case true => {
-              val orderDetail = orderService.get(order).get
-              if (orderDetail.order.comments.isDefined) {
-                Mailer.sendOrderWithCommentsToAdmin(orderDetail)
-              }
-              Mailer.sendOrderConfirmationEmail(currentUser.user, orderDetail)
-              Redirect(routes.Orders.overview(order))
+          if (preReservationService.cleanupPrereservationsAndCloseOrder(order, comments.comments, event, currentUser.allUsers, comments.keepUnusedPrereservations.getOrElse(false))) {
+            val orderDetail = orderService.get(order).get
+            if (orderDetail.order.comments.isDefined) {
+              Mailer.sendOrderWithCommentsToAdmin(orderDetail)
             }
+            Mailer.sendOrderConfirmationEmail(currentUser.user, orderDetail)
+            Redirect(routes.Orders.overview(order))
+          } else {
+            BadRequest(s"Bestelling $order niet afgesloten")
           }
         }
       )
@@ -166,28 +163,26 @@ class Orders @Inject()(ticketService: TicketService, eventService: EventService,
     ensureOrderAccess(id) {
       orderService.get(id) match {
         case None => BadRequest(s"Bestelling $id niet gevonden")
-        case Some(order) => {
+        case Some(order) =>
           Ok(views.html.orderOverview(order, userContext))
-        }
       }
     }
   }
-  
+
   def cancel(id: OrderId) = AuthDBAction { implicit rs =>
     import FloorProtocol._
 
     ensureOrderAccess(id) {
       orderService.destroy(id) match {
         case 0 => BadRequest(s"Bestelling $id niet gevonden")
-        case _ => {
-          (orderEngine.floors) ! ReloadFullState()
+        case _ =>
+          orderEngine.floors ! ReloadFullState()
           Redirect(routes.Application.index())
-        }
       }
     }
   }
 
-  def startSeatOrder(id: ShowId, order: OrderId, event: EventId) = AuthDBAction.async {
+  def startSeatOrder(id: ShowId, order: OrderId, event: EventId): Action[AnyContent] = AuthDBAction.async {
     implicit rs =>
       import FloorProtocol._
 
@@ -211,12 +206,11 @@ class Orders @Inject()(ticketService: TicketService, eventService: EventService,
               Cache.remove(priceCategoryKey)
               Future(startSeatOrderFailed(order, event))
             } else {
-              implicit val timeout = Timeout(30.seconds)
+              implicit val timeout: Timeout = Timeout(30.seconds)
 
               (orderEngine.floors ? StartOrder(id, order, res.quantity, rs.user.allUsers, money, avail)).map {
-                case status: Response => {
+                case status: Response =>
                   Redirect(routes.Orders.viewSeatOrder(id, order))
-                }
               }.recover({
                 case ooc: CapacityExceededException =>
                   logger.debug(s"$id $order: Capacity exceeded")
@@ -236,22 +230,21 @@ class Orders @Inject()(ticketService: TicketService, eventService: EventService,
       }
   }
 
-  private def startSeatOrderFailed(order: OrderId, event: EventId ,msg: String = "Er is een fout opgetreden bij het opstarten van de reservatie"): SimpleResult = {
+  private def startSeatOrderFailed(order: OrderId, event: EventId, msg: String = "Er is een fout opgetreden bij het opstarten van de reservatie"): SimpleResult = {
     Redirect(routes.Orders.view(order, event)).flashing("start-order" -> msg)
   }
 
-  def cancelSeatOrder(showId: ShowId, orderId: OrderId) = AuthDBAction.async {
+  def cancelSeatOrder(showId: ShowId, orderId: OrderId): Action[AnyContent] = AuthDBAction.async {
     implicit rs =>
       import FloorProtocol._
 
       ensureOrderAccessAsync(orderId) {
-        implicit val timeout = Timeout(30.seconds)
+        implicit val timeout: Timeout = Timeout(30.seconds)
 
         (orderEngine.floors ? Cancel(showId, orderId)).map {
-          case status: Response => {
+          case status: Response =>
 
             Redirect(routes.Orders.view(orderId, toEventId(showId)))
-          }
         }.recover({
           case error =>
             logger.error(s"$showId $orderId: Failed to cancel order", error)
@@ -261,18 +254,16 @@ class Orders @Inject()(ticketService: TicketService, eventService: EventService,
       }
   }
 
-  def commitSeatOrder(showId: ShowId, orderId: OrderId) = AuthDBAction.async {
+  def commitSeatOrder(showId: ShowId, orderId: OrderId): Action[AnyContent] = AuthDBAction.async {
     implicit rs =>
       import FloorProtocol._
 
       ensureOrderAccessAsync(orderId) {
-        implicit val timeout = Timeout(30.seconds)
+        implicit val timeout: Timeout = Timeout(30.seconds)
 
         (orderEngine.floors ? Commit(showId, orderId)).map {
-          case status: Response => {
-
+          case status: Response =>
             Redirect(routes.Orders.view(orderId, toEventId(showId)))
-          }
         }.recover({
           case error =>
             logger.error(s"$showId $orderId: Failed to commit order", error)
@@ -295,15 +286,15 @@ class Orders @Inject()(ticketService: TicketService, eventService: EventService,
       logger.warn(s"$orderId: Order not found")
       BadRequest(s"Order $orderId niet gevonden")
     })(
-        order => {
-          if (rs.user.allUsers.contains(order.userId) || rs.user.roles.contains(Roles.Admin))
-            action
-          else {
-            logger.warn(s"$order: Order for user ${order.userId} but ${rs.user.id} attempted to use it")
-            BadRequest(s"Geen toegang tot order ${orderId}")
-          }
+      order => {
+        if (rs.user.allUsers.contains(order.userId) || rs.user.roles.contains(Roles.Admin))
+          action
+        else {
+          logger.warn(s"$order: Order for user ${order.userId} but ${rs.user.id} attempted to use it")
+          BadRequest(s"Geen toegang tot order $orderId")
         }
-      )
+      }
+    )
   }
 
 
@@ -314,82 +305,78 @@ class Orders @Inject()(ticketService: TicketService, eventService: EventService,
       logger.warn(s"$orderId: Order not found")
       Future.successful(BadRequest(s"Order $orderId niet gevonden"))
     })(
-          order => {
-            if (order.userId == rs.user.id)
-              action
-            else {
-              logger.warn(s"$order: Order for user ${order.userId} but ${rs.user.id} attempted to use it")
-              Future.successful(BadRequest(s"Geen toegang tot order $order"))
-            }
-          }
-        )
+      order => {
+        if (order.userId == rs.user.id)
+          action
+        else {
+          logger.warn(s"$order: Order for user ${order.userId} but ${rs.user.id} attempted to use it")
+          Future.successful(BadRequest(s"Geen toegang tot order $order"))
+        }
+      }
+    )
   }
 
-  def viewSeatOrder(id: ShowId, order: OrderId) = AuthDBAction.async { implicit rs =>
+  def viewSeatOrder(id: ShowId, order: OrderId): Action[AnyContent] = AuthDBAction.async { implicit rs =>
     ensureOrderAccessAsync(order) {
       Future.successful(Ok(views.html.reservationFloorplan(showService.getEventShow(id), order, userContext)))
     }
   }
 
- def cancelTicketOrder(order: OrderId, event: EventId, ticket: TicketOrderId) = AuthDBAction { implicit rs =>
-   import FloorProtocol._
+  def cancelTicketOrder(order: OrderId, event: EventId, ticket: TicketOrderId) = AuthDBAction { implicit rs =>
+    import FloorProtocol._
 
-   ensureOrderAccess(order) {
-     orderService.destroyTicketOrders(ticket) match {
-       case 0 => BadRequest(s"Bestelling $ticket niet gevonden")
-       case _ => {
-         (orderEngine.floors) ! ReloadFullState()
-         Redirect(routes.Orders.view(order, event))
-       }
-     }
-   }
+    ensureOrderAccess(order) {
+      orderService.destroyTicketOrders(ticket) match {
+        case 0 => BadRequest(s"Bestelling $ticket niet gevonden")
+        case _ =>
+          orderEngine.floors ! ReloadFullState()
+          Redirect(routes.Orders.view(order, event))
+      }
+    }
   }
 
 
-  def toJson(status: Response) = Json.obj("plan" -> Json.toJson(status.floorPlan), "timeout" -> status.timeout, "seq" -> status.seq)
+  def toJson(status: Response): JsObject = Json.obj("plan" -> Json.toJson(status.floorPlan), "timeout" -> status.timeout, "seq" -> status.seq)
 
-  def ajaxFloorplan(id: ShowId, order: OrderId) = AuthDBAction.async { implicit rs =>
+  def ajaxFloorplan(id: ShowId, order: OrderId): Action[AnyContent] = AuthDBAction.async { implicit rs =>
     import FloorProtocol._
 
     ensureOrderAccessAsync(order) {
 
-      implicit val timeout = Timeout(30.seconds)
+      implicit val timeout: Timeout = Timeout(30.seconds)
 
       (orderEngine.floors ? CurrentStatus(id, order)).map {
-        case status: Response => { Ok(toJson(status)) }
+        case status: Response => Ok(toJson(status))
       }.recover({
-        case error: MissingOrderException => {
+        case error: MissingOrderException =>
           NotFound(Json.obj("error" -> "missing", "redirect" -> controllers.routes.Orders.view(order, toEventId(id)).url))
-        }
-        case error => {
+        case error =>
           logger.warn(s"$id $order: Failed to retrieve  floorplan", error)
           InternalServerError
-        }
       })
     }
   }
 
   case class AjaxMove(target: SeatId, seats: Option[List[SeatId]])
-  implicit val ajaxMoveFMT = Json.format[AjaxMove]
 
-  def ajaxMove(id: ShowId, order: OrderId) = AuthDBAction.async(parse.json) { implicit rs =>
+  implicit val ajaxMoveFMT: Format[AjaxMove] = Json.format[AjaxMove]
+
+  def ajaxMove(id: ShowId, order: OrderId): Action[JsValue] = AuthDBAction.async(parse.json) { implicit rs =>
     import FloorProtocol._
 
     ensureOrderAccessAsync(order) {
 
-      implicit val timeout = Timeout(5.seconds)
+      implicit val timeout: Timeout = Timeout(5.seconds)
 
       rs.body.validate[AjaxMove].map {
-        case (move) => {
+        case (move) =>
           (orderEngine.floors ? Move(id, order, move.target, move.seats.map(_.toSet))).map {
             case status: Response => Ok(toJson(status))
           }.recover({
-            case error => {
+            case error =>
               logger.warn(s"$id $order: Failed to move to seat $move", error)
               InternalServerError
-            }
           })
-        }
       }.recoverTotal {
         e => Future.successful(BadRequest("Detected error:" + JsError.toFlatJson(e)))
       }
@@ -397,28 +384,27 @@ class Orders @Inject()(ticketService: TicketService, eventService: EventService,
   }
 
 
-  def ajaxMoveBest(id: ShowId, order: OrderId) = AuthDBAction.async { implicit rs =>
+  def ajaxMoveBest(id: ShowId, order: OrderId): Action[AnyContent] = AuthDBAction.async { implicit rs =>
     import FloorProtocol._
 
     ensureOrderAccessAsync(order) {
 
-      implicit val timeout = Timeout(30.seconds)
+      implicit val timeout: Timeout = Timeout(30.seconds)
 
       (orderEngine.floors ? MoveBest(id, order)).map {
         case status: Response => Ok(toJson(status))
       }.recover({
-        case error => {
+        case error =>
           logger.warn(s"Failed to retreive ajax floorplan $id $order", error)
           InternalServerError
-        }
       })
     }
   }
 
-  def reloadStatus() = AuthDBAction(Authorization.ADMIN) { implicit rs =>
+  def reloadStatus(): Action[AnyContent] = AuthDBAction(Authorization.ADMIN) { implicit rs =>
     import FloorProtocol._
 
-    (orderEngine.floors) ! ReloadFullState()
+    orderEngine.floors ! ReloadFullState()
     Redirect(routes.Application.index()).flashing("success" -> "Status herladen")
 
   }
@@ -438,7 +424,7 @@ class Orders @Inject()(ticketService: TicketService, eventService: EventService,
           orderService.get(id) match {
             case None => BadRequest(s"Bestelling $id niet gevonden")
             case Some(order) if !order.order.processed =>
-              val eventWithFilteredShows = if (userContext.exists(_.isAdmin)) event else EventReservationsDetail(event.event, event.users, event.shows.map(vs =>VenueShows(vs.venue, vs.shows.filter(_.reservationAllowed))), event.pendingPrereservationsByShow)
+              val eventWithFilteredShows = if (userContext.exists(_.isAdmin)) event else EventReservationsDetail(event.event, event.users, event.shows.map(vs => VenueShows(vs.venue, vs.shows.filter(_.reservationAllowed))), event.pendingPrereservationsByShow)
               status(views.html.order(eventWithFilteredShows, order, getSeatTypes(rs.user), userContext))
             case _ => BadRequest(s"Bestelling $id is afgesloten")
           }
@@ -450,14 +436,17 @@ class Orders @Inject()(ticketService: TicketService, eventService: EventService,
     if (Authorization.ADMIN.isAuthorized(user)) {
       SeatType.values
     } else {
-      current.configuration.getBoolean("application.disable-accessible-seats").getOrElse(false) match {
-        case true => current.configuration.getBoolean("application.disable-vip-seats").getOrElse(false) match {
-          case true => SeatType.values
-          case false => Set(SeatType.Normal, SeatType.Disabled)
+      if (current.configuration.getBoolean("application.disable-accessible-seats").getOrElse(false)) {
+        if (current.configuration.getBoolean("application.disable-vip-seats").getOrElse(false)) {
+          SeatType.values
+        } else {
+          Set(SeatType.Normal, SeatType.Disabled)
         }
-        case false => current.configuration.getBoolean("application.disable-vip-seats").getOrElse(false) match {
-          case true => Set(SeatType.Normal, SeatType.Vip)
-          case false => Set(SeatType.Normal)
+      } else {
+        if (current.configuration.getBoolean("application.disable-vip-seats").getOrElse(false)) {
+          Set(SeatType.Normal, SeatType.Vip)
+        } else {
+          Set(SeatType.Normal)
         }
       }
     }
