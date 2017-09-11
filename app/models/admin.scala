@@ -67,13 +67,27 @@ object admin {
 
   case class ShowEdit(venueId: VenueId, date: DateTime, reservationStart: Option[DateTime], reservationEnd: Option[DateTime], archived: Boolean)
 
-  object ShowConstraints {
-    val constraints: Seq[Constraint[ShowEdit]] = Seq(
-      Constraint[ShowEdit]("constraint.show.date.start", Nil) { q =>
-        Valid
+  object ShowConstraints {  //TODO
+    def forEvent(event: Event): Seq[Constraint[ShowEdit]] = Seq(
+      Constraint[ShowEdit]("constraint.show.date.start", Nil) { show =>
+        show.reservationStart match {
+          case Some(startDate) if event.reservationStart.exists(_.isAfter(startDate)) => Invalid("error.show.date.start", Nil)
+          case Some(startDate) if event.reservationEnd.exists(_.isBefore(startDate)) => Invalid("error.show.date.start", Nil)
+          case _ => Valid
+        }
       },
-      Constraint[ShowEdit]("constraint.show.date.end", Nil) { q =>
-        Valid
+      Constraint[ShowEdit]("constraint.show.date.end", Nil) { show =>
+        show.reservationEnd match {
+          case Some(endDate) if event.reservationStart.exists(_.isAfter(endDate)) => Invalid("error.show.date.end", Nil)
+          case Some(endDate) if event.reservationEnd.exists(_.isBefore(endDate)) => Invalid("error.show.date.end", Nil)
+          case _ => Valid
+        }
+      },
+      Constraint[ShowEdit]("constraint.show.date.before", Nil) { show =>
+        (show.reservationStart, show.reservationEnd) match {
+          case (Some(startDate), Some(endDate)) if startDate.isAfter(endDate) => Invalid("error.show.date.before", Nil)
+          case _ => Valid
+        }
       }
     )
   }

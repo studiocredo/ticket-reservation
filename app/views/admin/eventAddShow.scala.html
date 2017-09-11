@@ -11,6 +11,8 @@
             </div>
             <div class="panel-body">
                 @form(action = routes.EventDetails.addShow(eventId), 'class -> "form form-horizontal") {
+                    @globalFormErrors(showForm)
+
                     <fieldset>
                     @inputText(showForm("date"), '_label -> "Tijdstip", 'class -> "form-control")
 
@@ -21,6 +23,11 @@
                         '_showConstraints -> false,
                         'class -> "form-control"
                     )
+
+                    @inputText(showForm("reservationStart"), '_label -> "Start reservaties", 'class -> "form-control", '_help -> "Datum ('yyyy-MM-dd HH:mm'). Laat leeg indien zelfde als evenement")
+                    @inputText(showForm("reservationEnd"), '_label -> "Einde reservaties", 'class -> "form-control", '_help -> "Datum ('yyyy-MM-dd HH:mm'). Laat leeg indien zelfde als evenement")
+
+                    @twCheckbox(showForm("archived"), '_label -> "Gearchiveerd")
                     </fieldset>
                     @twFormActions {
                         <input type="submit" value="Voorstelling toevoegen" class="btn btn-primary">

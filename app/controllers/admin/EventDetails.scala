@@ -10,6 +10,7 @@ import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
 import play.api._
 import play.api.data.Form
 import play.api.data.Forms._
+import play.api.data.validation.Invalid
 import play.api.mvc.SimpleResult
 import views.helper.Options
 
@@ -50,12 +51,17 @@ class EventDetails @Inject()(eventService: EventService, showService: ShowServic
       formWithErrors => page(id, formWithErrors, assetForm, BadRequest),
       newShow => {
         eventService.get(id).fold {
-          page(id, formWithBindings.withGlobalError("event.not_found"), assetForm, BadRequest) //TODO
+          page(id, formWithBindings.withGlobalError("error.event.not_found"), assetForm, BadRequest)
         } { event =>
-          showService.insert(id, ShowEdit(newShow.venueId, newShow.date, newShow.reservationStart, newShow.reservationEnd, newShow.archived))
-          Redirect(routes.EventDetails.view(id)).flashing("success" -> "Voorstelling toegevoegd")
+          ShowConstraints.forEvent(event).map(_.apply(newShow)).collect { case i: Invalid => i } match {
+            case Nil =>
+              showService.insert(id, newShow)
+              Redirect(routes.EventDetails.view(id)).flashing("success" -> "Voorstelling toegevoegd")
+            case list =>
+              val formWithErrors = list.flatMap(_.errors).foldLeft(formWithBindings){ case(form, error) => form.withGlobalError(error.message, error.args)}
+              page(id, formWithErrors, assetForm, BadRequest)
+          }
         }
-
       }
     )
   }
@@ -82,10 +88,12 @@ class EventDetails @Inject()(eventService: EventService, showService: ShowServic
     showPage(id, showId)
   }
 
-  def showPage(id: EventId, showId: ShowId, showForm: Form[ShowEdit] = showForm, status: Status = Ok)(implicit rs: SecuredDBRequest[_]): SimpleResult = {
+  def showPage(id: EventId, showId: ShowId, showForm: Form[ShowEdit] = showForm, load: Boolean = true , status: Status = Ok)(implicit rs: SecuredDBRequest[_]): SimpleResult = {
     showService.get(showId) match {
       case None => BadRequest(s"Show $id niet gevonden")
-      case Some(show) => status(views.html.admin.show(id, showId, showForm.fill(ShowEdit(show.venueId, show.date, show.reservationStart, show.reservationEnd, show.archived)), Options.apply(venueService.list(), Options.VenueRenderer),  userContext))
+      case Some(show) =>
+        val filledForm = if (load) showForm.fill(ShowEdit(show.venueId, show.date, show.reservationStart, show.reservationEnd, show.archived)) else showForm
+        status(views.html.admin.show(id, showId, filledForm, Options.apply(venueService.list(), Options.VenueRenderer),  userContext))
     }
   }
 
@@ -93,28 +101,39 @@ class EventDetails @Inject()(eventService: EventService, showService: ShowServic
     assetPage(id, assetId)
   }
 
-  def assetPage(id: EventId, assetId: AssetId, assetForm: Form[AssetEdit] = assetForm, status: Status = Ok)(implicit rs: SecuredDBRequest[_]): SimpleResult = {
+  def assetPage(id: EventId, assetId: AssetId, assetForm: Form[AssetEdit] = assetForm, load: Boolean = true , status: Status = Ok)(implicit rs: SecuredDBRequest[_]): SimpleResult = {
     assetService.get(assetId) match {
       case None => BadRequest(s"Item $id niet gevonden")
       case Some(asset) =>
-        status(views.html.admin.asset(id, assetId, assetForm.fill(AssetEdit(asset.name, asset.price, asset.availableStart, asset.availableEnd, asset.downloadable, asset.objectKey, asset.archived)), userContext))
+        val filledForm = if (load) assetForm.fill(AssetEdit(asset.name, asset.price, asset.availableStart, asset.availableEnd, asset.downloadable, asset.objectKey, asset.archived)) else assetForm
+        status(views.html.admin.asset(id, assetId, filledForm, userContext))
     }
   }
 
   def updateShow(id: EventId, showId: ShowId) = AuthDBAction { implicit rs =>
-    showForm.bindFromRequest.fold(
-      formWithErrors => showPage(id, showId, formWithErrors, BadRequest),
+    val formWithBindings = showForm.bindFromRequest
+    formWithBindings.fold(
+      formWithErrors => showPage(id, showId, formWithErrors, load = false, BadRequest),
       show => {
-        showService.update(showId, show)
-
-        Redirect(routes.EventDetails.view(id)).flashing("success" -> "Voorstelling aangepast")
+        eventService.get(id).fold {
+          showPage(id, showId, formWithBindings.withGlobalError("error.event.not_found"), load = false, BadRequest)
+        } { event =>
+          ShowConstraints.forEvent(event).map(_.apply(show)).collect { case i: Invalid => i } match {
+            case Nil =>
+              showService.update(showId, show)
+              Redirect(routes.EventDetails.view(id)).flashing("success" -> "Voorstelling aangepast")
+            case list =>
+              val formWithErrors = list.flatMap(_.errors).foldLeft(formWithBindings){ case(form, error) => form.withGlobalError(error.message, error.args)}
+              showPage(id, showId, formWithErrors, load = false, BadRequest)
+          }
+        }
       }
     )
   }
 
   def updateAsset(id: EventId, assetId: AssetId) = AuthDBAction { implicit rs =>
     assetForm.bindFromRequest.fold(
-      formWithErrors => assetPage(id, assetId, formWithErrors, BadRequest),
+      formWithErrors => assetPage(id, assetId, formWithErrors, load = false, BadRequest),
       asset => {
         assetService.update(assetId, asset)
 

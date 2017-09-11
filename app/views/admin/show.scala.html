@@ -14,6 +14,9 @@
 
     <div>
         @form(action = routes.EventDetails.updateShow(eventId, showId), 'class -> "form form-horizontal") {
+
+        @globalFormErrors(showForm, 'class -> "col-lg-10 col-lg-offset-2 alert alert-warning")
+
         <fieldset>
             @inputText(showForm("date"), '_label -> "Tijdstip", 'class -> "form-control")
 

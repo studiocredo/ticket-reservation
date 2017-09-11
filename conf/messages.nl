@@ -43,6 +43,10 @@ error.event.userquota.values.positive=Waarden moeten positieve getallen zijn
 error.event.userquota.values.increasing=Waarden moeten oplopend zijn
 error.event.quota.default_gt_values=Standaard quota moet minstens even groot zijn als gebruikersquota
 error.event.price.category.unique=Categorie moet uniek zijn
+error.event.not_found=Evenement niet gevonden
+error.show.date.start=Start reservaties moet binnen periode van het evenement liggen
+error.show.date.end=Einde reservaties moet binnen periode van het evenement liggen
+error.show.date.before=Start reservaties moet vóór einde reservaties zijn
 
 #No need to translate JSON conversion errors
 #error.expected.date=Datum verwacht
