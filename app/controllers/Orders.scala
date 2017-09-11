@@ -10,6 +10,7 @@ import be.studiocredo.util.Money
 import com.google.inject.Inject
 import controllers.auth.Mailer
 import models.HumanDateTime
+import models.admin.{EventReservationsDetail, VenueShows}
 import models.entities.FloorPlanJson._
 import models.entities.SeatType.SeatType
 import models.entities.{Identity, Order, SeatId, SeatType, _}
@@ -437,7 +438,8 @@ class Orders @Inject()(ticketService: TicketService, eventService: EventService,
           orderService.get(id) match {
             case None => BadRequest(s"Bestelling $id niet gevonden")
             case Some(order) if !order.order.processed =>
-              status(views.html.order(event, order, getSeatTypes(rs.user), userContext))
+              val eventWithFilteredShows = if (userContext.exists(_.isAdmin)) event else EventReservationsDetail(event.event, event.users, event.shows.map(vs =>VenueShows(vs.venue, vs.shows.filter(_.reservationAllowed))), event.pendingPrereservationsByShow)
+              status(views.html.order(eventWithFilteredShows, order, getSeatTypes(rs.user), userContext))
             case _ => BadRequest(s"Bestelling $id is afgesloten")
           }
         }

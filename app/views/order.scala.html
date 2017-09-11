@@ -49,7 +49,7 @@
     @defining(Json.toJson(seatTypes.map(_.toString))) { seatTypesJ =>
     <div class="row">
         <div class="col-md-6">
-            <p class="text-info h4">@HumanDateTime.formatDateTime(show.date)</p>
+            <p class=" @if(show.reservationAllowed){text-info} else {text-warning} h4">@HumanDateTime.formatDateTime(show.date)</p>
             <p class="text-muted h5">@venue.name</p>
         </div>
         <div class="col-md-6">
