@@ -196,7 +196,7 @@ object entities {
   case class Asset(id: AssetId, eventId: EventId, name: String, price: Option[Money], availableStart: DateTime, availableEnd: Option[DateTime], downloadable: Boolean, objectKey: Option[String], archived: Boolean) extends Archiveable with MaybePriced
 
   case class Show(id: ShowId, eventId: EventId, venueId: VenueId, date: DateTime, reservationStart: Option[DateTime], reservationEnd: Option[DateTime], archived: Boolean) extends Archiveable with HasTime {
-    val reservationAllowed: Boolean = reservationStart.forall(!archived && _.isBeforeNow && reservationEnd.exists(_.isAfterNow))
+    val reservationAllowed: Boolean = !archived && reservationStart.forall(_.isBeforeNow) && reservationEnd.forall(_.isAfterNow)
   }
 
   case class EventShow(id: ShowId, eventId: EventId, name: String, venueId: VenueId, venueName: String, date: DateTime, template: Option[String], archived: Boolean) extends Archiveable with HasTime
