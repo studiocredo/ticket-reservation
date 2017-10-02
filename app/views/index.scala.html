@@ -95,15 +95,22 @@
                     }
                 }
             }
-            @for(show <- event.shows.map(_.shows).flatten.filter(_.reservationStart.isDefined)) {
-                <p>Voor de show van @HumanDateTime.formatDateOrDateTime(show.date)
+            @for(show <- event.shows.map(_.shows).flatten.filter(show => !show.archived && show.reservationStart.isDefined)) {
                 @(show.reservationStart, show.reservationEnd) match {
-                    case (Some(startDate), Some(endDate)) => { lopen de reservaties van @HumanDateTime.formatDateOrDateTime(startDate) tot @HumanDateTime.formatDateOrDateTime(endDate). }
-                    case (Some(startDate), _) => { beginnen de reservaties op @HumanDateTime.formatDateOrDateTime(startDate). }
-                    case (_, Some(endDate)) => { lopen de reservaties tot @HumanDateTime.formatDateOrDateTime(endDate). }
-                    case _ => { none }
+                    case (Some(startDate), Some(endDate)) if startDate.isAfterNow && endDate.isAfterNow => {
+                        <p>Voor de show van @HumanDateTime.formatDateOrDateTime(show.date) lopen de reservaties van
+                            @HumanDateTime.formatDateOrDateTime(startDate) tot @HumanDateTime.formatDateOrDateTime(endDate).</p>
+                    }
+                    case (Some(startDate), _) if startDate.isAfterNow => {
+                        <p>Voor de show van @HumanDateTime.formatDateOrDateTime(show.date) beginnen de reservaties op
+                            @HumanDateTime.formatDateOrDateTime(startDate).</p>
+                    }
+                    case (_, Some(endDate)) if endDate.isAfterNow => {
+                        <p>Voor de show van @HumanDateTime.formatDateOrDateTime(show.date) lopen de reservaties tot
+                            @HumanDateTime.formatDateOrDateTime(endDate).</p>
+                    }
+                    case _ => { }
                 }
-                </p>
             }
             @event.pricing match {
                 case None => {}
