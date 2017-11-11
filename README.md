@@ -8,5 +8,5 @@ sbt run
 ```
 
 ```bash
-sbt docker:deployLocal
+sbt docker:publishLocal
 ```
