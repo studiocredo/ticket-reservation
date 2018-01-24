@@ -47,7 +47,7 @@ class PreReservationService @Inject()(orderService: OrderService, venueService: 
   }
 
   private def activePreReservationFilter(t: (ShowPrereservation, Show, Event, User, Venue)): Boolean = {
-    t._3.preReservationAllowed
+    t._3.reservationAllowed
   }
 
   def preReservationsByUsersAndEvent(ids: List[UserId], event: EventId)(implicit s: Session): List[ShowPrereservationDetail] = {
