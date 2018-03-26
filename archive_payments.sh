@@ -26,7 +26,7 @@ if [ -z "$date" ]; then
   die 'Provide at least date'
 fi
 
-dateArg=$(date -d "$date" -I)
+dateArg=$(gdate -d "$date" -I)
 
 if [ -n "$amount" ]; then
 cat <<EOF
