@@ -43,7 +43,7 @@ object ApplicationBuild extends Build with DockerKeys with NativePackagerKeys {
 
     "org.mindrot" % "jbcrypt" % "0.3m",
 
-    "org.codemonkey.simplejavamail" % "simple-java-mail" % "2.1",
+    "org.simplejavamail" % "simple-java-mail" % "5.0.1",
 
     "com.amazonaws" % "aws-java-sdk" % "1.9.33",
     "commons-io" % "commons-io" % "2.4"

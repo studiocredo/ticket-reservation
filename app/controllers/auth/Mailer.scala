@@ -1,18 +1,20 @@
 package controllers.auth
 
-import play.api.Play._
-import play.api.templates.{Html, Txt}
-import play.api.Logger
-import play.api.libs.concurrent.Akka
-import play.api.mvc.RequestHeader
 import be.studiocredo.auth.EmailToken
+import javax.mail.Message.RecipientType
+import javax.mail.internet.MimeUtility
 import models.admin.{EventPrereservationsDetail, RichUser}
 import models.entities.{OrderDetail, TicketDocument}
+import org.simplejavamail.email.EmailBuilder
+import org.simplejavamail.mailer.config.TransportStrategy
+import org.simplejavamail.mailer.MailerBuilder
+import play.api.Logger
+import play.api.Play._
+import play.api.libs.concurrent.Akka
+import play.api.mvc.RequestHeader
+import play.api.templates.{Html, Txt}
 
 import scala.io.Source
-import org.codemonkey.simplejavamail.{Email, TransportStrategy}
-import javax.mail.internet.MimeUtility
-import javax.mail.Message.RecipientType
 
 case class Attachment(name: String, data: Source, mimeType: String)
 
@@ -31,15 +33,20 @@ object Mailer {
 
   val transportStrategy: TransportStrategy = current.configuration.getString("smtp.transport").getOrElse("plain") match {
     case "tls" => TransportStrategy.SMTP_TLS
-    case "ssl" => TransportStrategy.SMTP_SSL
-    case _ => TransportStrategy.SMTP_PLAIN
+    case "ssl" => TransportStrategy.SMTPS
+    case _ => TransportStrategy.SMTP
   }
 
-  import org.codemonkey.simplejavamail.Mailer
-  def mailer = new Mailer(host, port, user, password, transportStrategy)
+  val mailer: org.simplejavamail.mailer.Mailer = MailerBuilder
+    .withSMTPServerHost(host)
+    .withSMTPServerPort(port)
+    .withSMTPServerUsername(user).
+    withSMTPServerPassword(password)
+    .withTransportStrategy(transportStrategy)
+    .buildMailer()
 
-  def sendSignUpEmail(to: String, token: EmailToken)(implicit request: RequestHeader)  {
-    val txtAndHtml  = (None, Some(views.html.mails.signUpEmail(token.id)))
+  def sendSignUpEmail(to: String, token: EmailToken)(implicit request: RequestHeader) {
+    val txtAndHtml = (None, Some(views.html.mails.signUpEmail(token.id)))
 
     sendEmail(s"$subjectPrefix Instructies voor registratie", to, txtAndHtml)
   }
@@ -118,25 +125,26 @@ object Mailer {
   }
 
   private def sendEmail(subject: String, recipient: String, body: (Option[Txt], Option[Html]), attachments: List[Attachment] = Nil) {
-    import scala.concurrent.duration._
     import play.api.libs.concurrent.Execution.Implicits._
+
+    import scala.concurrent.duration._
 
     if (Logger.isDebugEnabled) {
       logger.debug(s"sending email to '$recipient' = [[[$body]]]")
     }
 
     Akka.system.scheduler.scheduleOnce(1.seconds) {
-      val e = new Email()
-      e.setFromAddress(fromName, fromAddress)
-      e.setSubject(subject)
-      e.addRecipient(recipient, recipient, RecipientType.TO)
-      e.setText(body._1.map(_.body).getOrElse(""))
-      e.setTextHTML(body._2.getOrElse(Html("")).toString)
+      val e = EmailBuilder.startingBlank()
+        .from(fromName, fromAddress)
+        .withSubject(subject)
+        .withRecipient(recipient, recipient, RecipientType.TO)
+        .withPlainText(body._1.map(_.body).getOrElse(""))
+        .withHTMLText(body._2.getOrElse(Html("")).toString)
       attachments.foreach {
         a =>
-          e.addAttachment(MimeUtility.encodeText(a.name), a.data.map(_.toByte).toArray, a.mimeType)
+          e.withAttachment(MimeUtility.encodeText(a.name), a.data.map(_.toByte).toArray, a.mimeType)
       }
-      mailer.sendMail(e)
+      mailer.sendMail(e.buildEmail())
       logger.debug(s"Mail with subject $subject sent to $recipient")
     }
   }
