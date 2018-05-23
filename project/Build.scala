@@ -29,6 +29,8 @@ object ApplicationBuild extends Build with DockerKeys with NativePackagerKeys {
     "com.github.tototoshi" %% "slick-joda-mapper" % "0.4.0",
 
     "org.joda" % "joda-money" % "0.9",
+    "joda-time" % "joda-time" % "2.8.2",
+    "org.joda" % "joda-convert" % "1.2",
 
     "com.itextpdf" % "itextpdf" % "5.5.0",
     "org.bouncycastle" % "bcpkix-jdk15on" % "1.50",
