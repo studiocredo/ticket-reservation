@@ -1,27 +1,26 @@
 package be.studiocredo
 
 
-import models.ids.{OrderId, PaymentId}
-import play.api.db.slick.Config.driver.simple._
-import models.entities._
-import scala.slick.session.Session
-import models.schema.tables._
-import com.google.inject.Inject
-import be.studiocredo.util.ServiceReturnValues._
-import models.Page
-import scala.Some
 import java.io.File
-import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
-import be.studiocredo.util.{AXATransactionImporter, Money}
-import java.text.{DecimalFormatSymbols, DecimalFormat, SimpleDateFormat, DateFormat}
-import org.joda.time.format.DateTimeFormat
+
+import be.studiocredo.codabox.CodaboxService
+import be.studiocredo.util.AXATransactionImporter
+import be.studiocredo.util.ServiceReturnValues._
+import com.google.inject.Inject
+import models.{Page, schema}
+import models.entities._
+import models.ids.{OrderId, PaymentId}
+import models.schema.tables._
+import play.api.db.slick.Config.driver.simple._
 import views.helper.PaymentRegisteredOption
 
-class PaymentService @Inject()() {
-  val PaymentsQ = Query(Payments)
-  val PaymentsQActive = PaymentsQ.where(_.archived === false)
-  val OrdersQ = Query(Orders)
+import scala.concurrent.Future
+import scala.slick.session.Session
+
+class PaymentService @Inject()(codaboxService: CodaboxService) {
+  val PaymentsQ: Query[schema.Payments, Payment] = Query(Payments)
+  val PaymentsQActive: Query[schema.Payments, Payment] = PaymentsQ.where(_.archived === false)
+  val OrdersQ: Query[schema.Orders, Order] = Query(Orders)
 
   def page(page: Int = 0, showAll: Boolean, pageSize: Int = 10, orderBy: Int = 1, nameFilter: Option[String] = None, registeredFilter: PaymentRegisteredOption.Option = PaymentRegisteredOption.default)(implicit s: Session): Page[Payment] = {
     import models.queries._
@@ -37,12 +36,13 @@ class PaymentService @Inject()() {
     }
 
     val queryF = nameFilter.foldLeft(registeredFilterQuery){
-      (query, filter) => query.filter(q => iLike(q.debtor, s"%${filter}%")) // should replace with lucene
+      (query, filter) => query.filter(q => iLike(q.debtor, s"%$filter%")) // should replace with lucene
     }
 
-    val query = showAll match {
-      case true => queryF
-      case false => queryF.filter(q => q.archived === false)
+    val query = if (showAll) {
+      queryF
+    } else {
+      queryF.filter(q => q.archived === false)
     }
 
     val total = query.length.run
@@ -72,6 +72,8 @@ class PaymentService @Inject()() {
     } yield p.importId).list
     payments.filterNot(pe => known.contains(pe.importId)).map(addOrderId).map(Payments.autoInc.insert)
   }
+
+  def syncCodaBox(): Future[Option[Int]] = codaboxService.sync()
 
   private def addOrderId(payment: PaymentEdit)(implicit s: Session): PaymentEdit = {
     payment.message.fold(payment) { message =>
@@ -103,16 +105,15 @@ class PaymentService @Inject()() {
       })
   }
 
-  def delete(id: PaymentId)(implicit s: Session) = {
+  def delete(id: PaymentId)(implicit s: Session): Int = {
     PaymentsQ.where(_.id === id).map(_.archived).update(true)
   }
 
   private def validatePaymentUpdate(id: PaymentId, data: PaymentEdit)(implicit s: Session): Either[ServiceFailure, ServiceSuccess] = {
     find(id) match {
       case None => Left(serviceFailure("payment.update.notfound"))
-      case Some(payment) => {
+      case Some(payment) =>
         Right(serviceSuccess("payment.update.success"))
-      }
     }
   }
 

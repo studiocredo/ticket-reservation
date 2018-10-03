@@ -1,18 +1,16 @@
 package be.studiocredo
 
+import be.studiocredo.aws.DownloadService
+import be.studiocredo.codabox.{CodaboxService, CodaboxSyncService}
+import be.studiocredo.reservations.ReservationEngineMonitorService
 import com.google.inject.{AbstractModule, Singleton}
 import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
-import be.studiocredo.auth.AuthTokenExpireService
-import be.studiocredo.aws.DownloadService
-import be.studiocredo.reservations.ReservationEngineMonitorService
 
 object Modules {
 
   class BaseModule extends AbstractModule with ScalaModule {
     def configure() {
       binder().disableCircularProxies()
-
-      import be.studiocredo._
       bind[EventService].in[Singleton]
       bind[UserService].in[Singleton]
       bind[VenueService].in[Singleton]
@@ -24,6 +22,8 @@ object Modules {
       bind[TicketService].in[Singleton]
       bind[ReservationEngineMonitorService].asEagerSingleton()
       bind[DownloadService].asEagerSingleton()
+      bind[CodaboxService].asEagerSingleton()
+      bind[CodaboxSyncService].asEagerSingleton()
 
       bind[controllers.Application].in[Singleton]
       bind[controllers.admin.EventDetails].in[Singleton]
@@ -52,6 +52,7 @@ object Modules {
       multi.addBinding().to[AuthTokenExpireService]
       multi.addBinding().to[ReservationEngineMonitorService]
       multi.addBinding().to[DownloadService]
+      multi.addBinding().to[CodaboxService]
 
       bind[controllers.auth.Auth].in[Singleton]
       bind[controllers.auth.LoginPage].in[Singleton]

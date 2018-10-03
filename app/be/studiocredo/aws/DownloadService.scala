@@ -15,7 +15,6 @@ import com.amazonaws.util.Base64
 import com.google.common.io.Resources
 import com.google.inject.Inject
 import models.entities.{Asset, User}
-import models.ids.UserId
 import org.apache.commons.io.FilenameUtils
 import org.apache.http.client.utils.URIBuilder
 import org.joda.time.format.ISOPeriodFormat

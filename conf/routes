@@ -48,11 +48,13 @@ GET         /admin/user/:id                         @controllers.admin.UserDetai
 GET         /admin/payments                         @controllers.admin.Payments.list(search:Option[String] ?= None, registered:String ?= views.helper.PaymentRegisteredOption.default.id, showAll:Boolean ?= false, p:Int ?= 0)
 GET         /admin/payments/new                     @controllers.admin.Payments.create
 POST        /admin/payments/upload                  @controllers.admin.Payments.upload
+GET         /admin/payments/sync                    @controllers.admin.Payments.syncCodaBox
 POST        /admin/payments                         @controllers.admin.Payments.save
 GET         /admin/payments/:id                     @controllers.admin.Payments.edit(id:PaymentId)
 POST        /admin/payments/:id                     @controllers.admin.Payments.update(id:PaymentId)
 POST        /admin/payments/:id/delete              @controllers.admin.Payments.delete(id:PaymentId)
 POST        /admin/payments/:id/copy                @controllers.admin.Payments.copy(id:PaymentId)
+
 
 GET         /admin/orders                           @controllers.admin.Orders.list(search:Option[String] ?= None, paid:String ?= views.helper.OrderPaidOption.default.id, showAll:Boolean ?= false, p:Int ?= 0)
 GET         /admin/orders/reloadStatus              @controllers.Orders.reloadStatus()

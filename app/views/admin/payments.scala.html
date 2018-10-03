@@ -9,10 +9,13 @@
 @base("Administratie: Betalingen")(userContext) {
 
     <div class="row actions-bar">
-        <div class="col-md-3">
+        <div class="col-md-2">
             <a class="btn btn-primary" id="add" href="@routes.Payments.create()">Betaling toevoegen</a>
         </div>
-        <div class="col-md-9">
+        <div class="col-md-2">
+            <a class="btn btn-primary" id="sync" href="@routes.Payments.syncCodaBox()">Sync</a>
+        </div>
+        <div class="col-md-8">
             @form(action = routes.Payments.list(), 'class -> "form form-inline form-no-feedback") {
                 @inputText(paymentSearchForm("search"), '_label -> "Zoekopdracht",  '_labelclass -> "sr-only", '_inputclass -> "", 'class -> "form-control", 'placeholder -> "Zoekopdracht", '_showConstraints -> false, '_showErrors -> false)
                 @inputRadioGroup(paymentSearchForm("registered").copy(value=paymentSearchForm("registered").value.map{Some(_)}.getOrElse(Some(views.helper.PaymentRegisteredOption.default.id))), views.helper.PaymentRegisteredOption.mapper, '_label -> "Status",  '_labelclass -> "sr-only", '_inputclass -> "", 'class -> "checkbox-inline", '_showConstraints -> false, '_showErrors -> false)

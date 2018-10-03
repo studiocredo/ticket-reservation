@@ -1,22 +1,16 @@
 package be.studiocredo
 
-import models.ids.{OrderId, PaymentId}
-import play.api.db.slick.Config.driver.simple._
-import models.entities._
-import scala.slick.session.Session
-import models.schema.tables._
-import com.google.inject.Inject
-import be.studiocredo.util.ServiceReturnValues._
-import models.Page
-import scala.Some
-import java.io.File
-import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
-import be.studiocredo.util.AXATransactionImporter
-import java.text.DateFormat
 import be.studiocredo.reservations.TicketGenerator
+import be.studiocredo.util.ServiceReturnValues._
 import com.github.tototoshi.slick.JodaSupport._
+import com.google.inject.Inject
+import models.entities._
+import models.ids.OrderId
+import models.schema.tables._
 import org.joda.time.DateTime
+import play.api.db.slick.Config.driver.simple._
+
+import scala.slick.session.Session
 
 class TicketService @Inject()(orderService: OrderService) {
   val TicketQ = Query(TicketDistributionLog)
@@ -37,14 +31,13 @@ class TicketService @Inject()(orderService: OrderService) {
     find(order).headOption.fold(create(order))(Right(_))
   }
 
-  def create(order: OrderId)(implicit s: Session): Either[ServiceFailure, TicketDistribution] = {
-    orderService.find(order) match {
+  def create(orderId: OrderId)(implicit s: Session): Either[ServiceFailure, TicketDistribution] = {
+    orderService.find(orderId) match {
       case None => Left(serviceFailure("ticket.order.notfound"))
-      case Some(order) => {
+      case Some(order) =>
         val ticket = TicketDistribution(order.id, nextSerial(order.id), DateTime.now)
         TicketDistributionLog.*.insert(ticket)
         Right(ticket)
-      }
     }
   }
 
@@ -54,7 +47,7 @@ class TicketService @Inject()(orderService: OrderService) {
     val processedOrders = ( for {
       ticket <- TicketQ
       if ticket.orderId inSet paidOrders
-    } yield (ticket.orderId) ).list
+    } yield ticket.orderId ).list
 
     (paidOrders.toSet -- processedOrders.toSet).map { order =>
       val ticket = TicketDistribution(order, nextSerial(order), now)
@@ -66,17 +59,15 @@ class TicketService @Inject()(orderService: OrderService) {
   def generate(ticket: TicketDistribution, url: String)(implicit s: Session): Either[ServiceFailure, TicketDocument] = {
     find(ticket.order, ticket.serial) match {
       case None => Left(serviceFailure("ticket.notfound"))
-      case Some(ticket) => {
-        orderService.get(ticket.order) match {
+      case Some(actualTicket) =>
+        orderService.get(actualTicket.order) match {
           case None => Left(serviceFailure("ticket.order.notfound"))
-          case Some(order) => {
-            TicketGenerator.create(order, ticket, url) match {
+          case Some(order) =>
+            TicketGenerator.create(order, actualTicket, url) match {
               case None => Left(serviceFailure("ticket.generation.failed"))
               case Some(ticketDocument) => Right(ticketDocument)
             }
-          }
         }
-      }
     }
   }
 

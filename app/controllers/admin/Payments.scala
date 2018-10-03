@@ -1,18 +1,18 @@
 package controllers.admin
 
-import com.google.inject.Inject
 import be.studiocredo._
 import be.studiocredo.auth.AuthenticatorService
-import play.api.data.Form
-import play.api.data.Forms._
-import models.ids._
-import models.entities._
-import models.entities.PaymentType.PaymentType
 import be.studiocredo.util.Money
 import be.studiocredo.util.ServiceReturnValues._
-import models.entities.PaymentEdit
-import scala.Some
-import views.helper.{PaymentRegisteredOption, Options}
+import com.google.inject.Inject
+import models.entities.PaymentType.PaymentType
+import models.entities.{PaymentEdit, _}
+import models.ids._
+import play.api.data.Form
+import play.api.data.Forms._
+import views.helper.{Options, PaymentRegisteredOption}
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 
 case class PaymentSearchForm(search: Option[String], registered: PaymentRegisteredOption.Option)
@@ -136,6 +136,13 @@ class Payments @Inject()(paymentService: PaymentService, orderService: OrderServ
     }.getOrElse {
       ListPage.flashing(
         "error" -> "Bestand niet gevonden")
+    }
+  }
+
+  def syncCodaBox() = AuthAction.async { implicit request =>
+    paymentService.syncCodaBox().map {
+      case Some(count) => ListPage.flashing("success" -> s"$count betaling gesynchroniseerd")
+      case _ => ListPage.flashing("error" -> "Fout bij synchronisatie betalingen")
     }
   }
 }
