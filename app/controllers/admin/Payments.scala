@@ -45,18 +45,20 @@ class Payments @Inject()(paymentService: PaymentService, orderService: OrderServ
     )(PaymentEdit.apply)(PaymentEdit.unapply)
   )
   
-  def list(search: Option[String], registered: String, showAll: Boolean, page: Int) = AuthDBAction { implicit rs =>
-    val bindedForm = paymentSearchForm.bindFromRequest
-    bindedForm.fold(
-      formWithErrors => {
-        val list = paymentService.page(page, showAll)
-        Ok(views.html.admin.payments(list, formWithErrors, showAll, userContext))
-      },
-      paymentFormData => {
-        val list = paymentService.page(page, showAll, 10, 1, paymentFormData.search, paymentFormData.registered)
-        Ok(views.html.admin.payments(list, bindedForm, showAll, userContext))
-      }
-    )
+  def list(search: Option[String], registered: String, showAll: Boolean, page: Int) = AuthDBAction.async { implicit rs =>
+    paymentService.info().map { codaboxInfo =>
+      val bindedForm = paymentSearchForm.bindFromRequest
+      bindedForm.fold(
+        formWithErrors => {
+          val list = paymentService.page(page, showAll)
+          Ok(views.html.admin.payments(list, formWithErrors, showAll, codaboxInfo, userContext))
+        },
+        paymentFormData => {
+          val list = paymentService.page(page, showAll, 10, 1, paymentFormData.search, paymentFormData.registered)
+          Ok(views.html.admin.payments(list, bindedForm, showAll, codaboxInfo, userContext))
+        }
+      )
+    }
   }
 
   def delete(id: PaymentId) = AuthDBAction { implicit request =>
@@ -139,8 +141,8 @@ class Payments @Inject()(paymentService: PaymentService, orderService: OrderServ
     }
   }
 
-  def syncCodaBox() = AuthAction.async { implicit request =>
-    paymentService.syncCodaBox().map {
+  def importCodabox() = AuthAction.async { implicit request =>
+    paymentService.info().map { //TODO
       case Some(count) => ListPage.flashing("success" -> s"$count betaling gesynchroniseerd")
       case _ => ListPage.flashing("error" -> "Fout bij synchronisatie betalingen")
     }

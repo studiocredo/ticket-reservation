@@ -4,6 +4,7 @@ package be.studiocredo
 import java.io.File
 
 import be.studiocredo.codabox.CodaboxService
+import be.studiocredo.codabox.CodaboxService.CodaboxInfo
 import be.studiocredo.util.AXATransactionImporter
 import be.studiocredo.util.ServiceReturnValues._
 import com.google.inject.Inject
@@ -73,7 +74,7 @@ class PaymentService @Inject()(codaboxService: CodaboxService) {
     payments.filterNot(pe => known.contains(pe.importId)).map(addOrderId).map(Payments.autoInc.insert)
   }
 
-  def syncCodaBox(): Future[Option[Int]] = codaboxService.sync()
+  def info(): Future[Option[CodaboxInfo]] = codaboxService.info()
 
   private def addOrderId(payment: PaymentEdit)(implicit s: Session): PaymentEdit = {
     payment.message.fold(payment) { message =>

@@ -6,6 +6,7 @@
     <logger name="play" level="INFO" />
     <logger name="be.studiocredo.maitred" level="debug"/>
     <logger name="be.studiocredo.suggester" level="debug"/>
+    <logger name="be.studiocredo.codabox" level="debug"/>
 
     <logger name="scala.slick" level="debug"/>
     <logger name="scala.slick.compiler" level="info"/>

@@ -1,10 +1,11 @@
 package be.studiocredo
 
 import be.studiocredo.aws.DownloadService
-import be.studiocredo.codabox.{CodaboxService, CodaboxSyncService}
+import be.studiocredo.codabox._
 import be.studiocredo.reservations.ReservationEngineMonitorService
 import com.google.inject.{AbstractModule, Singleton}
 import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
+import play.api.Play
 
 object Modules {
 
@@ -22,7 +23,11 @@ object Modules {
       bind[TicketService].in[Singleton]
       bind[ReservationEngineMonitorService].asEagerSingleton()
       bind[DownloadService].asEagerSingleton()
-      bind[CodaboxService].asEagerSingleton()
+      if (Play.current.configuration.getString(CodaboxConfigurationKeys.client).isDefined) {
+        bind[CodaboxService].to[RestCodaboxService].asEagerSingleton()
+      } else {
+        bind[CodaboxService].to[NullCodaboxService].asEagerSingleton()
+      }
       bind[CodaboxSyncService].asEagerSingleton()
 
       bind[controllers.Application].in[Singleton]

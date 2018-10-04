@@ -4,7 +4,7 @@
     <logger name="be.studiocredo" level="warn"/>
     <logger name="be.studiocredo.requests" level="warn"/>
     <logger name="play" level="warn" />
-    <logger name="mailer" level="debug" />
+    <logger name="mailer" level="info" />
 
     <logger name="scala.slick" level="warn"/>
     <logger name="scala.slick.compiler" level="warn"/>
