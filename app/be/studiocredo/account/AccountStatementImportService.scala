@@ -67,14 +67,14 @@ class NullAccountStatementImportService extends AccountStatementImportService {
   }
 }
 
-class UploadAccountStatementImportService extends AccountStatementImportService {
+class UploadAccountStatementImportService @Inject()(transactionImporter: TransactionImporter) extends AccountStatementImportService {
   override val upload: Boolean = true
 
   override def sync(): Future[Option[Int]] = Future.apply(None)
 
   override def info(): Future[Option[CodaboxInfo]] = Future.apply(None)
 
-  override def extract(file: Option[File]): Future[Seq[PaymentEdit]] = Future.apply(file.map(new AXATransactionImporter().importFile).getOrElse(Nil))
+  override def extract(file: Option[File]): Future[Seq[PaymentEdit]] = Future.apply(file.map(transactionImporter.importFile).getOrElse(Nil))
 
   override def onStart(): Unit = {
     Logger.logger.debug("Starting upload account statement import service")

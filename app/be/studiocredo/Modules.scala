@@ -23,7 +23,13 @@ object Modules {
       bind[TicketService].in[Singleton]
       bind[ReservationEngineMonitorService].asEagerSingleton()
       bind[DownloadService].asEagerSingleton()
-      if (Play.current.configuration.getBoolean(AccountStatementImportConfigurationKeys.uploadEnabled).getOrElse(false)) {
+
+      val accountStatementImportServiceUploadType = Play.current.configuration.getString(AccountStatementImportConfigurationKeys.uploadType)
+      if (accountStatementImportServiceUploadType.isDefined) {
+        accountStatementImportServiceUploadType match {
+          case Some("axa") => bind[TransactionImporter].to[AXATransactionImporter].asEagerSingleton()
+          case _ => bind[TransactionImporter].to[NullTransactionImporter].asEagerSingleton()
+        }
         bind[AccountStatementImportService].to[UploadAccountStatementImportService].asEagerSingleton()
       } else if (Play.current.configuration.getString(AccountStatementImportConfigurationKeys.codaboxClient).isDefined) {
         bind[AccountStatementImportService].to[CodaboxAccountStatementImportService].asEagerSingleton()

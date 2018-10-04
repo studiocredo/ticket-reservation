@@ -55,11 +55,11 @@ class Payments @Inject()(paymentService: PaymentService, orderService: OrderServ
       bindedForm.fold(
         formWithErrors => {
           val list = paymentService.page(page, showAll)
-          Ok(views.html.admin.payments(list, formWithErrors, showAll, true, codaboxInfo, userContext))
+          Ok(views.html.admin.payments(list, formWithErrors, showAll, accountStatementImportService.upload, codaboxInfo, userContext))
         },
         paymentFormData => {
           val list = paymentService.page(page, showAll, 10, 1, paymentFormData.search, paymentFormData.registered)
-          Ok(views.html.admin.payments(list, bindedForm, showAll, true, codaboxInfo, userContext))
+          Ok(views.html.admin.payments(list, bindedForm, showAll, accountStatementImportService.upload, codaboxInfo, userContext))
         }
       )
     }

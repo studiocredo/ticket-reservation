@@ -7,7 +7,7 @@ import scala.util.{Failure, Try}
 object AccountStatementImportConfigurationKeys {
   val codaboxUrl: String = "account.import.codabox.url"
   val codaboxClient: String = "account.import.codabox.client"
-  val uploadEnabled: String = "account.import.upload"
+  val uploadType: String = "account.import.upload.type"
 }
 
 object CodaboxConfiguration {
