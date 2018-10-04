@@ -1,4 +1,4 @@
-@(currentPage: Page[models.entities.Payment], paymentSearchForm: Form[controllers.admin.PaymentSearchForm], showAll: Boolean, codaboxInfo: Option[be.studiocredo.account.AccountStatementImportService.CodaboxInfo], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
+@(currentPage: Page[models.entities.Payment], paymentSearchForm: Form[controllers.admin.PaymentSearchForm], showAll: Boolean, showUpload: Boolean, codaboxInfo: Option[be.studiocredo.account.AccountStatementImportService.CodaboxInfo], userContext: Option[models.entities.UserContext])(implicit request: be.studiocredo.auth.SecureRequest[_], lang: Lang)
 
 @import controllers.admin.routes
 @import helper._
@@ -24,6 +24,23 @@
         @codaboxInfo.map { cbi =>
         <div class="col-md-3">
             <a class="btn btn-primary @if(cbi.status.unprocessed == 0){disabled}" id="sync" href="@routes.Payments.importCodabox()">Betalingen importeren (@cbi.status.unprocessed)</a>
+        </div>
+        }
+        @if(showUpload) {
+        <div class="col-md-6">
+            @form(action = routes.Payments.upload(), 'enctype -> "multipart/form-data", 'class -> "form form-inline form-no-feedback") {
+            <div class="input-group">
+                        <span class="input-group-btn">
+                            <span class="btn btn-primary btn-file">
+                                Bestand selecteren... <input type="file" name="transactions" title="Bestand kiezen">
+                            </span>
+                        </span>
+                <input type="text" class="form-control for-btn-file" readonly="">
+                <span class="input-group-btn">
+                            <button type="submit" class="btn btn-default"><span class="glyphicon glyphicon-upload"></span></button>
+                        </span>
+            </div>
+            }
         </div>
         }
     </div>

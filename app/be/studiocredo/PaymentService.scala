@@ -3,22 +3,19 @@ package be.studiocredo
 
 import java.io.File
 
-import be.studiocredo.account.AccountStatementImportService
-import be.studiocredo.account.AccountStatementImportService.CodaboxInfo
-import be.studiocredo.util.AXATransactionImporter
+import be.studiocredo.account.AXATransactionImporter
 import be.studiocredo.util.ServiceReturnValues._
 import com.google.inject.Inject
-import models.{Page, schema}
 import models.entities._
 import models.ids.{OrderId, PaymentId}
 import models.schema.tables._
+import models.{Page, schema}
 import play.api.db.slick.Config.driver.simple._
 import views.helper.PaymentRegisteredOption
 
-import scala.concurrent.Future
 import scala.slick.session.Session
 
-class PaymentService @Inject()(codaboxService: AccountStatementImportService) {
+class PaymentService @Inject()() {
   val PaymentsQ: Query[schema.Payments, Payment] = Query(Payments)
   val PaymentsQActive: Query[schema.Payments, Payment] = PaymentsQ.where(_.archived === false)
   val OrdersQ: Query[schema.Orders, Order] = Query(Orders)
@@ -66,15 +63,12 @@ class PaymentService @Inject()(codaboxService: AccountStatementImportService) {
     )
   }
 
-  def insertTransactions(file: File)(implicit s: Session): List[PaymentId] = {
-    val payments = new AXATransactionImporter().importFile(file)
+  def upload(payments: Seq[PaymentEdit])(implicit s: Session): Seq[PaymentId] = {
     val known = (for {
       p <- PaymentsQ.filter(_.importId inSet payments.flatMap(_.importId))
     } yield p.importId).list
     payments.filterNot(pe => known.contains(pe.importId)).map(addOrderId).map(Payments.autoInc.insert)
   }
-
-  def info(): Future[Option[CodaboxInfo]] = codaboxService.info()
 
   private def addOrderId(payment: PaymentEdit)(implicit s: Session): PaymentEdit = {
     payment.message.fold(payment) { message =>

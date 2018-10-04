@@ -1,8 +1,11 @@
 package be.studiocredo.account
 
+import java.io.File
+
 import be.studiocredo.Service
 import be.studiocredo.account.AccountStatementImportService.CodaboxInfo
 import com.google.inject.Inject
+import models.entities.PaymentEdit
 import play.api.Play
 import play.api.libs.json.{Format, Json, Reads}
 import play.api.libs.ws.WS
@@ -48,6 +51,8 @@ object AccountStatementImportService {
 trait AccountStatementImportService extends Service {
   def sync(): Future[Option[Int]]
   def info(): Future[Option[CodaboxInfo]]
+  def extract(file: Option[File]): Future[Seq[PaymentEdit]]
+  val upload: Boolean = false
 }
 
 class NullAccountStatementImportService extends AccountStatementImportService {
@@ -55,15 +60,21 @@ class NullAccountStatementImportService extends AccountStatementImportService {
 
   override def info(): Future[Option[CodaboxInfo]] = Future.apply(None)
 
+  override def extract(file: Option[File]): Future[Seq[PaymentEdit]] = Future.apply(Nil)
+
   override def onStart(): Unit = {
     Logger.logger.debug("Starting mock account statement import service")
   }
 }
 
 class UploadAccountStatementImportService extends AccountStatementImportService {
+  override val upload: Boolean = true
+
   override def sync(): Future[Option[Int]] = Future.apply(None)
 
   override def info(): Future[Option[CodaboxInfo]] = Future.apply(None)
+
+  override def extract(file: Option[File]): Future[Seq[PaymentEdit]] = Future.apply(file.map(new AXATransactionImporter().importFile).getOrElse(Nil))
 
   override def onStart(): Unit = {
     Logger.logger.debug("Starting upload account statement import service")
@@ -106,4 +117,6 @@ class CodaboxAccountStatementImportService @Inject()() extends AccountStatementI
       }
     }
   }
+
+  override def extract(file: Option[File] = None): Future[Seq[PaymentEdit]] = Future.apply(Nil)
 }

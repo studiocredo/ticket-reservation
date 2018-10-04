@@ -23,11 +23,11 @@ object Modules {
       bind[TicketService].in[Singleton]
       bind[ReservationEngineMonitorService].asEagerSingleton()
       bind[DownloadService].asEagerSingleton()
-      if (Play.current.configuration.getString(AccountStatementImportConfigurationKeys.codaboxClient).isDefined) {
+      if (Play.current.configuration.getBoolean(AccountStatementImportConfigurationKeys.uploadEnabled).getOrElse(false)) {
+        bind[AccountStatementImportService].to[UploadAccountStatementImportService].asEagerSingleton()
+      } else if (Play.current.configuration.getString(AccountStatementImportConfigurationKeys.codaboxClient).isDefined) {
         bind[AccountStatementImportService].to[CodaboxAccountStatementImportService].asEagerSingleton()
         bind[CodaboxSyncService].asEagerSingleton()
-      } else if (Play.current.configuration.getBoolean(AccountStatementImportConfigurationKeys.uploadEnabled).getOrElse(false)) {
-        bind[AccountStatementImportService].to[UploadAccountStatementImportService].asEagerSingleton()
       } else {
         bind[AccountStatementImportService].to[NullAccountStatementImportService].asEagerSingleton()
       }
@@ -49,7 +49,7 @@ object Modules {
       binder().disableCircularProxies()
 
       bind[AuthenticatorService].in[Singleton]
-//      bind[AuthTokenStore].to[CacheAuthTokenStore].in[Singleton]
+      //      bind[AuthTokenStore].to[CacheAuthTokenStore].in[Singleton]
       bind[AuthTokenStore].to[DbAuthTokenStore].in[Singleton]
       bind[IdentityService].in[Singleton]
 
@@ -68,4 +68,5 @@ object Modules {
       bind[controllers.auth.PasswordReset].in[Singleton]
     }
   }
+
 }

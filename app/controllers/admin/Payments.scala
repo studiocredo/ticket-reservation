@@ -1,6 +1,7 @@
 package controllers.admin
 
 import be.studiocredo._
+import be.studiocredo.account.AccountStatementImportService
 import be.studiocredo.auth.AuthenticatorService
 import be.studiocredo.util.Money
 import be.studiocredo.util.ServiceReturnValues._
@@ -10,16 +11,19 @@ import models.entities.{PaymentEdit, _}
 import models.ids._
 import play.api.data.Form
 import play.api.data.Forms._
+import play.api.libs.Files
+import play.api.mvc.{Action, AnyContent, MultipartFormData, SimpleResult}
 import views.helper.{Options, PaymentRegisteredOption}
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 
 case class PaymentSearchForm(search: Option[String], registered: PaymentRegisteredOption.Option)
 
-class Payments @Inject()(paymentService: PaymentService, orderService: OrderService, val authService: AuthenticatorService, val notificationService: NotificationService, val userService: UserService) extends AdminController with UserContextSupport {
+class Payments @Inject()(paymentService: PaymentService, orderService: OrderService, accountStatementImportService: AccountStatementImportService, val authService: AuthenticatorService, val notificationService: NotificationService, val userService: UserService) extends AdminController with UserContextSupport {
 
-  val ListPage = Redirect(routes.Payments.list())
+  val ListPage: SimpleResult = Redirect(routes.Payments.list())
 
   import Options._
   val paymentTypeOptions = Options.apply(PaymentType.values.toSeq, PaymentTypeRenderer)
@@ -45,17 +49,17 @@ class Payments @Inject()(paymentService: PaymentService, orderService: OrderServ
     )(PaymentEdit.apply)(PaymentEdit.unapply)
   )
   
-  def list(search: Option[String], registered: String, showAll: Boolean, page: Int) = AuthDBAction.async { implicit rs =>
-    paymentService.info().map { codaboxInfo =>
+  def list(search: Option[String], registered: String, showAll: Boolean, page: Int): Action[AnyContent] = AuthDBAction.async { implicit rs =>
+    accountStatementImportService.info().map { codaboxInfo =>
       val bindedForm = paymentSearchForm.bindFromRequest
       bindedForm.fold(
         formWithErrors => {
           val list = paymentService.page(page, showAll)
-          Ok(views.html.admin.payments(list, formWithErrors, showAll, codaboxInfo, userContext))
+          Ok(views.html.admin.payments(list, formWithErrors, showAll, true, codaboxInfo, userContext))
         },
         paymentFormData => {
           val list = paymentService.page(page, showAll, 10, 1, paymentFormData.search, paymentFormData.registered)
-          Ok(views.html.admin.payments(list, bindedForm, showAll, codaboxInfo, userContext))
+          Ok(views.html.admin.payments(list, bindedForm, showAll, true, codaboxInfo, userContext))
         }
       )
     }
@@ -64,10 +68,9 @@ class Payments @Inject()(paymentService: PaymentService, orderService: OrderServ
   def delete(id: PaymentId) = AuthDBAction { implicit request =>
     paymentService.find(id) match {
       case None => ListPage.flashing("error" -> s"Betaling '$id' niet gevonden")
-      case Some(payment) => {
+      case Some(payment) =>
         paymentService.delete(id)
         ListPage.flashing("success" -> s"Betaling '$id' gearchiveerd")
-      }
     }
   }
 
@@ -105,10 +108,9 @@ class Payments @Inject()(paymentService: PaymentService, orderService: OrderServ
   def copy(id: PaymentId) = AuthDBAction { implicit rs =>
     paymentService.getEdit(id) match {
       case None => ListPage
-      case Some(payment) => {
-        val newDetails = Some(Seq(Some(s"Kopie van betaling ${id}"), payment.details).flatten.mkString("\n"))
+      case Some(payment) =>
+        val newDetails = Some(Seq(Some(s"Kopie van betaling $id"), payment.details).flatten.mkString("\n"))
         Ok(views.html.admin.paymentsCreateForm(paymentForm.fillAndValidate(payment.copy(importId = None, details = newDetails)), getOrderOptions(orderService.all), paymentTypeOptions, userContext))
-      }
     }
   }
 
@@ -125,26 +127,19 @@ class Payments @Inject()(paymentService: PaymentService, orderService: OrderServ
     )
   }
 
-  def upload() = AuthDBAction(parse.multipartFormData) { implicit request =>
-    request.body.file("transactions").map { transcations =>
-      val filename = transcations.filename
-      val contentType = transcations.contentType
-      val payments = paymentService.insertTransactions(transcations.ref.file)
-      transcations.ref.clean()
-      //transcations.ref.moveTo(new File(s"/tmp/transactions/$filename"))
-      ListPage.flashing(
-        "success" -> s"${payments.length} nieuwe betalingen geïmporteerd"
-      )
-    }.getOrElse {
-      ListPage.flashing(
-        "error" -> "Bestand niet gevonden")
+  def upload(): Action[MultipartFormData[Files.TemporaryFile]] = AuthDBAction.async(parse.multipartFormData) { implicit request =>
+    request.body.file("transactions").fold {
+      Future.apply(ListPage.flashing("error" -> "Bestand niet gevonden"))
+    } { data =>
+      accountStatementImportService.extract(Some(data.ref.file)).map(paymentService.upload).map { p =>
+        data.ref.clean()
+        p
+      }.map(payments => ListPage.flashing("success" -> s"${payments.length} nieuwe betalingen geïmporteerd"))
     }
   }
 
-  def importCodabox() = AuthAction.async { implicit request =>
-    paymentService.info().map { //TODO
-      case Some(count) => ListPage.flashing("success" -> s"$count betaling gesynchroniseerd")
-      case _ => ListPage.flashing("error" -> "Fout bij synchronisatie betalingen")
-    }
+  def importCodabox(): Action[AnyContent] = AuthDBAction.async { implicit request =>
+    accountStatementImportService.extract(None).map(paymentService.upload)
+      .map(payments => ListPage.flashing("success" -> s"${payments.length} nieuwe betalingen geïmporteerd"))
   }
 }
