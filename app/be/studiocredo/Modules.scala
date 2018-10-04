@@ -1,7 +1,7 @@
 package be.studiocredo
 
 import be.studiocredo.aws.DownloadService
-import be.studiocredo.codabox._
+import be.studiocredo.account._
 import be.studiocredo.reservations.ReservationEngineMonitorService
 import com.google.inject.{AbstractModule, Singleton}
 import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
@@ -23,12 +23,14 @@ object Modules {
       bind[TicketService].in[Singleton]
       bind[ReservationEngineMonitorService].asEagerSingleton()
       bind[DownloadService].asEagerSingleton()
-      if (Play.current.configuration.getString(CodaboxConfigurationKeys.client).isDefined) {
-        bind[CodaboxService].to[RestCodaboxService].asEagerSingleton()
+      if (Play.current.configuration.getString(AccountStatementImportConfigurationKeys.codaboxClient).isDefined) {
+        bind[AccountStatementImportService].to[CodaboxAccountStatementImportService].asEagerSingleton()
+        bind[CodaboxSyncService].asEagerSingleton()
+      } else if (Play.current.configuration.getBoolean(AccountStatementImportConfigurationKeys.uploadEnabled).getOrElse(false)) {
+        bind[AccountStatementImportService].to[UploadAccountStatementImportService].asEagerSingleton()
       } else {
-        bind[CodaboxService].to[NullCodaboxService].asEagerSingleton()
+        bind[AccountStatementImportService].to[NullAccountStatementImportService].asEagerSingleton()
       }
-      bind[CodaboxSyncService].asEagerSingleton()
 
       bind[controllers.Application].in[Singleton]
       bind[controllers.admin.EventDetails].in[Singleton]
@@ -57,7 +59,7 @@ object Modules {
       multi.addBinding().to[AuthTokenExpireService]
       multi.addBinding().to[ReservationEngineMonitorService]
       multi.addBinding().to[DownloadService]
-      multi.addBinding().to[CodaboxService]
+      multi.addBinding().to[AccountStatementImportService]
 
       bind[controllers.auth.Auth].in[Singleton]
       bind[controllers.auth.LoginPage].in[Singleton]

@@ -3,8 +3,8 @@ package be.studiocredo
 
 import java.io.File
 
-import be.studiocredo.codabox.CodaboxService
-import be.studiocredo.codabox.CodaboxService.CodaboxInfo
+import be.studiocredo.account.AccountStatementImportService
+import be.studiocredo.account.AccountStatementImportService.CodaboxInfo
 import be.studiocredo.util.AXATransactionImporter
 import be.studiocredo.util.ServiceReturnValues._
 import com.google.inject.Inject
@@ -18,7 +18,7 @@ import views.helper.PaymentRegisteredOption
 import scala.concurrent.Future
 import scala.slick.session.Session
 
-class PaymentService @Inject()(codaboxService: CodaboxService) {
+class PaymentService @Inject()(codaboxService: AccountStatementImportService) {
   val PaymentsQ: Query[schema.Payments, Payment] = Query(Payments)
   val PaymentsQActive: Query[schema.Payments, Payment] = PaymentsQ.where(_.archived === false)
   val OrdersQ: Query[schema.Orders, Order] = Query(Orders)

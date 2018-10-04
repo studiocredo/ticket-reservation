@@ -1,11 +1,11 @@
-package be.studiocredo.codabox
+package be.studiocredo.account
 
 import akka.actor.Cancellable
 import be.studiocredo.Service
 import com.google.inject.Inject
 import play.api.libs.concurrent.Akka
 
-class CodaboxSyncService @Inject()(codaboxService: CodaboxService) extends Service {
+class CodaboxSyncService @Inject()(codaboxService: AccountStatementImportService) extends Service {
   var cancellable: Option[Cancellable] = None
 
   override def onStop() {

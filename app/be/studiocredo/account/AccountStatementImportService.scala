@@ -1,7 +1,7 @@
-package be.studiocredo.codabox
+package be.studiocredo.account
 
 import be.studiocredo.Service
-import be.studiocredo.codabox.CodaboxService.CodaboxInfo
+import be.studiocredo.account.AccountStatementImportService.CodaboxInfo
 import com.google.inject.Inject
 import play.api.Play
 import play.api.libs.json.{Format, Json, Reads}
@@ -14,7 +14,7 @@ import scala.util.{Failure, Try}
 
 
 object Logger {
-  val logger = play.api.Logger("be.studiocredo.codabox")
+  val logger = play.api.Logger("be.studiocredo.account")
 
   def LogTry[A](computation: => A): Try[A] = {
     Try(computation) recoverWith {
@@ -25,7 +25,7 @@ object Logger {
   }
 }
 
-object CodaboxService {
+object AccountStatementImportService {
   object CodaboxInfo{
     implicit val codaBoxInfoFmt: Reads[CodaboxInfo] = Json.reads[CodaboxInfo]
   }
@@ -45,36 +45,46 @@ object CodaboxService {
 }
 
 
-trait CodaboxService extends Service {
+trait AccountStatementImportService extends Service {
   def sync(): Future[Option[Int]]
   def info(): Future[Option[CodaboxInfo]]
 }
 
-class NullCodaboxService extends CodaboxService {
+class NullAccountStatementImportService extends AccountStatementImportService {
   override def sync(): Future[Option[Int]] = Future.apply(None)
 
   override def info(): Future[Option[CodaboxInfo]] = Future.apply(None)
 
   override def onStart(): Unit = {
-    Logger.logger.debug("Starting mock codabox service")
+    Logger.logger.debug("Starting mock account statement import service")
   }
 }
 
-class RestCodaboxService @Inject()() extends CodaboxService {
+class UploadAccountStatementImportService extends AccountStatementImportService {
+  override def sync(): Future[Option[Int]] = Future.apply(None)
 
-  var configuration: Option[CodaboxConfiguration] = None
+  override def info(): Future[Option[CodaboxInfo]] = Future.apply(None)
+
+  override def onStart(): Unit = {
+    Logger.logger.debug("Starting upload account statement import service")
+  }
+}
+
+class CodaboxAccountStatementImportService @Inject()() extends AccountStatementImportService {
+
+  var configuration: CodaboxConfiguration = _
 
   override def onStart() {
-    Logger.logger.debug("Starting codabox service")
+    Logger.logger.debug("Starting account statement import service")
     configuration = CodaboxConfiguration.init(Play.current.configuration)
   }
 
   override def onStop(): Unit = {
-    Logger.logger.debug("Stopping codabox service")
+    Logger.logger.debug("Stopping account statement import service")
   }
 
   def sync(): Future[Option[Int]] = {
-    val url = WS.url(s"${configuration.get.url}/sync/${configuration.get.client}/account_movement")
+    val url = WS.url(s"${configuration.url}/sync/${configuration.client}/account_movement")
     url.delete().map { r =>
       r.status match {
         case Http.Status.OK => Logger.LogTry {
@@ -86,7 +96,7 @@ class RestCodaboxService @Inject()() extends CodaboxService {
   }
 
   def info(): Future[Option[CodaboxInfo]] = {
-    val url = WS.url(s"${configuration.get.url}/client/${configuration.get.client}")
+    val url = WS.url(s"${configuration.url}/client/${configuration.client}")
     url.get().map { r =>
       r.status match {
         case Http.Status.OK => Logger.LogTry {
