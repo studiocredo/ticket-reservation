@@ -119,7 +119,7 @@
         </div>
         <hr>
         <footer>
-            <p>&copy;&nbsp;<img src='@routes.Assets.at("images/logo_gray_small.png")'/>&nbsp;Studio Credo 2014</p>
+            <p>&copy;&nbsp;<img src='@routes.Assets.at("images/logo_gray_small.png")'/>&nbsp;Studio Credo 2014-2018</p>
         </footer>
         <script type="text/javascript">
             @request.flash.get("success").map { message =>
@@ -127,6 +127,15 @@
             }
             @request.flash.get("error").map { message =>
             credo.flash("danger", "@message");
+            }
+            @request.flash.get("danger").map { message =>
+            credo.flash("danger", "@message");
+            }
+            @request.flash.get("warning").map { message =>
+            credo.flash("warning", "@message");
+            }
+            @request.flash.get("info").map { message =>
+            credo.flash("info", "@message");
             }
         </script>
     </body>
