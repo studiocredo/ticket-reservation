@@ -27,6 +27,7 @@ class Payments @Inject()(paymentService: PaymentService, orderService: OrderServ
   val ListPage: SimpleResult = Redirect(routes.Payments.list())
 
   import Options._
+
   val paymentTypeOptions = Options.apply(PaymentType.values.toSeq, PaymentTypeRenderer)
 
   val paymentSearchForm = Form(
@@ -49,7 +50,7 @@ class Payments @Inject()(paymentService: PaymentService, orderService: OrderServ
       "archived" -> boolean
     )(PaymentEdit.apply)(PaymentEdit.unapply)
   )
-  
+
   def list(search: Option[String], registered: String, showAll: Boolean, page: Int): Action[AnyContent] = AuthDBAction.async { implicit rs =>
     accountStatementImportService.info().map { codaboxInfo =>
       val bindedForm = paymentSearchForm.bindFromRequest
@@ -66,13 +67,15 @@ class Payments @Inject()(paymentService: PaymentService, orderService: OrderServ
     }
   }
 
-  def delete(id: PaymentId) = AuthDBAction { implicit request =>
-    paymentService.find(id) match {
-      case None => ListPage.flashing("error" -> s"Betaling '$id' niet gevonden")
-      case Some(payment) =>
-        paymentService.delete(id)
-        ListPage.flashing("success" -> s"Betaling '$id' gearchiveerd")
-    }
+  def delete(id: PaymentId): Action[AnyContent] = AuthDBAction.async { implicit request =>
+    paymentService.find(id).map { payment =>
+      paymentService.delete(id)
+      accountStatementImportService.update(Seq(payment), CodaboxSyncStatus.Skipped)
+        .map {
+          case Some(response) if response.failed == 0 => ListPage.flashing("success" -> s"Betaling '$id' gearchiveerd")
+          case _ => ListPage.flashing("warning" -> s"Betaling '$id' gearchiveerd, fout tijdens synchroniseren")
+        }
+    }.getOrElse(Future.successful(ListPage.flashing("error" -> s"Betaling '$id' niet gevonden")))
   }
 
   def create() = AuthDBAction { implicit request =>
