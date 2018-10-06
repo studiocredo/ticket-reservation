@@ -2,6 +2,7 @@ package controllers.admin
 
 import be.studiocredo._
 import be.studiocredo.account.AccountStatementImportService
+import be.studiocredo.account.AccountStatementImportService.CodaboxSyncStatus
 import be.studiocredo.auth.AuthenticatorService
 import be.studiocredo.util.Money
 import be.studiocredo.util.ServiceReturnValues._
@@ -140,6 +141,11 @@ class Payments @Inject()(paymentService: PaymentService, orderService: OrderServ
 
   def importCodabox(): Action[AnyContent] = AuthDBAction.async { implicit request =>
     accountStatementImportService.extract(None).map(paymentService.upload)
-      .map(payments => ListPage.flashing("success" -> s"${payments.length} nieuwe betalingen geïmporteerd"))
+      .flatMap(payments => accountStatementImportService.update(payments, CodaboxSyncStatus.Processed))
+      .map {
+        case Some(response) if response.failed > 0 => ListPage.flashing("warning" -> s"${response.updated} nieuwe betalingen geïmporteerd, ${response.failed} fouten")
+        case Some(response) => ListPage.flashing("success" -> s"${response.updated} nieuwe betalingen geïmporteerd")
+        case _ => ListPage.flashing("error" -> s"Fout tijdens importeren van betalingen")
+      }
   }
 }

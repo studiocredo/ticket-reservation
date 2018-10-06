@@ -63,11 +63,11 @@ class PaymentService @Inject()() {
     )
   }
 
-  def upload(payments: Seq[PaymentEdit])(implicit s: Session): Seq[PaymentId] = {
+  def upload(payments: Seq[PaymentEdit])(implicit s: Session): Seq[Payment] = {
     val known = (for {
       p <- PaymentsQ.filter(_.importId inSet payments.flatMap(_.importId))
     } yield p.importId).list
-    payments.filterNot(pe => known.contains(pe.importId)).map(addOrderId).map(Payments.autoInc.insert)
+    payments.filterNot(pe => known.contains(pe.importId)).map(addOrderId).map(pe => Payment.fromEdit(Payments.autoInc.insert(pe), pe) )
   }
 
   private def addOrderId(payment: PaymentEdit)(implicit s: Session): PaymentEdit = {

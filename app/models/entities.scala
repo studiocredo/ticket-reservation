@@ -12,6 +12,7 @@ import org.joda.time.DateTime
 import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
 import play.api.data.FormError
 import play.api.data.validation.{Constraint, Invalid, Valid, ValidationError}
+import play.api.libs.json._
 import play.api.mvc.{PathBindable, QueryStringBindable}
 
 import scala.Predef._
@@ -442,6 +443,10 @@ object entities {
 
   case class Payment(id: PaymentId, paymentType: PaymentType, importId: Option[String], orderId: Option[OrderId], debtor: String, amount: Money, message: Option[String], details: Option[String], date: DateTime, archived: Boolean) extends HasTime with Archiveable with HasAmount
 
+  object Payment {
+    def fromEdit(id: PaymentId, pe: PaymentEdit): Payment = Payment(id, pe.paymentType, pe.importId, pe.orderId, pe.debtor, pe.amount, pe.message, pe.details, pe.date, pe.archived)
+  }
+
   case class PaymentEdit(paymentType: PaymentType, importId: Option[String], orderId: Option[OrderId], debtor: String, amount: Money, message: Option[String], details: Option[String], date: DateTime, archived: Boolean) extends HasTime with Archiveable with HasAmount
 
   case class TicketDocument(order: OrderDetail, filename: String, pdf: Array[Byte], mimetype: String) {
@@ -545,6 +550,11 @@ object ids {
 
   sealed trait IdFactory[T <: TypedId] extends (Long => T)
 
+  // json formatter
+  implicit def typedIdFmt[T <: TypedId](implicit create: IdFactory[T]): Format[T] = new Format[T] {
+    def reads(json: JsValue) = JsSuccess(create.apply(json.as[Long]))
+    def writes(id: T) = JsNumber(id.id)
+  }
 
   // play custom id formatters
 
