@@ -145,7 +145,7 @@ class CodaboxAccountStatementImportService @Inject()() extends AccountStatementI
   var configuration: CodaboxConfiguration = _
 
   override def onStart() {
-    Logger.logger.debug("Starting account statement import service")
+    Logger.logger.debug("Starting codabox account statement import service")
     configuration = CodaboxConfiguration.init(Play.current.configuration)
   }
 
@@ -224,10 +224,17 @@ class CodaboxAccountStatementImportService @Inject()() extends AccountStatementI
     }
 
     def getDetails = {
-      Some(s"Overschrijving van rekeningnummer ${codaboxAccountMovement.counterparty_account} " +
-        s"vanwege ${codaboxAccountMovement.counterparty_name}, " +
-        s"${Seq(codaboxAccountMovement.counterparty_street, codaboxAccountMovement.counterparty_locality).mkString}"
-      )
+      if (codaboxAccountMovement.amount < 0) {
+        Some(s"Overschrijving naar rekeningnummer ${codaboxAccountMovement.counterparty_account} " +
+          s"van ${codaboxAccountMovement.counterparty_name}, " +
+          s"${Seq(codaboxAccountMovement.counterparty_street, codaboxAccountMovement.counterparty_locality).mkString}"
+        )
+      } else {
+        Some(s"Overschrijving van rekeningnummer ${codaboxAccountMovement.counterparty_account} " +
+          s"vanwege ${codaboxAccountMovement.counterparty_name}, " +
+          s"${Seq(codaboxAccountMovement.counterparty_street, codaboxAccountMovement.counterparty_locality).mkString}"
+        )
+      }
     }
 
     PaymentEdit(

@@ -151,4 +151,11 @@ class Payments @Inject()(paymentService: PaymentService, orderService: OrderServ
         case _ => ListPage.flashing("error" -> s"Fout tijdens importeren van betalingen")
       }
   }
+
+  def sync(): Action[AnyContent] = AuthAction.async { implicit request =>
+    accountStatementImportService.sync().map{
+      case Some(quantity) => ListPage.flashing("success" -> s"$quantity betalingen gesynchroniseerd")
+      case _ => ListPage.flashing("error" -> s"Fout tijdens synchroniseren van betalingen")
+    }
+  }
 }

@@ -10,9 +10,11 @@ class CodaboxSyncService @Inject()(codaboxService: AccountStatementImportService
 
   override def onStop() {
     cancellable.map(_.cancel())
+    cancellable = None
   }
 
   override def onStart() {
+    Logger.logger.info("Starting Codabox Sync service")
     import play.api.Play.current
     import play.api.libs.concurrent.Execution.Implicits._
 
@@ -20,7 +22,9 @@ class CodaboxSyncService @Inject()(codaboxService: AccountStatementImportService
 
     cancellable = Some(
       Akka.system.scheduler.schedule(0.seconds, 5.minutes) {
-        codaboxService.sync()
+        codaboxService.sync().map { maybeQuantity =>
+          maybeQuantity.filter(_ > 0).foreach(q => Logger.logger.info(s"$q payments synchronized"))
+        }
       }
     )
   }

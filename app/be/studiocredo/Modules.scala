@@ -66,6 +66,9 @@ object Modules {
       multi.addBinding().to[ReservationEngineMonitorService]
       multi.addBinding().to[DownloadService]
       multi.addBinding().to[AccountStatementImportService]
+      if (Play.current.configuration.getString(AccountStatementImportConfigurationKeys.codaboxClient).isDefined) {
+        multi.addBinding().to[CodaboxSyncService]
+      }
 
       bind[controllers.auth.Auth].in[Singleton]
       bind[controllers.auth.LoginPage].in[Singleton]
