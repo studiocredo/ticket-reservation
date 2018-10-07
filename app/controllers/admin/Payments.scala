@@ -118,7 +118,7 @@ class Payments @Inject()(paymentService: PaymentService, orderService: OrderServ
     }
   }
 
-  def update(id: PaymentId) = AuthDBAction.async { implicit rs =>
+  def update(id: PaymentId): Action[AnyContent] = AuthDBAction.async { implicit rs =>
     val bindedForm = paymentForm.bindFromRequest
     bindedForm.fold(
       formWithErrors => Future.apply(BadRequest(views.html.admin.paymentsEditForm(id, formWithErrors, getOrderOptions(orderService.all), paymentTypeOptions, userContext))),
@@ -127,7 +127,7 @@ class Payments @Inject()(paymentService: PaymentService, orderService: OrderServ
           error => Future.apply(BadRequest(views.html.admin.paymentsEditForm(id, bindedForm.withGlobalError(serviceMessage(error)), getOrderOptions(orderService.all), paymentTypeOptions, userContext))),
           success => {
             payment.orderId.map(_ => accountStatementImportService.update(Seq(Payment.fromEdit(id, payment)), CodaboxSyncStatus.Processed))
-              .getOrElse(Future.apply(Nil))
+              .getOrElse(accountStatementImportService.unsync(payment.importId))
               .map(_ => ListPage.flashing("success" -> "Betaling aangepast"))
           }
         )

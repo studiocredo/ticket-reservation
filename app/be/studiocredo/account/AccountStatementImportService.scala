@@ -101,6 +101,8 @@ object AccountStatementImportService {
 trait AccountStatementImportService extends Service {
   def sync(): Future[Option[Int]]
 
+  def unsync(maybeImportId: Option[String]): Future[Option[Boolean]]
+
   def info(): Future[Option[CodaboxInfo]]
 
   def update(payments: Seq[Payment], status: CodaboxSyncStatus): Future[Option[CodaboxSyncResponse]]
@@ -112,6 +114,8 @@ trait AccountStatementImportService extends Service {
 
 class NullAccountStatementImportService extends AccountStatementImportService {
   override def sync(): Future[Option[Int]] = Future.apply(None)
+
+  override def unsync(maybeImportId: Option[String]): Future[Option[Boolean]] = Future.apply(None)
 
   override def info(): Future[Option[CodaboxInfo]] = Future.apply(None)
 
@@ -128,6 +132,8 @@ class UploadAccountStatementImportService @Inject()(transactionImporter: Transac
   override val upload: Boolean = true
 
   override def sync(): Future[Option[Int]] = Future.apply(None)
+
+  override def unsync(maybeImportId: Option[String]): Future[Option[Boolean]] = Future.apply(None)
 
   override def info(): Future[Option[CodaboxInfo]] = Future.apply(None)
 
@@ -165,6 +171,18 @@ class CodaboxAccountStatementImportService @Inject()() extends AccountStatementI
     }
   }
 
+  override def unsync(maybeImportId: Option[String]): Future[Option[Boolean]] = {
+    maybeImportId.map { importId =>
+      val url = WS.url(s"${configuration.url}/sync/${configuration.client}/account_movement/$importId")
+      url.delete().map { r =>
+        r.status match {
+          case Http.Status.OK => Some(true)
+          case _ => None
+        }
+      }
+    }.getOrElse(Future.apply(None))
+  }
+
   override def info(): Future[Option[CodaboxInfo]] = {
     val url = WS.url(s"${configuration.url}/client/${configuration.client}")
     url.get().map { r =>
@@ -182,7 +200,7 @@ class CodaboxAccountStatementImportService @Inject()() extends AccountStatementI
   override def update(payments: Seq[Payment], status: CodaboxSyncStatus): Future[Option[CodaboxSyncResponse]] = {
     val url = WS.url(s"${configuration.url}/sync/${configuration.client}/account_movement")
     val body = payments.flatMap { payment =>
-      payment.importId.flatMap{ importId =>
+      payment.importId.flatMap { importId =>
         Try {
           importId.toLong
         }.toOption
