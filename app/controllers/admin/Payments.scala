@@ -118,14 +118,18 @@ class Payments @Inject()(paymentService: PaymentService, orderService: OrderServ
     }
   }
 
-  def update(id: PaymentId) = AuthDBAction { implicit rs =>
+  def update(id: PaymentId) = AuthDBAction.async { implicit rs =>
     val bindedForm = paymentForm.bindFromRequest
     bindedForm.fold(
-      formWithErrors => BadRequest(views.html.admin.paymentsEditForm(id, formWithErrors, getOrderOptions(orderService.all), paymentTypeOptions, userContext)),
+      formWithErrors => Future.apply(BadRequest(views.html.admin.paymentsEditForm(id, formWithErrors, getOrderOptions(orderService.all), paymentTypeOptions, userContext))),
       payment => {
         paymentService.update(id, payment).fold(
-          error => BadRequest(views.html.admin.paymentsEditForm(id, bindedForm.withGlobalError(serviceMessage(error)), getOrderOptions(orderService.all), paymentTypeOptions, userContext)),
-          success => ListPage.flashing("success" -> "Betaling aangepast")
+          error => Future.apply(BadRequest(views.html.admin.paymentsEditForm(id, bindedForm.withGlobalError(serviceMessage(error)), getOrderOptions(orderService.all), paymentTypeOptions, userContext))),
+          success => {
+            payment.orderId.map(_ => accountStatementImportService.update(Seq(Payment.fromEdit(id, payment)), CodaboxSyncStatus.Processed))
+              .getOrElse(Future.apply(Nil))
+              .map(_ => ListPage.flashing("success" -> "Betaling aangepast"))
+          }
         )
       }
     )
@@ -144,10 +148,10 @@ class Payments @Inject()(paymentService: PaymentService, orderService: OrderServ
 
   def importCodabox(): Action[AnyContent] = AuthDBAction.async { implicit request =>
     accountStatementImportService.extract(None).map(paymentService.upload)
-      .flatMap(payments => accountStatementImportService.update(payments, CodaboxSyncStatus.Processed))
+      .flatMap(payments => accountStatementImportService.update(payments.filter(_.orderId.isDefined), CodaboxSyncStatus.Processed))
       .map {
-        case Some(response) if response.failed > 0 => ListPage.flashing("warning" -> s"${response.updated} nieuwe betalingen geïmporteerd, ${response.failed} fouten")
-        case Some(response) => ListPage.flashing("success" -> s"${response.updated} nieuwe betalingen geïmporteerd")
+        case Some(response) if response.failed > 0 => ListPage.flashing("warning" -> s"Nieuwe betalingen geïmporteerd, ${response.failed} fouten")
+        case Some(response) => ListPage.flashing("success" -> s"Nieuwe betalingen geïmporteerd")
         case _ => ListPage.flashing("error" -> s"Fout tijdens importeren van betalingen")
       }
   }
