@@ -13,19 +13,16 @@ import play.api.http.MimeTypes
 
 import scala.collection.mutable
 
-class TicketGenerator {
-
-}
-
-object TicketGenerator {
+trait TicketGeneratorLike {
   val logger = Logger("be.studiocredo.ticketgenerator")
-  val templateResourceFolder = "templates"
+
+  def getTicketInputStreams(eventShows: scala.List[EventShow]): Map[EventId, Option[InputStream]]
 
   def create(order: OrderDetail, ticket: TicketDistribution, url: String): Option[TicketDocument] = {
     val out = new ByteArrayOutputStream
     // Create output PDF
     val document = new Document(PageSize.A4)
-   // Get template info
+    // Get template info
     val ticketInputStreamMap = getTicketInputStreams(order.ticketOrders.map(_.show))
 
     try {
@@ -57,7 +54,9 @@ object TicketGenerator {
 
       }
 
-      ticketInputStreamMap.values.filter(_.isDefined).map(_.get).foreach( try { _.close })
+      ticketInputStreamMap.values.filter(_.isDefined).map(_.get).foreach(try {
+        _.close
+      })
       document.close()
 
       Some(TicketDocument(order, s"ticket_${ticket.reference}.pdf", out.toByteArray, "application/pdf"))
@@ -71,14 +70,6 @@ object TicketGenerator {
         out.close()
       }
     }
-  }
-
-  private def getTicketInputStreams(eventShows: scala.List[EventShow]): Map[EventId, Option[InputStream]] = {
-    val templateMap = mutable.Map[EventId, Option[InputStream]]()
-    eventShows.foreach { eventShow =>
-      templateMap.getOrElseUpdate(eventShow.eventId, Option(this.getClass.getClassLoader.getResourceAsStream(scala.List(templateResourceFolder, eventShow.template.get).mkString("/"))))
-    }
-    templateMap.toMap
   }
 
   private def addBarcode(url: URL, document: Document, canvas: PdfContentByte) {
@@ -111,4 +102,23 @@ object TicketGenerator {
 
     canvas.endText()
   }
+}
+
+class TicketGenerator {
+
+}
+
+object TicketGenerator extends TicketGeneratorLike {
+  val templateResourceFolder = "templates"
+
+  def getTicketInputStreams(eventShows: scala.List[EventShow]): Map[EventId, Option[InputStream]] = {
+    val templateMap = mutable.Map[EventId, Option[InputStream]]()
+    eventShows.foreach { eventShow =>
+      templateMap.getOrElseUpdate(eventShow.eventId, Option(this.getClass.getClassLoader.getResourceAsStream(scala.List(templateResourceFolder, eventShow.template.get).mkString("/"))))
+    }
+    templateMap.toMap
+  }
+
+
+
 }
