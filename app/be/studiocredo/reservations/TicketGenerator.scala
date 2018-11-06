@@ -94,7 +94,10 @@ trait TicketGeneratorLike {
 
     canvas.setFontAndSize(font, 12)
     canvas.showTextAlignedKerned(Element.ALIGN_LEFT, order.order.billingName, 50, 405, 0)
-    canvas.showTextAlignedKerned(Element.ALIGN_LEFT, order.billingAddressLines.mkString(", "), 50, 370, 0)
+
+    order.billingAddressLines.grouped((order.billingAddressLines.length+1)/2).zipWithIndex.foreach{ case (line, index) =>
+      canvas.showTextAlignedKerned(Element.ALIGN_LEFT, line.mkString(","), 50, 375-index*15, 0)
+    }
     canvas.showTextAlignedKerned(Element.ALIGN_RIGHT, CurrencyFormat.format(ticketSeatOrder.price), 405, 405, 0)
     canvas.showTextAlignedKerned(Element.ALIGN_RIGHT, HumanDateTime.formatDateTimeCompact(order.order.date), 405, 360, 0)
 
